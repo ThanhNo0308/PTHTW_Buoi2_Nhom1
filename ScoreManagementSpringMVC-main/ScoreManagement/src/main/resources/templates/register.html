@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Đăng Ký</title>
+        <th:block th:replace="base :: styles"></th:block>
+    </head>
+    <body>
+        <div th:replace="base :: header"></div>
+        <section>
+            <div class="container mt-5">
+                <h1>Đăng Ký Giảng Viên</h1>
+
+                <form th:action="@{/register}" method="post">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Mật khẩu</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Xác nhận mật khẩu</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                    </div>
+
+                    <!-- Hiển thị lỗi nếu có -->
+                    <div class="alert alert-danger" th:if="${param.error}">
+                        Email không hợp lệ hoặc đã tồn tại hoặc mật khẩu không khớp.
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Đăng ký</button>
+                </form>
+            </div>
+
+            <!-- Toast thông báo thành công -->
+            <div id="success-toast" class="toast position-fixed bottom-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">Thành công</strong>
+                    <small class="text-muted">Bây giờ</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    Đăng ký thành công.
+                </div>
+            </div>
+
+            <!-- Script hiển thị toast nếu có param success -->
+            <script th:if="${param.success}">
+                document.addEventListener('DOMContentLoaded', function () {
+                    var successToast = new bootstrap.Toast(document.getElementById('success-toast'));
+                    successToast.show();
+                });
+            </script>
+
+        </section>
+        <div th:replace="base :: footer"></div>
+    </body>
+</html>

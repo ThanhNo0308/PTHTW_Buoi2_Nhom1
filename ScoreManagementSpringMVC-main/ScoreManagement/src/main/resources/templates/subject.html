@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>Quản Lý Hệ Thống Điểm</title>
+        <th:block th:replace="base :: styles"></th:block>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f5f5f5;
+            }
+            h1 {
+                background-color: #333;
+                color: #fff;
+                padding: 10px;
+                margin: 0;
+            }
+            table {
+                border-collapse: collapse;
+                width: 80%;
+                margin: 20px auto;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+            tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+        </style>
+    </head>
+    <body>
+        <div th:replace="base :: header"></div>
+        <section>
+            <h1>Danh Sách Môn Học</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên môn học</th>
+                        <th>Tín chỉ</th>
+                        <th>Số tiết học</th>
+                        <!-- Các cột khác nếu cần -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="subject : ${subjects}">
+                        <td th:text="${subject.id}"></td>
+                        <td th:text="${subject.subjectName}"></td>
+                        <td th:text="${subject.credits}"></td>
+                        <td th:text="${subject.numberOfLessons}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <div th:replace="base :: footer"></div>
+    </body>
+</html>

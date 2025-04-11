@@ -1,13 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.ntn.configs;
 
-/**
- *
- * @author vhuunghia
- */
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import java.text.SimpleDateFormat;
@@ -17,18 +9,19 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
-/**
- *
- * @author admin
- */
 @Configuration
+@Order(2)
 @EnableWebSecurity
 @EnableTransactionManagement
 @ComponentScan(basePackages = {
@@ -36,11 +29,11 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
     "com.ntn.repository",
     "com.ntn.service"
 })
-@Order(2)
 public class SpringSecurityConfig {
 
     @Autowired
     private Environment env;
+
     @Autowired
     private UserDetailsService userDetailsService;
 
@@ -49,47 +42,57 @@ public class SpringSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    protected void configure(AuthenticationManagerBuilder auth)
-            throws Exception {
-        auth.userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder());
+    @Bean
+    public HandlerMappingIntrospector
+            mvcHandlerMappingIntrospector() {
+        return new HandlerMappingIntrospector();
     }
 
-    
-    protected void configure(HttpSecurity http)
-            throws Exception {
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
 
-        http.formLogin()
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth
+                -> auth
+                        // Cho phép truy cập các tài nguyên tĩnh không cần login
+                        .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**").permitAll()
+                        // Các trang public
+                        .requestMatchers("/", "/login", "/register").permitAll()
+//                        // Role-based
+//                        .requestMatchers("/forum/**").hasAuthority("Admin")
+//                        .anyRequest().authenticated()
+        )
+                .formLogin(form -> form
                 .loginPage("/login")
                 .usernameParameter("username")
                 .passwordParameter("password")
-                .defaultSuccessUrl("/") // Chuyển hướng đến trang /register sau khi đăng nhập thành công
-                .failureUrl("/login?error");
+                .defaultSuccessUrl("/")
+                .failureUrl("/login?error=true")
+                .permitAll()
+                )
+                .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout=true")
+                .permitAll()
+                )
+                .exceptionHandling(exception -> exception
+                .accessDeniedPage("/403")
+                );
 
-        http.logout()
-                .logoutSuccessUrl("/login");
-        
-         
-        http.exceptionHandling()
-                .accessDeniedPage("/login?accessDenied");
-
-        // Tùy chỉnh các quyền truy cập dựa trên URL tại đây
-        http.authorizeRequests()
-                .antMatchers("/").permitAll()
-                .antMatchers("/forum").hasAuthority("Admin")
-                .antMatchers("/register").hasAuthority("Admin");
-
-        http.csrf().disable();
+        return http.build();
     }
 
     @Bean
     public Cloudinary cloudinary() {
-        Cloudinary cloudinary = new Cloudinary(ObjectUtils.asMap(
-                "cloud_name", "dup9wlfhh",
-                "api_key", "765423634639927",
-                "api_secret", "ziSI1aBDOGpEkuEeVTC2mc5CKXM",
-                "secure", true));
-        return cloudinary;
+        return new Cloudinary(ObjectUtils.asMap(
+                "cloud_name", "dvtrropzc",
+                "api_key", "245757555842261",
+                "api_secret", "TK9ie-U_fX0yS1FZD07rV5lLwbM",
+                "secure", true
+        ));
     }
 
     @Bean

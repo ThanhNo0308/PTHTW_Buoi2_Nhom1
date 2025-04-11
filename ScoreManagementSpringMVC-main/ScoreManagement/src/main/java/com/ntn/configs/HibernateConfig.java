@@ -22,7 +22,7 @@ import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
  * @author Kiet
  */
 @Configuration
-@PropertySource("classpath:databases.properties")
+@PropertySource("classpath:database.properties")
 public class HibernateConfig {
     @Autowired
     private Environment env;
@@ -31,7 +31,7 @@ public class HibernateConfig {
     public LocalSessionFactoryBean getSessionFactory(){
         LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
         sessionFactory.setPackagesToScan(new String[]{
-            "com.hcmou.pojo"
+            "com.ntn.pojo"
         });
         sessionFactory.setDataSource(dataSource());
         sessionFactory.setHibernateProperties(hibernateProperties());

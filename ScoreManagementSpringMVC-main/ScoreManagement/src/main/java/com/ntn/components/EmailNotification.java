@@ -13,7 +13,7 @@ import javax.mail.internet.*;
 public class EmailNotification {
     public static void sendNotification(String recipientEmail, String subject, String messageText) {
         final String senderEmail = "2251050056@ou.edu.vn"; // Điền địa chỉ email của bạn ở đây
-        final String senderPassword = "060204000492"; // Điền mật khẩu email của bạn ở đây
+        final String senderPassword = ""; // Điền mật khẩu email của bạn ở đây
 
         // Cấu hình thông tin máy chủ email
         Properties properties = new Properties();

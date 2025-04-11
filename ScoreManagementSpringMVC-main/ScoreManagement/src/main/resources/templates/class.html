@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>Quản Lý Hệ Thống Điểm</title>
+        <th:block th:replace="base :: styles"></th:block>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f5f5f5;
+            }
+
+            h1 {
+                background-color: #333;
+                color: #fff;
+                padding: 10px;
+                margin: 0;
+            }
+
+            table {
+                border-collapse: collapse;
+                width: 80%;
+                margin: 20px auto;
+            }
+
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+
+            th {
+                background-color: #f2f2f2;
+            }
+
+            tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+        </style>
+    </head>
+    <body>
+        <div th:replace="base :: header"></div>
+        <section>
+
+            <!-- Nếu danh sách lớp rỗng -->
+            <div th:if="${#lists.isEmpty(classes)}" class="alert alert-primary d-flex align-items-center" role="alert">
+                <svg xmlns="http://www.w3.org/2000/svg" class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Info:">
+                <use xlink:href="#info-fill"/>
+                </svg>
+                <div>
+                    Hiện tại ngành này chưa có lớp
+                </div>
+            </div>
+
+            <!-- Nếu danh sách lớp không rỗng -->
+            <div th:if="${not #lists.isEmpty(classes)}">
+                <h1>Danh Sách Lớp</h1>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Mã Lớp</th>
+                            <th>Ngành</th>
+                            <th>Giáo viên chủ nhiệm</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="c : ${classes}">
+                            <td th:text="${c.id}"></td>
+                            <td th:text="${c.className}"></td>
+                            <td th:text="${c.majorId}"></td>
+                            <td th:text="${c.teacherId}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <div th:replace="base :: footer"></div>
+    </body>
+</html>
