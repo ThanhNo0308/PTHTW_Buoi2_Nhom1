@@ -28,4 +28,6 @@ public interface UserRepository {
     List<Teacher> getTeacherByEmail(String email);
     boolean findTeacherEmail(String email);
     boolean authAdminUser(String username, String password);
+    boolean authTeacherUser(String username, String password);
+    boolean authStudentUser(String username, String password);
 }

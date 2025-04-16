@@ -8,8 +8,7 @@ package com.ntn.controllers;
  *
  * @author vhuunghia
  */
-import com.ntn.components.JwtService;
-import com.ntn.pojo.Role;
+//import com.ntn.components.JwtService;
 import com.ntn.pojo.User;
 import com.ntn.service.UserService;
 import java.security.Principal;
@@ -43,24 +42,47 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api")
 public class ApiUserController {
 
-    @Autowired
-    private JwtService jwtService;
+//    @Autowired
+//    private JwtService jwtService;
     @Autowired
     private UserService userService;
 
+//    @PostMapping("/login")
+//    @CrossOrigin
+//    public ResponseEntity<String> login(@RequestBody Map<String, String> requestBody) {
+//        String username = requestBody.get("username");
+//        String password = requestBody.get("password");
+//        int roleID = Integer.parseInt(requestBody.get("roleID"));
+//        User authenticatedUser = userService.getUserByUn(username);
+//        if (this.userService.authUser(username, password) && roleID == authenticatedUser.getRoleID().getId()) {
+//            String token = this.jwtService.generateTokenLogin(username, authenticatedUser.getRoleID().getRoleName());
+//            return new ResponseEntity<>(token, HttpStatus.OK);
+//        } else {
+//            return new ResponseEntity<>("Tên người dùng, mật khẩu hoặc vai trò không đúng", HttpStatus.UNAUTHORIZED);
+//        }
+//    }
+    
     @PostMapping("/login")
     @CrossOrigin
     public ResponseEntity<String> login(@RequestBody Map<String, String> requestBody) {
         String username = requestBody.get("username");
         String password = requestBody.get("password");
         int roleID = Integer.parseInt(requestBody.get("roleID"));
+
+        // Xác thực người dùng
         User authenticatedUser = userService.getUserByUn(username);
-        if (this.userService.authUser(username, password) && roleID == authenticatedUser.getRoleID().getId()) {
-            String token = this.jwtService.generateTokenLogin(username, authenticatedUser.getRoleID().getRoleName());
-            return new ResponseEntity<>(token, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Tên người dùng, mật khẩu hoặc vai trò không đúng", HttpStatus.UNAUTHORIZED);
+        if (authenticatedUser != null && userService.authUser(username, password)) {
+            try {
+                int userRole = Integer.parseInt(authenticatedUser.getRole().name());
+                if (roleID == userRole) {
+                    return new ResponseEntity<>("Đăng nhập thành công", HttpStatus.OK);
+                }
+            } catch (NumberFormatException e) {
+                return new ResponseEntity<>("Role không hợp lệ", HttpStatus.BAD_REQUEST);
+            }
         }
+            // Đăng nhập thất bại
+            return new ResponseEntity<>("Tên người dùng, mật khẩu hoặc vai trò không đúng", HttpStatus.UNAUTHORIZED);
     }
 
     @PostMapping(path = "/users/",

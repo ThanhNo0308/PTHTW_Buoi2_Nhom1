@@ -7,13 +7,13 @@ package com.ntn.service.impl;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.ntn.controllers.ApiUserController;
-import com.ntn.pojo.Role;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
 import com.ntn.repository.UserRepository;
 import com.ntn.service.UserService;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -56,17 +56,30 @@ public class UserServiceImp implements UserService {
 
 //    @Autowired
 //    private Cloudinary cloudinary;
+//    @Override
+//    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+//        User u = this.userRepo.getUserByUsername(username);
+//        if (u == null) {
+//            throw new UsernameNotFoundException("Invalid");
+//        }
+//        Set<GrantedAuthority> authorities = new HashSet<>();
+//        User authenticatedUser = getUserByUn(u.getUsername());
+//        authorities.add(new SimpleGrantedAuthority(authenticatedUser.getRole().name()));
+//        return new org.springframework.security.core.userdetails.User(
+//                u.getUsername(), u.getPassword(), authorities);
+//    }
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User u = this.userRepo.getUserByUsername(username);
-        if (u == null) {
+        User user = userRepo.getUserByUsername(username);
+        if (user == null) {
             throw new UsernameNotFoundException("Invalid");
         }
-        Set<GrantedAuthority> authorities = new HashSet<>();
-        User authenticatedUser = getUserByUn(u.getUsername());
-        authorities.add(new SimpleGrantedAuthority(authenticatedUser.getRoleID().getRoleName()));
+
         return new org.springframework.security.core.userdetails.User(
-                u.getUsername(), u.getPassword(), authorities);
+                user.getUsername(),
+                user.getPassword(),
+                Collections.singleton(new SimpleGrantedAuthority(user.getRole().name()))
+        );
     }
 
     @Override
@@ -82,6 +95,7 @@ public class UserServiceImp implements UserService {
     @Override
     public User addUser(Map<String, String> params) {
         String email = params.get("email");
+        String username = params.get("username");
         // Tạo EntityManager
 
         // Lấy danh sách kết quả
@@ -90,35 +104,32 @@ public class UserServiceImp implements UserService {
         if (!students.isEmpty()) {
             // Tìm thấy Student với email tương ứng
             Student foundStudent = students.get(0);
-            Role role = new Role();
-            role.setId(3);
-            // Bây giờ bạn có thể sử dụng foundStudent để thực hiện các hành động mong muốn
             User user = new User();
-            user.setUsername(email);
             user.setName(foundStudent.getLastName());
             user.setGender(foundStudent.getGender());
             user.setIdentifyCard(foundStudent.getIdentifyCard());
             user.setHometown(foundStudent.getHometown());
-//            user.setBirthdate(foundStudent.getBirthdate());
-            user.setPhone(foundStudent.getPhone());
-            user.setPassword(this.passwordEncoder.encode(params.get("password")));
             user.setBirthdate(foundStudent.getBirthdate());
+            user.setPhone(foundStudent.getPhone());
+            user.setEmail(foundStudent.getEmail());
+            user.setUsername(username);
+            user.setPassword(this.passwordEncoder.encode(params.get("password")));
             user.setActive(foundStudent.getStatus());
-
-            user.setRoleID(role);
-            if (params.get("avatar") != null) {
+            user.setRole(User.Role.Student);
+            String avatarData = params.get("avatar");
+            if (avatarData != null && !avatarData.isEmpty()) {
                 try {
-                    Map uploadResult = this.cloudinary.uploader().upload("data:image/png;base64," + params.get("avatar"),
-                            ObjectUtils.asMap("resource_type", "auto"));
-
-                    // Lấy URL của ảnh từ phản hồi của Cloudinary
-                    String imageUrl = uploadResult.get("secure_url").toString();
-
-                    // Cập nhật URL ảnh vào đối tượng User (u) hoặc lưu lại ở đâu đó tùy bạn
-                    user.setImage(imageUrl);
+                    Map uploadResult = this.cloudinary.uploader().upload(
+                            "data:image/png;base64," + avatarData,
+                            ObjectUtils.asMap("resource_type", "auto")
+                    );
+                    user.setImage(uploadResult.get("secure_url").toString());
                 } catch (IOException ex) {
                     Logger.getLogger(UserServiceImp.class.getName()).log(Level.SEVERE, null, ex);
+                    return null;
                 }
+            } else {
+                return null; // Return null if no avatar provided
             }
 
             this.userRepo.addUser(user);
@@ -142,9 +153,8 @@ public class UserServiceImp implements UserService {
         List<Teacher> teachers = this.userRepo.getTeacherByEmail(email);
         if (!teachers.isEmpty()) {
             Teacher foundTeacher = teachers.get(0);
-            Role role = new Role();
-            role.setId(2);
             User user = new User();
+            user.setEmail(email);
             user.setUsername(email);
             user.setName(foundTeacher.getTeacherName());
             user.setGender(foundTeacher.getGender());
@@ -153,7 +163,7 @@ public class UserServiceImp implements UserService {
             user.setPhone(foundTeacher.getPhoneNumber());
             user.setPassword(this.passwordEncoder.encode(params.get("password")));
             user.setActive("Active");
-            user.setRoleID(role);
+            user.setRole(User.Role.Teacher);
 
             this.userRepo.addTeacherUser(user);
             return user;
@@ -172,5 +182,15 @@ public class UserServiceImp implements UserService {
     @Override
     public boolean authAdminUser(String username, String password) {
         return this.userRepo.authAdminUser(username, password);
+    }
+
+    @Override
+    public boolean authTeacherUser(String username, String password) {
+        return this.userRepo.authTeacherUser(username, password);
+    }
+
+    @Override
+    public boolean authStudentUser(String username, String password) {
+        return this.userRepo.authStudentUser(username, password);
     }
 }

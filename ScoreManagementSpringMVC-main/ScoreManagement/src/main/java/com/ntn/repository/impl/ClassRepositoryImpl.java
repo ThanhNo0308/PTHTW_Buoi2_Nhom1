@@ -51,7 +51,7 @@ public class ClassRepositoryImpl implements ClassRepository {
         CriteriaQuery<Class> q = b.createQuery(Class.class);
         Root root = q.from(Class.class);
         q.select(root);
-        q.where(b.equal(root.get("majorId"), majorId));
+        q.where(b.equal(root.get("majorId").get("id"), majorId));
         Query query = s.createQuery(q);
         return query.getResultList();
     }

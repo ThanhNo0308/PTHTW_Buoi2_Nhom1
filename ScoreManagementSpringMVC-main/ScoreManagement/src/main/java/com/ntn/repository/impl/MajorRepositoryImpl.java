@@ -40,18 +40,17 @@ public class MajorRepositoryImpl implements MajorRepository {
 
     @Override
     public List<Major> getMajorsByTrainingTypeId(int trainingtypeId) {
-        // Lấy phiên hiện tại từ LocalSessionFactoryBean
         Session session = this.factory.getObject().getCurrentSession();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Major> criteriaQuery = criteriaBuilder.createQuery(Major.class);
-
         Root<Major> root = criteriaQuery.from(Major.class);
 
-        // Thêm điều kiện để lọc các Major theo trainingtypeId
-        criteriaQuery.where(criteriaBuilder.equal(root.get("trainingTypeId"), trainingtypeId));
+        // Sửa điều kiện tại đây
+        criteriaQuery.where(
+                criteriaBuilder.equal(root.get("trainingTypeId").get("id"), trainingtypeId)
+        );
 
         criteriaQuery.select(root);
-
         Query query = session.createQuery(criteriaQuery);
         return query.getResultList();
     }

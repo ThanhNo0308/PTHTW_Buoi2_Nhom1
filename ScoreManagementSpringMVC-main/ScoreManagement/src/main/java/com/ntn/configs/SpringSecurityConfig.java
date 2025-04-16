@@ -17,17 +17,19 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 @Configuration
-@Order(2)
+//@Order(2)
 @EnableWebSecurity
 @EnableTransactionManagement
 @ComponentScan(basePackages = {
     "com.ntn.controllers",
     "com.ntn.repository",
-    "com.ntn.service"
+    "com.ntn.service",
+    "com.ntn.components"
 })
 public class SpringSecurityConfig {
 
@@ -36,6 +38,9 @@ public class SpringSecurityConfig {
 
     @Autowired
     private UserDetailsService userDetailsService;
+
+    @Autowired
+    private CustomLoginSuccessHandler loginSuccessHandler;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -54,32 +59,55 @@ public class SpringSecurityConfig {
     }
 
     @Bean
+    public AuthenticationSuccessHandler customSuccessHandler() {
+        return new CustomLoginSuccessHandler();
+    }
+
+    @Bean
+    public CustomLoginSuccessHandler loginSuccessHandler() {
+        return new CustomLoginSuccessHandler();
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth
-                -> auth
-                        // Cho phép truy cập các tài nguyên tĩnh không cần login
-                        .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**").permitAll()
-                        // Các trang public
-                        .requestMatchers("/", "/login", "/register").permitAll()
-//                        // Role-based
-//                        .requestMatchers("/forum/**").hasAuthority("Admin")
-//                        .anyRequest().authenticated()
-        )
+        http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                // Cho phép truy cập các tài nguyên tĩnh
+                .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**").permitAll()
+                // Trang chủ cho phép truy cập không cần đăng nhập
+                .requestMatchers("/", "/login", "/registerStudent").permitAll()
+                // Các URL yêu cầu quyền Admin
+                .requestMatchers("/pageStudent").hasAuthority("Student")
+                .requestMatchers("/pageTeacher").hasAuthority("Teacher")
+                .requestMatchers("/forum", "/register", "/pageAdmin").hasAuthority("Admin")
+                // Mọi request khác yêu cầu xác thực
+                .anyRequest().authenticated()
+                )
                 .formLogin(form -> form
                 .loginPage("/login")
+                .loginProcessingUrl("/login")
                 .usernameParameter("username")
                 .passwordParameter("password")
-                .defaultSuccessUrl("/")
+                .successHandler(loginSuccessHandler) // Gắn custom handler
                 .failureUrl("/login?error=true")
                 .permitAll()
                 )
                 .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout=true")
+                .invalidateHttpSession(true) // Đảm bảo session bị vô hiệu hóa
+                .clearAuthentication(true) // Đảm bảo xóa authentication
+                .deleteCookies("JSESSIONID") // Xóa cookie session
                 .permitAll()
                 )
+                .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                .invalidSessionUrl("/login?invalid_session=true") // Chuyển hướng nếu session không hợp lệ
+                .maximumSessions(1) // Giới hạn 1 session cho mỗi người dùng
+                )
                 .exceptionHandling(exception -> exception
-                .accessDeniedPage("/403")
+                .accessDeniedPage("/login?accessDenied")
                 );
 
         return http.build();

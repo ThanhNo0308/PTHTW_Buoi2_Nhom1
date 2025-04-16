@@ -6,22 +6,23 @@
         <title th:fragment="title"></title>
 
     <th:block th:fragment="styles">
+        <!-- jQuery first -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+        <!-- Bootstrap CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
               integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-                integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        <!-- Bootstrap Bundle with Popper -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" 
+                integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" 
         crossorigin="anonymous"></script>
-
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
               integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w=="
               crossorigin="anonymous" referrerpolicy="no-referrer" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.8.0/html2pdf.bundle.js"></script>
-        
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-        
+
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.5.0/dist/css/bootstrap.min.css">
 
         <link th:href="@{/static/css/base.css}" rel="stylesheet" />
@@ -29,6 +30,7 @@
         <link th:href="@{/static/css/register.css}" rel="stylesheet" />
         <link th:href="@{/static/css/style.css}" rel="stylesheet" />
     </th:block>
+
 </head>
 <body>
     <header th:fragment="header">
@@ -39,7 +41,7 @@
                     <!-- Logo và tiêu đề -->
                     <div class="header_nav_title d-flex align-items-center">
                         <a class="navbar-brand d-flex align-items-center" th:href="@{/}">
-                            <img src="https://filethpt.hcm.edu.vn//UploadImages/Config/thptphandangluu/logo%20Truong%20THPT%20PDL%20(3).jpg"
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQThYHWBrNfNpsRbdryNRTlfPgPD1mAx1vUFmjqpW4_R6ZlodLOSmEJCPfQFfD6SULFqVY&usqp=CAU"
                                  alt="" width="70" height="54" class="d-inline-block align-text-top me-2">
                             <h1 style="font-size: 1.1vw; color: rgb(19, 3, 80); font-weight: 700; padding-top: 7px;">
                                 Trường Đại Học <br>HCM
@@ -54,9 +56,8 @@
                             <li class="nav-item">
                                 <a class="nav-link" aria-current="page" th:href="@{/}"><i class="fas fa-home"></i> Trang chủ</a>
                             </li>
-
                             <!-- Khoa - Ban -->
-                            <li class="nav-item dropdown">
+                            <li class="nav-item dropdown" sec:authorize="hasAuthority('Admin')">
                                 <a class="nav-link dropdown-toggle" href="#" id="departmentDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fa-solid fa-shapes"></i> Khoa-Ban
                                 </a>
@@ -66,14 +67,17 @@
                                     </li>
                                 </ul>
                             </li>
+                            <li class="nav-item" sec:authorize="hasAuthority('Admin')">
+                                <a class="nav-link" th:href="@{/subjects}"><i class="fa-solid fa-book-open"></i> Danh sách môn học</a>
+                            </li>
 
                             <!-- Cựu Sinh Viên -->
-                            <li class="nav-item">
-                                <a class="nav-link" href="#"><i class="fas fa-tv"></i> Cựu Sinh Viên</a>
+                            <li class="nav-item" sec:authorize="hasAuthority('Admin')">
+                                <a class="nav-link" th:href="@{/subjTeach}"><i class="fa-solid fa-chalkboard-user"></i> Danh sách giảng dạy</a>
                             </li>
 
                             <!-- Đào tạo -->
-                            <li class="nav-item dropdown">
+                            <li class="nav-item dropdown" sec:authorize="hasAuthority('Admin')">
                                 <a class="nav-link dropdown-toggle" href="#" id="trainingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fa-solid fa-school"></i> Đào tạo
                                 </a>
@@ -85,8 +89,17 @@
                             </li>
 
                             <!-- Đăng ký -->
-                            <li class="nav-item">
+                            <li class="nav-item" sec:authorize="hasAuthority('Admin')">
                                 <a class="btn btn-success ms-2 mt-1" th:href="@{/register}">Đăng ký người dùng</a>
+                            </li>
+                            <li class="nav-item" sec:authorize="!isAuthenticated()">
+                                <a class="btn btn-success ms-2 mt-1" th:href="@{/login}">Đăng nhập</a>
+                            </li>
+                            <li class="nav-item" sec:authorize="!isAuthenticated()">
+                                <a class="btn btn-success ms-2 mt-1" th:href="@{/registerStudent}">Đăng ký</a>
+                            </li>
+                            <li class="nav-item" sec:authorize="isAuthenticated()">
+                                <a class="btn btn-success ms-2 mt-1" th:href="@{/logout}">Đăng xuất</a>
                             </li>
                         </ul>
 
@@ -101,8 +114,8 @@
                 </div>
             </nav>
         </div>
-
     </header>
+
 
     <footer th:fragment="footer" class="text-center text-lg-start bg-light text-muted footer">
         <!-- Section: Social media -->
@@ -168,5 +181,7 @@
             <a class="text-reset fw-bold" href="#">YourSite.com</a>
         </div>
     </footer>
+    <!-- CHÈN NÀY Ở CUỐI TRƯỚC </body> -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" crossorigin="anonymous"></script>
 </body>
 </html>

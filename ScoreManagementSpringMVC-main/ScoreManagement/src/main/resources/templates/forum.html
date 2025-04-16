@@ -14,7 +14,7 @@
                 <label for="subjTeachSelect">Diễn đàn theo môn học</label>
                 <select class="form-select" id="subjTeachSelect" onchange="navigateToForum()">
                     <option>Chọn môn học</option>
-                    <option value="all" data-url="@{/forum}">Xem tất cả</option>
+                    <option value="all" th:data-url="@{/forum}">Xem tất cả</option>
                     <option th:each="subjteach : ${subjteachs}"
                             th:value="${subjteach.id}"
                             th:attr="data-url=@{'/forumBySubjectTeacher'(subjectTeacherId=${subjteach.id})}"
@@ -61,7 +61,7 @@
 
         <script>
             function navigateToAddPost() {
-                window.location.href = "/addForumPage";
+                window.location.href = "/ScoreManagement/addForumPage";
             }
 
             function confirmDelete(forumId) {

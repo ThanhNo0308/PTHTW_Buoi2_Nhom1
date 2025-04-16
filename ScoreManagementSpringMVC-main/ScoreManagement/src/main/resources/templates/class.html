@@ -64,6 +64,7 @@
                             <th>Mã Lớp</th>
                             <th>Ngành</th>
                             <th>Giáo viên chủ nhiệm</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -72,6 +73,11 @@
                             <td th:text="${c.className}"></td>
                             <td th:text="${c.majorId}"></td>
                             <td th:text="${c.teacherId}"></td>
+                            <td>
+                                <a th:href="@{/students(classId=${c.id})}" class="btn btn-primary">
+                                    <i class="fas fa-users"></i> Danh sách sinh viên
+                                </a>
+                            </td>
                         </tr>
                     </tbody>
                 </table>

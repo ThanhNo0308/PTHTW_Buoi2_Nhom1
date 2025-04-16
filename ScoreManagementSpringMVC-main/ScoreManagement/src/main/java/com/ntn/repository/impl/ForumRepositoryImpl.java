@@ -47,7 +47,7 @@ public class ForumRepositoryImpl implements ForumRepository {
         CriteriaQuery<Forum> q = b.createQuery(Forum.class);
         Root root = q.from(Forum.class);
         q.select(root);
-        q.where(b.equal(root.get("subjectTeacherId"), subjectTeacherId));
+        q.where(b.equal(root.get("subjectTeacherId").get("id"), subjectTeacherId));
         Query query = s.createQuery(q);
         return query.getResultList();
     }

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Đăng ký</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+
+    <div class="register-container">
+        <div class="register-form">
+            <h2 class="register-title">Đăng Ký Tài Khoản Sinh Viên</h2>
+            <div class="container mt-4">
+                <form th:action="@{/registerStudent}" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email sinh viên (<span class="text-danger">*</span>)</label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" 
+                               placeholder="Nhập email trường cấp (@dh.edu.vn)" required>
+                        <small class="form-text text-muted">Vui lòng sử dụng email do trường cấp (@dh.edu.vn)</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Tên đăng nhập (<span class="text-danger">*</span>)</label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               placeholder="Nhập tên đăng nhập" required>
+                    </div>
+
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Mật khẩu (<span class="text-danger">*</span>)</label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               minlength="6" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Xác nhận mật khẩu (<span class="text-danger">*</span>)</label>
+                        <input type="password" class="form-control" id="confirmPassword" 
+                               name="confirmPassword" minlength="6" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="avatar" class="form-label">Ảnh đại diện (<span class="text-danger">*</span>)</label>
+                        <input type="file" class="form-control" id="avatar" name="avatar" 
+                               accept="image/*" onchange="handleFileSelect(event)" required>
+                        <input type="hidden" id="base64Avatar" name="avatar">
+                        <small class="form-text text-muted">Chọn ảnh đại diện (jpg, png, jpeg)</small>
+                    </div>
+
+                    <div class="alert alert-danger" th:if="${param.error == 'email'}">
+                        Email không hợp lệ hoặc không tồn tại trong hệ thống.
+                    </div>
+                    <div class="alert alert-danger" th:if="${param.error == 'password'}">
+                        Mật khẩu không khớp hoặc không đủ độ dài.
+                    </div>
+                    <div class="alert alert-danger" th:if="${param.error == 'avatar'}">
+                        Vui lòng chọn ảnh đại diện.
+                    </div>
+                    <div class="alert alert-danger" th:if="${param.error == 'email-format'}">
+                        Email phải là email do trường cấp (@dh.edu.com)
+                    </div>
+                    <div class="alert alert-danger" th:if="${param.error == 'avatar-required'}">
+                        Vui lòng chọn ảnh đại diện
+                    </div>
+                    <div class="alert alert-danger" th:if="${param.error == 'invalid-email'}">
+                        Email không tồn tại trong hệ thống hoặc đã được đăng ký
+                    </div>
+                    <div class="alert alert-danger" th:if="${param.error == 'system'}">
+                        Lỗi hệ thống, vui lòng thử lại sau
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Đăng ký</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="base :: footer"></div>
+
+    <script>
+        // Kiểm tra password match
+        const password = document.getElementById("password")
+        const confirm_password = document.getElementById("confirmPassword");
+
+        function validatePassword() {
+            if (password.value != confirm_password.value) {
+                confirm_password.setCustomValidity("Mật khẩu không khớp");
+            } else {
+                confirm_password.setCustomValidity('');
+            }
+        }
+
+        password.onchange = validatePassword;
+        confirm_password.onkeyup = validatePassword;
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const validTypes = ["image/png", "image/jpeg", "image/jpg"];
+            if (!validTypes.includes(file.type)) {
+                alert("Chỉ chấp nhận ảnh PNG, JPG hoặc JPEG!");
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                const base64String = reader.result.split(',')[1];
+                document.getElementById('base64Avatar').value = base64String;
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>

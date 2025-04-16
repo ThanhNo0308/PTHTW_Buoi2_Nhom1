@@ -70,9 +70,11 @@
     animation-fill-mode: forwards;
 
 }
-.login_form_contain{
+.login_form_contain {
     border-radius: 40px;
-    width: 1000px;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
     position: fixed;
     top: 5%;
     left: 10%;
@@ -143,7 +145,11 @@
     border-bottom-right-radius: 20px;
 }
 
-.login_ui{
-    position: fixed;
-    z-index: 2000;
+.login_ui {
+    position: relative; /* Thay đổi từ fixed thành relative */
+    width: 100%;
+    min-height: calc(100vh - 200px); /* Điều chỉnh chiều cao phù hợp */
+    align-items: center;
+    /*z-index: 1;*/
+    margin: 2rem 0;
 }

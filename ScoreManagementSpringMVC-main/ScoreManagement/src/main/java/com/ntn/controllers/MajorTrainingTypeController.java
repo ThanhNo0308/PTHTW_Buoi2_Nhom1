@@ -23,13 +23,14 @@ import org.springframework.web.bind.annotation.RequestParam;
  */
 @Controller
 public class MajorTrainingTypeController {
-         @Autowired
+
+    @Autowired
     private MajorService majorService;
-  
-      @GetMapping("/trainingtype")
-    public String showMajorByTrainingType(Model model, @RequestParam("trainingtypeId") int trainingtypeId){
+
+    @GetMapping("/trainingtype")
+    public String showMajorByTrainingType(Model model, @RequestParam("trainingtypeId") int trainingtypeId) {
         List<Major> majors = majorService.getMajorsByTrainingTypeId(trainingtypeId);
         model.addAttribute("majors", majors);
-             return "major";
+        return "major";
     }
 }

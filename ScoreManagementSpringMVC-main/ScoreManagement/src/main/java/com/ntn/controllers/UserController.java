@@ -5,10 +5,21 @@
 package com.ntn.controllers;
 
 import com.ntn.pojo.User;
+import com.ntn.pojo.User.Role;
 import com.ntn.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
 import jakarta.servlet.http.HttpSession;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,29 +46,106 @@ public class UserController {
         return "login"; // Trả về trang đăng nhập
     }
 
+    @GetMapping("/pageAdmin")
+    public String pageAdmin() {
+        return "pageAdmin";
+    }
+
+    @GetMapping("/pageTeacher")
+    public String pageTeacher() {
+        return "pageTeacher";
+    }
+
+    @GetMapping("/pageStudent")
+    public String pageStudent() {
+        return "pageStudent";
+    }
+
+    @GetMapping("/registerStudent")
+    public String showRegistrationStudentForm(Model model) {
+        return "registerStudent"; // Trả về trang đăng ký
+    }
+
+//    @PostMapping("/login")
+//    public String loginUser(@RequestParam("username") String username,
+//            @RequestParam("password") String password,
+//            Model model, HttpSession session) {
+//        boolean isAuthenticated = userService.authAdminUser(username, password);
+//
+//        if (isAuthenticated) {
+//            // Lưu thông tin người dùng vào session
+//            session.setAttribute("user", username);
+//            model.addAttribute("user", username);
+//            return "redirect:/register"; // Đăng nhập thành công và có quyền Admin, chuyển hướng đến trang đăng ký người dùng
+//        } else {
+//            model.addAttribute("error", "Tên người dùng hoặc mật khẩu không chính xác hoặc bạn không có quyền đăng nhập.");
+//            return "login"; // Đăng nhập không thành công hoặc không có quyền, hiển thị thông báo lỗi trên trang đăng nhập
+//        }
+//    }
     @PostMapping("/login")
     public String loginUser(@RequestParam("username") String username,
             @RequestParam("password") String password,
-            Model model, HttpSession session) {
-        boolean isAuthenticated = userService.authAdminUser(username, password);
+            @RequestParam("role") String role,
+            Model model, HttpSession session,
+            HttpServletRequest request, HttpServletResponse response) {
+
+        // Xác thực người dùng dựa trên role
+        boolean isAuthenticated = false;
+        String redirectUrl = "";
+
+        switch (role) {
+            case "Admin":
+                isAuthenticated = userService.authAdminUser(username, password);
+                redirectUrl = "redirect:/pageAdmin";
+                break;
+            case "Teacher":
+                isAuthenticated = userService.authTeacherUser(username, password);
+                redirectUrl = "redirect:/pageTeacher";
+                break;
+            case "Student":
+                isAuthenticated = userService.authStudentUser(username, password);
+                redirectUrl = "redirect:/pageStudent";
+                break;
+            default:
+                // Đảm bảo không có authentication nào được tạo
+                SecurityContextHolder.clearContext();
+                session.invalidate();
+                return "redirect:/login?error=role_invalid";
+        }
 
         if (isAuthenticated) {
-            // Lưu thông tin người dùng vào session
+            // Lấy User object cho Spring Security
+            User user = userService.getUserByUn(username);
+
+            // Cấu hình Spring Security authentication
+            List<GrantedAuthority> authorities = new ArrayList<>();
+            authorities.add(new SimpleGrantedAuthority(role));
+
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    username, null, authorities);
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // Lưu thông tin vào session
             session.setAttribute("user", username);
-            model.addAttribute("user", username);
-            return "redirect:/register"; // Đăng nhập thành công và có quyền Admin, chuyển hướng đến trang đăng ký người dùng
+            session.setAttribute("role", role);
+
+            return redirectUrl;
         } else {
-            model.addAttribute("error", "Tên người dùng hoặc mật khẩu không chính xác hoặc bạn không có quyền đăng nhập.");
-            return "login"; // Đăng nhập không thành công hoặc không có quyền, hiển thị thông báo lỗi trên trang đăng nhập
+            // Đảm bảo xóa mọi thông tin xác thực khi đăng nhập thất bại
+            SecurityContextHolder.clearContext();
+            session.invalidate();
+            return "redirect:/login?error=true";
         }
     }
 
-    // Đăng xuất
     @PostMapping("/logout")
-    public String logout(HttpSession session) {
-        // Xóa thông tin người dùng khỏi session để đăng xuất
-        session.removeAttribute("user");
-        return "redirect:/login";
+    public String logout(HttpServletRequest request, HttpServletResponse response) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) {
+            new SecurityContextLogoutHandler().logout(request, response, auth);
+        }
+        return "redirect:/login?logout=true";
     }
 
     @PostMapping("/register")
@@ -80,6 +168,49 @@ public class UserController {
             return "redirect:/register?successs"; // Đăng ký thành công, redirect đến trang đăng nhập
         } else {
             return "redirect:/register?error"; // Đăng ký không thành công, redirect đến trang đăng ký với thông báo lỗi
+        }
+    }
+
+    @PostMapping("/registerStudent")
+    public String registerStudent(@RequestParam Map<String, String> params, Model model) {
+        String email = params.get("email");
+        String username = params.get("username");
+
+        // Kiểm tra email có nằm trong danh sách sinh viên không
+        if (!userService.isEmailExists(email)) {
+            model.addAttribute("error", "invalid-email");
+            return "redirect:/registerStudent?error=invalid-email";
+        }
+
+        // Kiểm tra định dạng email
+        if (!email.endsWith("@dh.edu.vn")) {
+            model.addAttribute("error", "email-format");
+            return "redirect:/registerStudent?error=email-format";
+        }
+
+        // Kiểm tra xác nhận mật khẩu
+        String password = params.get("password");
+        String confirmPassword = params.get("confirmPassword");
+        if (password == null || !password.equals(confirmPassword) || password.length() < 6) {
+            model.addAttribute("error", "password");
+            return "redirect:/registerStudent?error=password";
+        }
+
+        // Kiểm tra avatar đã chọn chưa
+        if (params.get("avatar") == null || params.get("avatar").isEmpty()) {
+            model.addAttribute("error", "avatar-required");
+            return "redirect:/registerStudent?error=avatar-required";
+        }
+
+        // Thêm username vào params
+        params.put("username", username);
+
+        // Đăng ký tài khoản sinh viên
+        User user = userService.addUser(params);
+        if (user != null) {
+            return "redirect:/login?success";
+        } else {
+            return "redirect:/registerStudent?error=system";
         }
     }
 

@@ -39,7 +39,7 @@ public class StudentRepositoryImpl implements StudentRepository {
         Root<Student> root = criteriaQuery.from(Student.class);
 
         // Thêm điều kiện để lọc các Major theo trainingtypeId
-        criteriaQuery.where(criteriaBuilder.equal(root.get("classId"), classId));
+        criteriaQuery.where(criteriaBuilder.equal(root.get("classId").get("id"), classId));
 
         criteriaQuery.select(root);
 

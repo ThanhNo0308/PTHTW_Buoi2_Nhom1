@@ -30,7 +30,8 @@ import org.springframework.web.servlet.view.JstlView;
 @ComponentScan(basePackages = {
     "com.ntn.controllers",
     "com.ntn.repository",
-    "com.ntn.service"
+    "com.ntn.service",
+    "com.ntn.components"
 })
 //@PropertySource("classpath:configs.properties")
 public class WebAppContextConfig implements WebMvcConfigurer {

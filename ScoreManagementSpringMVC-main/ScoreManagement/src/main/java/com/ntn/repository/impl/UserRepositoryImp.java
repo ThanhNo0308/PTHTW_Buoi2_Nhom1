@@ -4,7 +4,6 @@
  */
 package com.ntn.repository.impl;
 
-import com.ntn.pojo.Role;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
@@ -40,17 +39,6 @@ public class UserRepositoryImp implements UserRepository {
     @Autowired
     private BCryptPasswordEncoder passEncoder;
 
-//    @Override
-//    public List<User> getUsers() {
-//        Session s = this.factory.getObject().getCurrentSession();
-//        CriteriaBuilder b = s.getCriteriaBuilder();
-//        CriteriaQuery<User> q = b.createQuery(User.class);
-//        Root root = q.from(User.class);
-//        q.select(root); 
-//        Query query = s.createQuery(q);
-//        return query.getResultList(); 
-//
-//    }
     @Override
     public User getUserByUsername(String username) {
         Session s = this.factory.getObject().getCurrentSession();
@@ -140,20 +128,31 @@ public class UserRepositoryImp implements UserRepository {
     @Override
     public boolean authAdminUser(String username, String password) {
         User user = this.getUserByUsername(username);
-       if (user != null) {
-        // Lấy vai trò của người dùng từ trường roleID của user
-        Role userRole = user.getRoleID();
-        
-        if (userRole != null && userRole.getId() == 1) {
-            // Kiểm tra xem vai trò có roleId = 1 (Admin) không
-            return passEncoder.matches(password, user.getPassword());
-            }
-        else
-        {
-            return false;
+        if (user != null) {
+            return user.getRole() == User.Role.Admin && 
+                   passEncoder.matches(password, user.getPassword());
         }
+        return false;
+    }
+    
+    @Override
+    public boolean authTeacherUser(String username, String password) {
+        User user = this.getUserByUsername(username);
+        if (user != null) {
+            return user.getRole() == User.Role.Teacher && 
+                   passEncoder.matches(password, user.getPassword());
         }
-    return false;
+        return false;
+    }
+    
+    @Override
+    public boolean authStudentUser(String username, String password) {
+        User user = this.getUserByUsername(username);
+        if (user != null) {
+            return user.getRole() == User.Role.Student && 
+                   passEncoder.matches(password, user.getPassword());
+        }
+        return false;
     }
 }
 

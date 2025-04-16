@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
     <head>
         <meta charset="UTF-8">
-        <title>Quản Lý Hệ Thống Điểm</title>
+        <title>Hệ Thống Quản Lý Điểm</title>
     <th:block th:replace="base :: styles"></th:block>
 
     <style>
@@ -38,92 +39,88 @@
 </head>
 <body>
     <div th:replace="base :: header"></div>
-    <section>
-        <!-- Menu đơn giản -->
+    <div class="row" sec:authorize="hasAuthority('Admin')">
+        <div class="topnav">
+            <a class="nav-link" th:href="@{/forum}"><i class="fas fa-newspaper"></i> Diễn đàn</a>
+        </div>
+    </div>
+    <!-- Content -->
+    <div class="container mt-4">
         <div class="row">
-            <div class="topnav">
-                <a class="nav-link" th:href="@{/forum}"><i class="fas fa-newspaper"></i> Diễn đàn</a>
-            </div>
-        </div>
-
-        <!-- Content -->
-        <div class="container mt-4">
-            <div class="row">
-                <!-- Tin tức 1 -->
-                <div class="col-md-4">
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                Trường Đại học TP. Hồ Chí Minh đăng cai tổ chức Cuộc thi Tài Năng Anh ngữ lần 2 năm 2023 – Chủ đề “Em yêu Thành phố của em”
-                            </h5>
-                            <p class="card-text">
-                                Sáng ngày 27/8/2023, tại Hội trường 602 cơ sở Võ Văn Tần, Trường Đại Học Mở TP. Hồ Chí Minh đăng cai tổ chức cuộc thi Tài năng Anh ngữ lần 2 năm 2023 phối hợp cùng với Hội đồng Đội TP. Hồ Chí Minh...
-                            </p>
-                            <a href="#" class="btn btn-primary">Xem thêm</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tin tức 2 -->
-                <div class="col-md-4">
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                Hội thảo khoa học ICAAFM 2023 – A Sustainability Development Perspective
-                            </h5>
-                            <p class="card-text">
-                                Sáng ngày 25/8/2023 tại TP. Nha Trang, Trường Đại học Mở phối hợp cùng Đại học Nha Trang tổ chức hội thảo khoa học quốc tế với chủ đề ICAAFM 2023...
-                            </p>
-                            <a href="#" class="btn btn-primary">Xem thêm</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tin tức 3 -->
-                <div class="col-md-4">
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <h5 class="card-title">Thông báo tuyển sinh Đại học Chính quy năm 2022</h5>
-                            <p class="card-text">
-                                Căn cứ Thông tư số 07/VBHN-BGDĐT ngày 20/12/2021 ban hành Quy chế tuyển sinh đại học, tuyển sinh cao đẳng ngành Giáo dục mầm non...
-                            </p>
-                            <a href="#" class="btn btn-primary">Xem thêm</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tin tức thêm -->
-        <div class="container">
-            <h2>Tin Tức</h2>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="news-item">
-                        <h3>THÔNG BÁO TUYỂN SINH NGHIÊN CỨU SINH NĂM 2023 – ĐỢT 2</h3>
-                        <p>Thời gian đào tạo tiêu chuẩn của trình độ tiến sĩ là 03 năm. Nghiên cứu sinh được phép hoàn thành sớm hơn hoặc chậm hơn không quá 01 năm...</p>
+            <!-- Tin tức 1 -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            Trường Đại học TP. Hồ Chí Minh đăng cai tổ chức Cuộc thi Tài Năng Anh ngữ lần 2 năm 2023 – Chủ đề “Em yêu Thành phố của em”
+                        </h5>
+                        <p class="card-text">
+                            Sáng ngày 27/8/2023, tại Hội trường 602 cơ sở Võ Văn Tần, Trường Đại Học Mở TP. Hồ Chí Minh đăng cai tổ chức cuộc thi Tài năng Anh ngữ lần 2 năm 2023 phối hợp cùng với Hội đồng Đội TP. Hồ Chí Minh...
+                        </p>
                         <a href="#" class="btn btn-primary">Xem thêm</a>
                     </div>
                 </div>
+            </div>
 
-                <div class="col-md-4">
-                    <div class="news-item">
-                        <h3>Tuyển sinh Thạc sĩ MBA liên kết với Đại học Fresenius, Đức – Giai đoạn...</h3>
-                        <p>LIÊN KẾT VỚI ĐẠI HỌC FRESENIUS (ĐỨC) GIAI ĐOẠN 1 – ĐỢT 2 NĂM 2023</p>
+            <!-- Tin tức 2 -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            Hội thảo khoa học ICAAFM 2023 – A Sustainability Development Perspective
+                        </h5>
+                        <p class="card-text">
+                            Sáng ngày 25/8/2023 tại TP. Nha Trang, Trường Đại học Mở phối hợp cùng Đại học Nha Trang tổ chức hội thảo khoa học quốc tế với chủ đề ICAAFM 2023...
+                        </p>
                         <a href="#" class="btn btn-primary">Xem thêm</a>
                     </div>
                 </div>
+            </div>
 
-                <div class="col-md-4">
-                    <div class="news-item">
-                        <h3>Tuyển sinh đại học chính quy năm 2023</h3>
-                        <p>...</p>
+            <!-- Tin tức 3 -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Thông báo tuyển sinh Đại học Chính quy năm 2022</h5>
+                        <p class="card-text">
+                            Căn cứ Thông tư số 07/VBHN-BGDĐT ngày 20/12/2021 ban hành Quy chế tuyển sinh đại học, tuyển sinh cao đẳng ngành Giáo dục mầm non...
+                        </p>
                         <a href="#" class="btn btn-primary">Xem thêm</a>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+
+    <!-- Tin tức thêm -->
+    <div class="container">
+        <h2>Tin Tức</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="news-item">
+                    <h3>THÔNG BÁO TUYỂN SINH NGHIÊN CỨU SINH NĂM 2023 – ĐỢT 2</h3>
+                    <p>Thời gian đào tạo tiêu chuẩn của trình độ tiến sĩ là 03 năm. Nghiên cứu sinh được phép hoàn thành sớm hơn hoặc chậm hơn không quá 01 năm...</p>
+                    <a href="#" class="btn btn-primary">Xem thêm</a>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="news-item">
+                    <h3>Tuyển sinh Thạc sĩ MBA liên kết với Đại học Fresenius, Đức – Giai đoạn...</h3>
+                    <p>LIÊN KẾT VỚI ĐẠI HỌC FRESENIUS (ĐỨC) GIAI ĐOẠN 1 – ĐỢT 2 NĂM 2023</p>
+                    <a href="#" class="btn btn-primary">Xem thêm</a>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="news-item">
+                    <h3>Tuyển sinh đại học chính quy năm 2023</h3>
+                    <p>...</p>
+                    <a href="#" class="btn btn-primary">Xem thêm</a>
+                </div>
+            </div>
+        </div>
+    </div>
     <div th:replace="base :: footer"></div>
 </body>
 </html>

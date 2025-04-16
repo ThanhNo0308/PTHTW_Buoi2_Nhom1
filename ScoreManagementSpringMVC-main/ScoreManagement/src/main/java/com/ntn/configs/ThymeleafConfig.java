@@ -6,6 +6,7 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.spring6.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.spring6.view.ThymeleafViewResolver;
 import org.springframework.web.servlet.ViewResolver;
+import org.thymeleaf.extras.springsecurity6.dialect.SpringSecurityDialect;
 
 @Configuration
 public class ThymeleafConfig {
@@ -13,7 +14,7 @@ public class ThymeleafConfig {
     @Bean
     public SpringResourceTemplateResolver templateResolver() {
         SpringResourceTemplateResolver resolver = new SpringResourceTemplateResolver();
-        resolver.setPrefix("classpath:/templates/"); 
+        resolver.setPrefix("classpath:/templates/");
         resolver.setSuffix(".html");
         resolver.setTemplateMode("HTML");
         resolver.setCharacterEncoding("UTF-8");
@@ -22,9 +23,11 @@ public class ThymeleafConfig {
     }
 
     @Bean
-    public SpringTemplateEngine templateEngine(SpringResourceTemplateResolver templateResolver) {
+    public SpringTemplateEngine templateEngine(SpringResourceTemplateResolver templateResolver
+            , SpringSecurityDialect springSecurityDialect) {
         SpringTemplateEngine engine = new SpringTemplateEngine();
         engine.setTemplateResolver(templateResolver);
+        engine.addDialect(springSecurityDialect);
         return engine;
     }
 
@@ -35,4 +38,10 @@ public class ThymeleafConfig {
         resolver.setCharacterEncoding("UTF-8");
         return resolver;
     }
+
+    @Bean
+    public SpringSecurityDialect springSecurityDialect() {
+        return new SpringSecurityDialect();
+    }
+
 }

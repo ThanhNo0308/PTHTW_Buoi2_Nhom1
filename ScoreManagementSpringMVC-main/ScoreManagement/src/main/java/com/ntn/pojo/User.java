@@ -11,6 +11,8 @@ import java.util.List;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 import jakarta.persistence.FetchType;
 
@@ -52,36 +54,51 @@ import jakarta.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "User.findByActive", query = "SELECT u FROM User u WHERE u.active = :active")})
 public class User implements Serializable {
 
+    public enum Role {
+        Admin,
+        Teacher,
+        Student
+    }
+
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
     @Column(name = "Id")
     private Integer id;
+    @Column(name = "Gender")
+    private Short gender;
+    @Column(name = "Birthdate")
+    @Temporal(TemporalType.DATE)
+    private Date birthdate;
+    @OneToMany(mappedBy = "userId")
+    @JsonIgnore
+    private List<Forumcomment> forumcommentList;
+    @OneToMany(mappedBy = "userId")
+    @JsonIgnore
+    private List<Forum> forumList;
     @Size(max = 125)
     @Column(name = "Name")
     private String name;
-    @Column(name = "Gender")
-    private Short gender;
     @Size(max = 65)
     @Column(name = "IdentifyCard")
     private String identifyCard;
     @Size(max = 50)
     @Column(name = "Hometown")
     private String hometown;
-    @Column(name = "Birthdate")
-    @Temporal(TemporalType.DATE)
-    private Date birthdate;
     // @Pattern(regexp="^\\(?(\\d{3})\\)?[- ]?(\\d{3})[- ]?(\\d{4})$", message="Invalid phone/fax format, should be as xxx-xxx-xxxx")//if the field contains phone or fax number consider using this annotation to enforce field validation
     @Size(max = 50)
     @Column(name = "Phone")
     private String phone;
+    // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
+    @Size(max = 100)
+    @Column(name = "Email")
+    private String email;
     @Size(max = 50)
     @Column(name = "Username")
     private String username;
     @Size(max = 255)
     @Column(name = "Password")
-//    @JsonIgnore
     private String password;
     @Size(max = 500)
     @Column(name = "Image")
@@ -89,15 +106,9 @@ public class User implements Serializable {
     @Size(max = 25)
     @Column(name = "Active")
     private String active;
-    @OneToMany(mappedBy = "userId")
-    @JsonIgnore
-    private List<Forumcomment> forumcommentList;
-    @OneToMany(mappedBy = "userId")
-    @JsonIgnore
-    private List<Forum> forumList;
-    @JoinColumn(name = "RoleID", referencedColumnName = "Id")
-    @ManyToOne
-    private Role roleID;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "Role")
+    private Role role;
 
     public User() {
     }
@@ -114,20 +125,71 @@ public class User implements Serializable {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public Short getGender() {
         return gender;
     }
 
     public void setGender(Short gender) {
         this.gender = gender;
+    }
+
+    public Date getBirthdate() {
+        return birthdate;
+    }
+
+    public void setBirthdate(Date birthdate) {
+        this.birthdate = birthdate;
+    }
+
+    @XmlTransient
+    public List<Forumcomment> getForumcommentList() {
+        return forumcommentList;
+    }
+
+    public void setForumcommentList(List<Forumcomment> forumcommentList) {
+        this.forumcommentList = forumcommentList;
+    }
+
+    @XmlTransient
+    public List<Forum> getForumList() {
+        return forumList;
+    }
+
+    public void setForumList(List<Forum> forumList) {
+        this.forumList = forumList;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 0;
+        hash += (id != null ? id.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        // TODO: Warning - this method won't work in the case the id fields are not set
+        if (!(object instanceof User)) {
+            return false;
+        }
+        User other = (User) object;
+        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "com.hcmou.pojo.User[ id=" + id + " ]";
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getIdentifyCard() {
@@ -146,20 +208,20 @@ public class User implements Serializable {
         this.hometown = hometown;
     }
 
-    public Date getBirthdate() {
-        return birthdate;
-    }
-
-    public void setBirthdate(Date birthdate) {
-        this.birthdate = birthdate;
-    }
-
     public String getPhone() {
         return phone;
     }
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getUsername() {
@@ -194,56 +256,11 @@ public class User implements Serializable {
         this.active = active;
     }
 
-    @XmlTransient
-    public List<Forumcomment> getForumcommentList() {
-        return forumcommentList;
+    public Role getRole() {
+        return role;
     }
 
-    public void setForumcommentList(List<Forumcomment> forumcommentList) {
-        this.forumcommentList = forumcommentList;
+    public void setRole(Role role) {
+        this.role = role;
     }
-
-    @XmlTransient
-    public List<Forum> getForumList() {
-        return forumList;
-    }
-
-    public void setForumList(List<Forum> forumList) {
-        this.forumList = forumList;
-    }
-
-    public Role getRoleID() {
-        return roleID;
-    }
-
-    public void setRoleID(Role roleID) {
-        this.roleID = roleID;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 0;
-        hash += (id != null ? id.hashCode() : 0);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof User)) {
-            return false;
-        }
-        User other = (User) object;
-        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return "com.hcmou.pojo.User[ id=" + id + " ]";
-    }
-
-    
 }

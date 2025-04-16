@@ -1,16 +1,3 @@
-/*
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
-*/
-/* 
-<<<<<<< HEAD
-    Created on : Aug 24, 2023, 3:17:00 PM
-    Author     : vhuunghia
-=======
-    Created on : Sep 2, 2023, 3:09:58 PM
-    Author     : nguye
->>>>>>> 2f165ec42f819b7f800bac496f6188f9cda59c09
-*/
 * {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -19,13 +6,12 @@ body {
   background-color: rgba(255, 255, 255, 0.858);
 }
 
-/* phan chinh sửa css chung */
+
 .scale-1_2:hover {
   transform: scale(1.2);
   transition: 0.5s;
 }
 
-/*  */
 
 a {
   color: black !important;
@@ -76,8 +62,9 @@ a {
 }
 
 .nav-item a:hover {
-  transform: scale(1.2);
-  transition: 0.5s;
+  transform: none;
+  transition: none;
+  background-color: #f8f9fa;
 }
 
 .nav-item i {
@@ -96,11 +83,18 @@ a {
 .navbar {
   padding-left: 10px;
   padding-right: 10px;
-  
+  position: relative;
+  z-index: 1030;
 }
 
 .navbar-collapse {
   margin-left: 5%;
+}
+
+.sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
 }
 
 
@@ -160,5 +154,43 @@ a {
 
 div.row{
     height: auto !important;
+}
+
+.dropdown-menu {
+    position: absolute;
+    z-index: 1050 !important;
+    background: white;
+    border: 1px solid rgba(0,0,0,.15);
+    border-radius: 0.25rem;
+    padding: 0.5rem 0;
+    margin-top: 0;
+    min-width: 10rem;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.175);
+    transform: none !important;
+}
+
+.nav-item.dropdown {
+    position: static;
+}
+
+.nav-item.dropdown:hover .dropdown-menu {
+    display: block;
+    overflow: hidden;
+    left: auto;
+    transform: none !important;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 0.25rem 1rem;
+    clear: both;
+    font-weight: 300;
+    text-align: inherit;
+    border: 0;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
 }
 
