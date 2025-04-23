@@ -35,16 +35,16 @@ import jakarta.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Trainingtype.findByTrainingTypeName", query = "SELECT t FROM Trainingtype t WHERE t.trainingTypeName = :trainingTypeName")})
 public class Trainingtype implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-    @Id
-    @Basic(optional = false)
-    @NotNull
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id")
-    private Integer id;
     @Size(max = 125)
     @Column(name = "TrainingTypeName")
     private String trainingTypeName;
+
+    private static final long serialVersionUID = 1L;
+    @Id
+    @Basic(optional = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "Id")
+    private Integer id;
     @OneToMany(mappedBy = "trainingTypeId")
     @JsonIgnore
     private List<Major> majorList;
@@ -64,13 +64,6 @@ public class Trainingtype implements Serializable {
         this.id = id;
     }
 
-    public String getTrainingTypeName() {
-        return trainingTypeName;
-    }
-
-    public void setTrainingTypeName(String trainingTypeName) {
-        this.trainingTypeName = trainingTypeName;
-    }
 
     @XmlTransient
     public List<Major> getMajorList() {
@@ -104,6 +97,14 @@ public class Trainingtype implements Serializable {
     @Override
     public String toString() {
         return trainingTypeName;
+    }
+
+    public String getTrainingTypeName() {
+        return trainingTypeName;
+    }
+
+    public void setTrainingTypeName(String trainingTypeName) {
+        this.trainingTypeName = trainingTypeName;
     }
     
 }

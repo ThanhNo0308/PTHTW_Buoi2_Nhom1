@@ -18,6 +18,10 @@ public interface SubjectRepository {
     List<Subject> getSubjects();
 
     List<Subject> getListSubjectById(List<Integer> listSubjectID);
+    
+    List<Subject> getSubjectsByKeyword(String keyword);
+    List<Subject> getSubjectsByDepartmentId(Integer departmentId);
+    List<Subject> getSubjectsByDepartmentIdAndKeyword(Integer departmentId, String keyword);
 
     List<Subjectteacher> getSubjectTeacherByTeacherID(int TeacherID);
 
@@ -36,4 +40,7 @@ public interface SubjectRepository {
     boolean addOrUpdateSubject(Subject subject);
     
     boolean deleteSubject(int subjectId);
+    
+    Subject getSubjectById(int subjectId);
+    
 }

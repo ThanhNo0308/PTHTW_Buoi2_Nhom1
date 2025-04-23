@@ -37,16 +37,16 @@ import jakarta.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Major.findByMajorName", query = "SELECT m FROM Major m WHERE m.majorName = :majorName")})
 public class Major implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-    @Id
-    @Basic(optional = false)
-    @NotNull
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id")
-    private Integer id;
     @Size(max = 255)
     @Column(name = "MajorName")
     private String majorName;
+
+    private static final long serialVersionUID = 1L;
+    @Id
+    @Basic(optional = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "Id")
+    private Integer id;
     @JoinColumn(name = "DepartmentId", referencedColumnName = "Id")
     @ManyToOne
     private Department departmentId;
@@ -72,13 +72,6 @@ public class Major implements Serializable {
         this.id = id;
     }
 
-    public String getMajorName() {
-        return majorName;
-    }
-
-    public void setMajorName(String majorName) {
-        this.majorName = majorName;
-    }
 
     public Department getDepartmentId() {
         return departmentId;
@@ -128,6 +121,14 @@ public class Major implements Serializable {
     @Override
     public String toString() {
         return majorName;
+    }
+
+    public String getMajorName() {
+        return majorName;
+    }
+
+    public void setMajorName(String majorName) {
+        this.majorName = majorName;
     }
     
 }

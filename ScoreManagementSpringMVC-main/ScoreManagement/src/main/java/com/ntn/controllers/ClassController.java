@@ -1,36 +1,227 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.ntn.controllers;
 
 import com.ntn.pojo.Class;
-import com.ntn.pojo.Department;
-import com.ntn.pojo.Trainingtype;
+import com.ntn.pojo.Major;
+import com.ntn.pojo.Student;
+import com.ntn.pojo.Teacher;
 import com.ntn.service.ClassService;
-import com.ntn.service.DepartmentService;
+import com.ntn.service.MajorService;
+import com.ntn.service.StudentService;
+import com.ntn.service.TeacherService;
 import com.ntn.service.TrainingTypeService;
+
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-/**
- *
- * @author nguye
- */
+import jakarta.validation.Valid;
+import java.beans.PropertyEditorSupport;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.bind.WebDataBinder;
+
 @Controller
 public class ClassController {
+
     @Autowired
-    private ClassService classServ;
-   
-    @GetMapping("/classes")
-    public String list(Model model, @RequestParam("majorId") int majorId) {
-        List<Class> classes = classServ.getClassesByMajorId(majorId);
+    private ClassService classService;
+
+    @Autowired
+    private MajorService majorService;
+
+    @Autowired
+    private TeacherService teacherService;
+
+    @Autowired
+    private StudentService studentService;
+
+    @Autowired
+    private TrainingTypeService trainingTypeService;
+
+    @PreAuthorize("hasAuthority('Admin')")
+    @GetMapping("/admin/classes")
+    public String getClasses(
+            @RequestParam(name = "majorId", required = false) Integer majorId,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            Model model) {
+
+        List<Class> classes;
+        if (majorId != null) {
+            classes = classService.getClassesByMajorId(majorId);
+            model.addAttribute("selectedMajor", majorService.getMajorById(majorId));
+        } else if (keyword != null && !keyword.isEmpty()) {
+            classes = classService.getClassesByKeyword(keyword);
+        } else {
+            classes = classService.getClasses();
+        }
+
         model.addAttribute("classes", classes);
-        return "class";
+        model.addAttribute("majors", majorService.getMajors());
+        return "/admin/classes";
     }
+
+    @PreAuthorize("hasAuthority('Admin')")
+    @GetMapping("/admin/class-add")
+    public String classAddForm(Model model) {
+        model.addAttribute("class", new Class());
+        List<Major> majors = majorService.getMajors();
+        model.addAttribute("majors", majors);
+        model.addAttribute("teachers", teacherService.getTeachers());
+        return "/admin/class-add";
+    }
+
+    @PreAuthorize("hasAuthority('Admin')")
+    @PostMapping("/admin/class-add")
+    public String addClass(
+            @ModelAttribute("class") Class classObj,
+            BindingResult bindingResult,
+            @RequestParam(value = "majorId.id", required = false) Integer majorId,
+            @RequestParam(value = "teacherId.id", required = false) Integer teacherId,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            // Kiểm tra lỗi validation
+            if (bindingResult.hasErrors()) {
+                System.out.println("VALIDATION ERRORS: " + bindingResult.getAllErrors());
+                model.addAttribute("majors", majorService.getMajors());
+                model.addAttribute("teachers", teacherService.getTeachers());
+                return "admin/class-add";
+            }
+
+            // Xử lý Major và Teacher thủ công
+            if (majorId != null) {
+                Major major = majorService.getMajorById(majorId);
+                classObj.setMajorId(major);
+            }
+
+            if (teacherId != null) {
+                Teacher teacher = teacherService.getTeacherById(teacherId);
+                classObj.setTeacherId(teacher);
+            }
+
+            // Lưu lớp học
+            boolean success = classService.addOrUpdateClass(classObj);
+
+            if (success) {
+                redirectAttributes.addFlashAttribute("successMessage", "Thêm lớp học thành công");
+                return "redirect:/admin/classes";
+            } else {
+                model.addAttribute("errorMessage", "Không thể thêm lớp học");
+                model.addAttribute("majors", majorService.getMajors());
+                model.addAttribute("teachers", teacherService.getTeachers());
+                return "admin/class-add";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            model.addAttribute("majors", majorService.getMajors());
+            model.addAttribute("teachers", teacherService.getTeachers());
+            return "admin/class-add";
+        }
+    }
+
+    @PreAuthorize("hasAuthority('Admin')")
+    @GetMapping("/admin/class-update/{id}")
+    public String classUpdateForm(@PathVariable("id") int classId, Model model) {
+        Class classObj = classService.getClassById(classId);
+
+        if (classObj == null) {
+            return "redirect:/admin/classes?error=class-not-found";
+        }
+
+        List<Major> majors = majorService.getMajors();
+        model.addAttribute("majors", majors);
+        model.addAttribute("class", classObj);
+        model.addAttribute("teachers", teacherService.getTeachers());
+        return "/admin/class-update";
+    }
+
+    @PreAuthorize("hasAuthority('Admin')")
+    @PostMapping("/admin/class-update")
+    public String classUpdate(
+            @Valid @ModelAttribute("class") Class classObj,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("majors", majorService.getMajors());
+            model.addAttribute("teachers", teacherService.getTeachers());
+            return "/admin/class-update";
+        }
+
+        boolean success = classService.addOrUpdateClass(classObj);
+
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật lớp học thành công");
+            return "redirect:/admin/classes";
+        } else {
+            model.addAttribute("errorMessage", "Không thể cập nhật lớp học");
+            model.addAttribute("majors", majorService.getMajors());
+            model.addAttribute("teachers", teacherService.getTeachers());
+            return "/admin/class-update";
+        }
+    }
+
+    @PreAuthorize("hasAuthority('Admin')")
+    @GetMapping("/admin/class-delete/{id}")
+    public String deleteClass(@PathVariable("id") int id, RedirectAttributes redirectAttributes) {
+        try {
+            classService.deleteClass(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Lớp học đã được xóa thành công.");
+        } catch (DataIntegrityViolationException e) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Không thể xóa lớp học này vì đã có sinh viên trong lớp. "
+                    + "Hãy chuyển sinh viên sang lớp khác trước khi xóa.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi xóa lớp học: " + e.getMessage());
+        }
+
+        return "redirect:/admin/classes";
+    }
+
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        // Xử lý Major
+        binder.registerCustomEditor(Major.class, "majorId", new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) {
+                if (text == null || text.isEmpty()) {
+                    setValue(null);
+                    return;
+                }
+                try {
+                    int id = Integer.parseInt(text);
+                    Major major = majorService.getMajorById(id);
+                    setValue(major);
+                } catch (NumberFormatException e) {
+                    setValue(null);
+                }
+            }
+        });
+
+        // Xử lý Teacher
+        binder.registerCustomEditor(Teacher.class, "teacherId", new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) {
+                if (text == null || text.isEmpty()) {
+                    setValue(null);
+                    return;
+                }
+                try {
+                    int id = Integer.parseInt(text);
+                    Teacher teacher = teacherService.getTeacherById(id);
+                    setValue(teacher);
+                } catch (NumberFormatException e) {
+                    setValue(null);
+                }
+            }
+        });
+    }
+
 }

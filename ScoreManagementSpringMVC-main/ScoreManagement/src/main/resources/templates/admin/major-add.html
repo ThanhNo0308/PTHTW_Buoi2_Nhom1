@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>Thêm ngành học mới</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+    
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Thêm ngành học mới</h4>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        
+                        <form th:action="@{/admin/major-add}" method="post" th:object="${major}">
+                            <div class="mb-3">
+                                <label for="majorName" class="form-label">Tên ngành <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="majorName" th:field="*{majorName}" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('majorName')}" th:errors="*{majorName}"></div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="departmentId" class="form-label">Khoa <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="departmentId" name="departmentId.id" required>
+                                        <option value="">-- Chọn khoa --</option>
+                                        <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.departmentName}"></option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="trainingTypeId" class="form-label">Hệ đào tạo <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="trainingTypeId" name="trainingTypeId.id" required>
+                                        <option value="">-- Chọn hệ đào tạo --</option>
+                                        <option th:each="type : ${trainingTypes}" th:value="${type.id}" th:text="${type.trainingTypeName}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="text-end mt-4">
+                                <a th:href="@{/admin/majors}" class="btn btn-secondary me-2">Hủy</a>
+                                <button type="submit" class="btn btn-primary">Lưu ngành học</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="base :: footer"></div>
+</body>
+</html>

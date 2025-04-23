@@ -18,18 +18,18 @@ import java.util.stream.Collectors;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- *
- * @author nguye
- */
 @Repository
 @Transactional
 public class SubjectRepositoryImpl implements SubjectRepository {
@@ -73,6 +73,102 @@ public class SubjectRepositoryImpl implements SubjectRepository {
 
         List<Subject> resultList = q.getResultList();
         return resultList;
+    }
+
+    @Override
+    public List<Subject> getSubjectsByDepartmentId(Integer departmentId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Subject> query = builder.createQuery(Subject.class);
+        Root<Subject> root = query.from(Subject.class);
+
+        query.select(root);
+
+        if (departmentId != null) {
+            query.where(builder.equal(root.get("departmentID").get("id"), departmentId));
+        }
+
+        query.orderBy(builder.asc(root.get("subjectName")));
+
+        return session.createQuery(query).getResultList();
+    }
+
+    @Override
+    public List<Subject> getSubjectsByDepartmentIdAndKeyword(Integer departmentId, String keyword) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Subject> query = builder.createQuery(Subject.class);
+        Root<Subject> root = query.from(Subject.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        if (departmentId != null) {
+            predicates.add(builder.equal(root.get("departmentID").get("id"), departmentId));
+        }
+
+        if (keyword != null && !keyword.isEmpty()) {
+            String pattern = "%" + keyword.toLowerCase() + "%";
+
+            // Tìm kiếm theo tên môn học
+            Predicate nameLike = builder.like(builder.lower(root.get("subjectName")), pattern);
+
+            // Thêm điều kiện tìm theo mã môn nếu keyword là số
+            try {
+                Integer codeValue = Integer.parseInt(keyword.trim());
+                Predicate codeEqual = builder.equal(root.get("id"), codeValue);
+
+                // Thêm điều kiện OR giữa tìm theo tên và tìm theo mã
+                predicates.add(builder.or(nameLike, codeEqual));
+            } catch (NumberFormatException e) {
+                // Nếu không phải số, chỉ tìm theo tên
+                predicates.add(nameLike);
+            }
+        }
+
+        if (!predicates.isEmpty()) {
+            query.where(builder.and(predicates.toArray(new Predicate[0])));
+        }
+
+        query.orderBy(builder.asc(root.get("subjectName")));
+
+        return session.createQuery(query).getResultList();
+    }
+
+    @Override
+    public List<Subject> getSubjectsByKeyword(String keyword) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Subject> query = builder.createQuery(Subject.class);
+        Root<Subject> root = query.from(Subject.class);
+
+        query.select(root);
+
+        if (keyword != null && !keyword.isEmpty()) {
+            String pattern = "%" + keyword.toLowerCase() + "%";
+
+            // Predicate cho tìm kiếm theo tên (sử dụng LIKE)
+            Predicate nameLike = builder.like(builder.lower(root.get("subjectName")), pattern);
+
+            // Predicate cho tìm kiếm theo mã môn học (kiểu Integer)
+            Predicate codeEqual = null;
+            try {
+                // Thử chuyển đổi keyword thành Integer để tìm theo mã môn
+                Integer codeValue = Integer.parseInt(keyword.trim());
+                codeEqual = builder.equal(root.get("id"), codeValue);
+            } catch (NumberFormatException e) {
+            }
+
+            // Kết hợp các điều kiện tìm kiếm
+            if (codeEqual != null) {
+                query.where(builder.or(nameLike, codeEqual));
+            } else {
+                query.where(nameLike);
+            }
+        }
+
+        query.orderBy(builder.asc(root.get("subjectName")));
+
+        return session.createQuery(query).getResultList();
     }
 
     @Override
@@ -222,34 +318,54 @@ public class SubjectRepositoryImpl implements SubjectRepository {
 
     @Override
     public boolean addOrUpdateSubject(Subject subject) {
-        Session s = this.factory.getObject().getCurrentSession();
+        Session session = this.factory.getObject().getCurrentSession();
         try {
-            if (subject.getId() == null) {
-                s.save(subject);
-            } else {
-                s.update(subject);
+            // Kiểm tra và cập nhật Department nếu cần
+            if (subject.getDepartmentID() != null && subject.getDepartmentID().getId() != null) {
+                Department dept = session.get(Department.class, subject.getDepartmentID().getId());
+                subject.setDepartmentID(dept);
             }
 
+            // Lưu hoặc cập nhật môn học
+            if (subject.getId() == null) {
+                // Thêm mới - không cần ID
+                session.persist(subject);
+            } else {
+                // Cập nhật - đã có ID
+                session.merge(subject);
+            }
+
+            session.flush();
+
+            System.out.println("Saved subject with ID: " + subject.getId());
             return true;
-        } catch (HibernateException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
+            System.err.println("Error saving subject: " + ex.getMessage());
             return false;
         }
     }
 
     @Override
     public boolean deleteSubject(int subjectId) {
-        Session s = this.factory.getObject().getCurrentSession();
-        Subject subjectToDelete = s.get(Subject.class, subjectId);
-        if (subjectToDelete != null) {
-            try {
-                s.delete(subjectToDelete);
-                return true; // Trả về true nếu xóa thành công
-            } catch (HibernateException ex) {
-                ex.printStackTrace();
-            }
+        Session session = this.factory.getObject().getCurrentSession();
+
+        try {
+            jakarta.persistence.Query query = session.createNativeQuery("DELETE FROM subject WHERE Id = :id");
+            query.setParameter("id", subjectId);
+
+            int result = query.executeUpdate();
+            return result > 0;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
         }
-        return false; // Trả về false nếu không tìm thấy Môn học để xóa hoặc có lỗi xảy ra 
+    }
+
+    @Override
+    public Subject getSubjectById(int subjectId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        return session.get(Subject.class, subjectId);
     }
 
 }

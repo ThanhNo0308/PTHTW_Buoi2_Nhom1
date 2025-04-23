@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Diễn đàn trao đổi học tập</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+    <div class="container mt-4 mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-plus-circle"></i> Thêm bài đăng mới</h4>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/addForum}" th:object="${forum}" method="post" class="needs-validation" novalidate>
+                            <input type="hidden" th:field="*{id}" />
+
+                            <div th:if="${#fields.hasErrors()}" class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle me-2"></i> Vui lòng sửa các lỗi sau:
+                                <ul>
+                                    <li th:each="err : ${#fields.errors()}" th:text="${err}"></li>
+                                </ul>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="title" class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-heading"></i></span>
+                                    <input type="text" th:field="*{title}" class="form-control" id="title" placeholder="Nhập tiêu đề bài đăng" required />
+                                </div>
+                                <div th:if="${#fields.hasErrors('title')}" th:errors="*{title}" class="text-danger mt-1"></div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="description" class="form-label">Mô tả ngắn <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-align-left"></i></span>
+                                    <textarea th:field="*{description}" class="form-control" id="description" rows="2" placeholder="Mô tả ngắn gọn về bài đăng" required></textarea>
+                                </div>
+                                <div th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="text-danger mt-1"></div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="content" class="form-label">Nội dung chi tiết <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-paragraph"></i></span>
+                                    <textarea th:field="*{content}" class="form-control" id="content" rows="5" placeholder="Nội dung chi tiết của bài đăng" required></textarea>
+                                </div>
+                                <div th:if="${#fields.hasErrors('content')}" th:errors="*{content}" class="text-danger mt-1"></div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="subjTeachSelect" class="form-label">Giảng viên - Môn học <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-chalkboard-teacher"></i></span>
+                                    <select class="form-select" th:field="*{subjectTeacherId.id}" id="subjTeachSelect" required>
+                                        <option value="" disabled selected>-- Chọn giảng viên và môn học --</option>
+                                        <option th:each="subjteach : ${subjteachs}"
+                                                th:value="${subjteach.id}"
+                                                th:text="${subjteach.teacherId.teacherName + ' - ' + subjteach.subjectId.subjectName}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="form-text text-muted">Chọn môn học và giảng viên liên quan đến bài đăng</div>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                                <a th:href="@{/admin/forum}" class="btn btn-secondary me-md-2">
+                                    <i class="fas fa-arrow-left"></i> Quay lại
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Lưu bài đăng
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:replace="base :: footer"></div>
+</body>
+</html>

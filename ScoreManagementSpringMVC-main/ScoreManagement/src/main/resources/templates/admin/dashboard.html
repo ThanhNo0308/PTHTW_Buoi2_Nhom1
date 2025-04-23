@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+    <head>
+        <title>Hệ thống quản lý điểm</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+    <div>
+        <div class="container mt-4">
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Sinh viên</h5>
+                            <h2 class="display-4" th:text="${studentCount}">0</h2>
+                        </div>
+                        <div class="card-footer d-flex align-items-center justify-content-between">
+                            <a class="text-white stretched-link" th:href="@{/admin/students}">Xem chi tiết</a>
+                            <i class="fas fa-angle-right"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card bg-success text-white mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Giảng viên</h5>
+                            <h2 class="display-4" th:text="${teacherCount}">0</h2>
+                        </div>
+                        <div class="card-footer d-flex align-items-center justify-content-between">
+                            <a class="text-white stretched-link" th:href="@{/admin/teachers}">Xem chi tiết</a>
+                            <i class="fas fa-angle-right"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card bg-info text-white mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Lớp học</h5>
+                            <h2 class="display-4" th:text="${classCount}">0</h2>
+                        </div>
+                        <div class="card-footer d-flex align-items-center justify-content-between">
+                            <a class="text-white stretched-link" th:href="@{/admin/classes}">Xem chi tiết</a>
+                            <i class="fas fa-angle-right"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Ngành học</h5>
+                            <h2 class="display-4" th:text="${majorCount}">0</h2>
+                        </div>
+                        <div class="card-footer d-flex align-items-center justify-content-between">
+                            <a class="text-white stretched-link" th:href="@{/admin/majors}">Xem chi tiết</a>
+                            <i class="fas fa-angle-right"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Khoa</h5>
+                            <h2 class="display-4" th:text="${departmentCount}">0</h2>
+                        </div>
+                        <div class="card-footer d-flex align-items-center justify-content-between">
+                            <a class="text-white stretched-link" th:href="@{/admin/departments}">Xem chi tiết</a>
+                            <i class="fas fa-angle-right"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-purple text-white mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Đăng ký học</h5>
+                            <h2 class="display-4" th:text="${enrollmentCount}">0</h2>
+                        </div>
+                        <div class="card-footer d-flex align-items-center justify-content-between">
+                            <a class="text-white stretched-link" th:href="@{/admin/enrollment}">Xem chi tiết</a>
+                            <i class="fas fa-angle-right"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-blackblue text-white mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Loại đào tạo</h5>
+                            <h2 class="display-4" th:text="${trainingTypeCount}">0</h2>
+                        </div>
+                        <div class="card-footer d-flex align-items-center justify-content-between">
+                            <a class="text-white stretched-link" th:href="@{/admin/training-types}">Xem chi tiết</a>
+                            <i class="fas fa-angle-right"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-orange text-white mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Tài khoản</h5>
+                            <h2 class="display-4" th:text="${accountCount}">0</h2>
+                        </div>
+                        <div class="card-footer d-flex align-items-center justify-content-between">
+                            <a class="text-white stretched-link" th:href="@{/admin/accounts}">Xem chi tiết</a>
+                            <i class="fas fa-angle-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-4" sec:authorize="hasAuthority('Admin')">
+                <div class="col-12">
+                    <div class="card shadow border-0 forum-card">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="forum-icon me-4">
+                                <i class="fas fa-comments fa-3x text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h4 class="card-title fw-bold mb-2">Quản lý diễn đàn trao đổi học tập</h4>
+                                <p class="card-text text-muted mb-3">Không gian trao đổi học tập, giải đáp thắc mắc giữa giảng viên và sinh viên.</p>
+                            </div>
+                            <div>
+                                <a th:href="@{/admin/forum}" class="btn btn-primary">
+                                    <i class="fas fa-sign-in-alt me-2"></i> Truy cập diễn đàn
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-cogs mr-1"></i>
+                            Quản lý hệ thống
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <a th:href="@{/admin/send-notification}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-bell mr-2"></i> Gửi thông báo cho sinh viên
+                                </a>
+                                <a th:href="@{/admin/enrollment}" class="list-group-item list-group-item-action">
+                                    <i class="far fa-registered"></i> Quản lý đăng ký học
+                                </a>
+                                <a th:href="@{/admin/school-years}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-calendar-alt mr-2"></i> Quản lý năm học
+                                </a>
+                                <a th:href="@{/admin/subjects}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-book mr-2"></i> Quản lý môn học
+                                </a>
+                                <a th:href="@{/admin/accounts}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-users-cog"></i> Quản lý tài khoản
+                                </a>
+                                <a th:href="@{/admin/subjTeach}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-chalkboard-teacher mr-2"></i> Phân công giảng dạy
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-graduation-cap mr-1"></i>
+                            Quản lý đào tạo
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <a th:href="@{/admin/training-types}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-place-of-worship"></i> Quản lý loại đào tạo
+                                </a>
+                                <a th:href="@{/admin/departments}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-globe"></i> Quản lý khoa
+                                </a>
+                                <a th:href="@{/admin/majors}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-university mr-2"></i> Quản lý ngành học
+                                </a>
+                                <a th:href="@{/admin/classes}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-users mr-2"></i> Quản lý lớp học
+                                </a>
+                                <a th:href="@{/admin/students}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-user-graduate mr-2"></i> Quản lý sinh viên
+                                </a>
+                                <a th:href="@{/admin/teachers}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-chalkboard-teacher mr-2"></i> Quản lý giảng viên
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:replace="base :: footer"></div>
+</body>
+</html>

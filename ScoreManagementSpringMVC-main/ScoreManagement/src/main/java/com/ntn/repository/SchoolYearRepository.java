@@ -9,14 +9,33 @@ import java.util.List;
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-
 /**
  *
  * @author vhuunghia
  */
 public interface SchoolYearRepository {
+
     List<Schoolyear> getListSchoolYear(String currentYear);
+
     Schoolyear getSchoolYearById(int SchoolYearId);
-    Subjectteacher getSubJectTeacherById(int subJectTeacherId);
-    Typescore getScoreTypeByName(String typeScore);
+
+    int getCurrentSchoolYearId();
+
+    List<Schoolyear> getAllSchoolYears();
+
+    Subjectteacher getSubJectTeacherById(int id);
+
+    Typescore getScoreTypeByName(String name);
+
+    boolean addOrUpdateSchoolYear(Schoolyear schoolYear);
+
+    boolean deleteSchoolYear(int schoolYearId);
+
+    List<Schoolyear> getSchoolYearsByNameYear(String nameYear);
+
+    List<Schoolyear> getSchoolYearsBySemester(String semesterName);
+
+    List<Schoolyear> getSchoolYearsByNameYearAndSemester(String nameYear, String semesterName);
+    
+    boolean hasRelatedData(int schoolYearId);
 }

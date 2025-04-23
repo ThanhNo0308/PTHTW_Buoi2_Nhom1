@@ -17,8 +17,10 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class MajorServiceImpl implements MajorService {
+
     @Autowired
     private MajorRepository majorRepo;
+
     @Override
     public List<Major> getMajorsByDepartmentId(int departmentId) {
         return this.majorRepo.getMajorsByDepartmentId(departmentId);
@@ -27,6 +29,11 @@ public class MajorServiceImpl implements MajorService {
     @Override
     public List<Major> getMajorsByTrainingTypeId(int trainingtypeId) {
         return this.majorRepo.getMajorsByTrainingTypeId(trainingtypeId);
+    }
+    
+    @Override
+    public List<Major> getMajorsByDepartmentAndTrainingType(Integer departmentId, Integer trainingTypeId) {
+        return this.majorRepo.getMajorsByDepartmentAndTrainingType(departmentId, trainingTypeId);
     }
 
     @Override
@@ -39,4 +46,18 @@ public class MajorServiceImpl implements MajorService {
         return this.majorRepo.deleteMajor(majorId);
     }
 
+    @Override
+    public int countMajors() {
+        return this.majorRepo.countMajors();
+    }
+
+    @Override
+    public List<Major> getMajors() {
+        return this.majorRepo.getMajors();
+    }
+
+    @Override
+    public Major getMajorById(int majorId) {
+        return this.majorRepo.getMajorById(majorId);
+    }
 }

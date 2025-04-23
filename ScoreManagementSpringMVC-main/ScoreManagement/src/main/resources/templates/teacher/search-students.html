@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>Tìm kiếm sinh viên</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+    
+    <div class="container mt-4">
+        <h2 class="mb-4">
+            <i class="fas fa-search"></i> Tìm kiếm sinh viên
+        </h2>
+        
+        <!-- Form tìm kiếm -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/teacher/search-students}" method="post" class="row g-3">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" name="searchQuery" th:value="${searchQuery}" 
+                               placeholder="Nhập từ khóa tìm kiếm" required>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="searchType" class="form-select">
+                            <option value="code" th:selected="${searchType == 'code'}">Tìm theo mã sinh viên</option>
+                            <option value="name" th:selected="${searchType == 'name'}">Tìm theo tên sinh viên</option>
+                            <option value="class" th:selected="${searchType == 'class'}">Tìm theo lớp</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> Tìm kiếm
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Kết quả tìm kiếm -->
+        <div class="card shadow" th:if="${students != null}">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Kết quả tìm kiếm</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(students)}" class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Không tìm thấy sinh viên phù hợp với từ khóa.
+                </div>
+                
+                <div th:if="${not #lists.isEmpty(students)}" class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Mã SV</th>
+                                <th>Họ và tên</th>
+                                <th>Lớp</th>
+                                <th>Email</th>
+                                <th>Số điện thoại</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="student : ${students}">
+                                <td th:text="${student.studentCode}"></td>
+                                <td th:text="${student.firstName + ' ' + student.lastName}"></td>
+                                <td th:text="${student.classId.className}"></td>
+                                <td th:text="${student.email}"></td>
+                                <td th:text="${student.phone}"></td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{'/teacher/student-detail/' + ${student.studentCode}}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-user"></i> Chi tiết
+                                        </a>
+                                        <a th:href="@{'/teacher/student-scores/' + ${student.studentCode}}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-chart-bar"></i> Xem điểm
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="base :: footer"></div>
+</body>
+</html>

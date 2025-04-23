@@ -8,6 +8,7 @@ import com.ntn.pojo.Student;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
 import com.ntn.repository.UserRepository;
+import jakarta.persistence.NoResultException;
 import java.util.List;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -41,22 +42,37 @@ public class UserRepositoryImp implements UserRepository {
 
     @Override
     public User getUserByUsername(String username) {
-        Session s = this.factory.getObject().getCurrentSession();
-        Query q = s.createQuery("FROM User WHERE username=:un");
-        q.setParameter("un", username);
+        Session session = this.factory.getObject().getCurrentSession();
+        String hql = "FROM User u WHERE u.username = :username";
+        Query query = session.createQuery(hql);
+        query.setParameter("username", username);
 
-        List<User> users = q.getResultList();
-        if (users.isEmpty()) {
-            return null; // Không tìm thấy người dùng, trả về null
-        } else {
-            return users.get(0); // Trả về người dùng đầu tiên trong danh sách (có thể chỉ có 1)
+        try {
+            return (User) query.getSingleResult();
+        } catch (NoResultException ex) {
+            return null;
+        }
+    }
+
+    @Override
+    public User getUserByEmail(String email) {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<User> query = builder.createQuery(User.class);
+            Root<User> root = query.from(User.class);
+            query.select(root).where(builder.equal(root.get("email"), email));
+
+            return session.createQuery(query).uniqueResult();
+        } catch (NoResultException ex) {
+            return null;
         }
     }
 
     @Override
     public boolean authUser(String username, String password) {
         User u = this.getUserByUsername(username);
-        
+
         return this.passEncoder.matches(password, u.getPassword());
     }
 
@@ -109,17 +125,17 @@ public class UserRepositoryImp implements UserRepository {
     @Override
     public List<Teacher> getTeacherByEmail(String email) {
         Session session = this.factory.getObject().getCurrentSession();
-    Query query = session.createQuery("FROM Teacher WHERE email = :email", Teacher.class);
-    query.setParameter("email", email);
+        Query query = session.createQuery("FROM Teacher WHERE email = :email", Teacher.class);
+        query.setParameter("email", email);
 
-    List<Teacher> teachers = query.getResultList();
+        List<Teacher> teachers = query.getResultList();
 
-    return teachers;
+        return teachers;
     }
 
     @Override
     public User addTeacherUser(User user) {
-         Session s = this.factory.getObject().getCurrentSession();
+        Session s = this.factory.getObject().getCurrentSession();
         s.save(user);
 
         return user;
@@ -129,30 +145,93 @@ public class UserRepositoryImp implements UserRepository {
     public boolean authAdminUser(String username, String password) {
         User user = this.getUserByUsername(username);
         if (user != null) {
-            return user.getRole() == User.Role.Admin && 
-                   passEncoder.matches(password, user.getPassword());
+            return user.getRole() == User.Role.Admin
+                    && passEncoder.matches(password, user.getPassword());
         }
         return false;
     }
-    
+
     @Override
     public boolean authTeacherUser(String username, String password) {
         User user = this.getUserByUsername(username);
         if (user != null) {
-            return user.getRole() == User.Role.Teacher && 
-                   passEncoder.matches(password, user.getPassword());
+            return user.getRole() == User.Role.Teacher
+                    && passEncoder.matches(password, user.getPassword());
         }
         return false;
     }
-    
+
     @Override
     public boolean authStudentUser(String username, String password) {
         User user = this.getUserByUsername(username);
         if (user != null) {
-            return user.getRole() == User.Role.Student && 
-                   passEncoder.matches(password, user.getPassword());
+            return user.getRole() == User.Role.Student
+                    && passEncoder.matches(password, user.getPassword());
         }
         return false;
     }
-}
 
+    @Override
+    public List<User> getUsers() {
+        Session s = this.factory.getObject().getCurrentSession();
+        jakarta.persistence.TypedQuery<User> q = s.createQuery("FROM User ORDER BY id", User.class);
+        return q.getResultList();
+    }
+
+    @Override
+    public User getUserById(int id) {
+        Session s = this.factory.getObject().getCurrentSession();
+        return s.get(User.class, id);
+    }
+
+    @Override
+    public boolean updateUser(User user) {
+        Session s = this.factory.getObject().getCurrentSession();
+        try {
+            // Lấy người dùng hiện tại từ database
+            User existingUser = s.get(User.class, user.getId());
+            if (existingUser == null) {
+                return false;
+            }
+
+            // Chỉ cập nhật các trường không null
+            if (user.getName() != null) {
+                existingUser.setName(user.getName());
+            }
+            if (user.getEmail() != null) {
+                existingUser.setEmail(user.getEmail());
+            }
+            if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+                existingUser.setPassword(user.getPassword());
+            }
+            if (user.getRole() != null) {
+                existingUser.setRole(user.getRole());
+            }
+            if (user.getActive() != null) {
+                existingUser.setActive(user.getActive());
+            }
+
+            s.update(existingUser);
+            return true;
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean deleteUser(int id) {
+        Session s = this.factory.getObject().getCurrentSession();
+        try {
+            User user = s.get(User.class, id);
+            if (user != null) {
+                s.delete(user);
+                return true;
+            }
+            return false;
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+}

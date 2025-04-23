@@ -18,10 +18,45 @@ import org.springframework.stereotype.Service;
 @Service
 public class SubjectTeacherServiceImpl implements SubjectTeacherService{
     @Autowired
-    private SubjectTeacherRepository subjTeachRepo;
+    private SubjectTeacherRepository subjectTeacherRepo;
     @Override
     public List<Subjectteacher> getSubjectTeachers() {
-        return this.subjTeachRepo.getSubjectTeachers();
+        return this.subjectTeacherRepo.getSubjectTeachers();
     }
     
+    @Override
+    public List<Subjectteacher> getAllSubjectTeachers() {
+        return this.subjectTeacherRepo.getAllSubjectTeachers();
+    }
+
+    @Override
+    public Subjectteacher getSubjectTeacherById(int id) {
+        return this.subjectTeacherRepo.getSubjectTeacherById(id);
+    }
+
+    @Override
+    public boolean addOrUpdateSubjectTeacher(Subjectteacher subjectTeacher) {
+        return this.subjectTeacherRepo.addOrUpdateSubjectTeacher(subjectTeacher);
+    }
+
+    @Override
+    public boolean deleteSubjectTeacher(int id) {
+        return this.subjectTeacherRepo.deleteSubjectTeacher(id);
+    }
+    
+    @Override
+    public List<Subjectteacher> getSubjectTeachersByTeacherId(int teacherId) {
+        return this.subjectTeacherRepo.getSubjectTeachersByTeacherId(teacherId);
+    }
+    
+    @Override
+    public List<Subjectteacher> getSubjectTeachersBySubjectId(Integer subjectId) {
+        return this.subjectTeacherRepo.getSubjectTeachersBySubjectId(subjectId);
+    }
+    
+    @Override
+    public List<Subjectteacher> getSubjectTeachersByDepartmentId(int departmentId) {
+        return this.subjectTeacherRepo.getSubjectTeachersByDepartmentId(departmentId);
+    }
+
 }

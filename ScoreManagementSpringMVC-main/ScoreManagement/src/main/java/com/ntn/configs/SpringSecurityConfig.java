@@ -78,8 +78,9 @@ public class SpringSecurityConfig {
                 // Trang chủ cho phép truy cập không cần đăng nhập
                 .requestMatchers("/", "/login", "/registerStudent").permitAll()
                 // Các URL yêu cầu quyền Admin
-                .requestMatchers("/pageStudent").hasAuthority("Student")
-                .requestMatchers("/pageTeacher").hasAuthority("Teacher")
+                .requestMatchers("/admin/**").hasAuthority("Admin")
+                .requestMatchers("/teacher/**").hasAnyAuthority("Teacher", "Admin")
+                .requestMatchers("/student/**").hasAuthority("Student")
                 .requestMatchers("/forum", "/register", "/pageAdmin").hasAuthority("Admin")
                 // Mọi request khác yêu cầu xác thực
                 .anyRequest().authenticated()

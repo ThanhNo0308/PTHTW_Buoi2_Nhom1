@@ -5,9 +5,12 @@
 package com.ntn.pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.Serializable;
 import java.util.List;
 import jakarta.persistence.Basic;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,10 +22,12 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
+import java.util.Set;
 
 /**
  *
@@ -37,16 +42,18 @@ import jakarta.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Class.findByClassName", query = "SELECT c FROM Class c WHERE c.className = :className")})
 public class Class implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-    @Id
-    @Basic(optional = false)
-    @NotNull
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id")
-    private Integer id;
     @Size(max = 255)
     @Column(name = "ClassName")
     private String className;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "classId")
+    private Set<Classscoretypes> classscoretypesSet;
+
+    private static final long serialVersionUID = 1L;
+    @Id
+    @Basic(optional = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "Id")
+    private Integer id;
     @OneToMany(mappedBy = "classId")
     @JsonIgnore
     private List<Student> studentList;
@@ -72,13 +79,6 @@ public class Class implements Serializable {
         this.id = id;
     }
 
-    public String getClassName() {
-        return className;
-    }
-
-    public void setClassName(String className) {
-        this.className = className;
-    }
 
     @XmlTransient
     public List<Student> getStudentList() {
@@ -128,6 +128,24 @@ public class Class implements Serializable {
     @Override
     public String toString() {
         return className;
+    }
+
+
+    @XmlTransient
+    public Set<Classscoretypes> getClassscoretypesSet() {
+        return classscoretypesSet;
+    }
+
+    public void setClassscoretypesSet(Set<Classscoretypes> classscoretypesSet) {
+        this.classscoretypesSet = classscoretypesSet;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
     }
 
 }

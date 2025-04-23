@@ -38,10 +38,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 
-/**
- *
- * @author vhuunghia
- */
 @Service("UserDetailsService")
 public class UserServiceImp implements UserService {
 
@@ -85,6 +81,11 @@ public class UserServiceImp implements UserService {
     @Override
     public User getUserByUn(String username) {
         return this.userRepo.getUserByUsername(username);
+    }
+
+    @Override
+    public User getUserByEmail(String email) {
+        return userRepo.getUserByEmail(email);
     }
 
     @Override
@@ -192,5 +193,25 @@ public class UserServiceImp implements UserService {
     @Override
     public boolean authStudentUser(String username, String password) {
         return this.userRepo.authStudentUser(username, password);
+    }
+
+    @Override
+    public List<User> getUsers() {
+        return this.userRepo.getUsers();
+    }
+
+    @Override
+    public User getUserById(int id) {
+        return this.userRepo.getUserById(id);
+    }
+
+    @Override
+    public boolean updateUser(User user) {
+        return this.userRepo.updateUser(user);
+    }
+
+    @Override
+    public boolean deleteUser(int id) {
+        return this.userRepo.deleteUser(id);
     }
 }

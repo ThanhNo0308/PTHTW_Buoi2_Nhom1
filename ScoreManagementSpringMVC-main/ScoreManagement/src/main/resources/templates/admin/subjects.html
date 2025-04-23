@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head>
+        <meta charset="UTF-8">
+        <title>Quản lý môn học</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-book-open"></i> Quản lý môn học
+            </h2>
+
+            <div sec:authorize="hasAuthority('Admin')">
+                <a th:href="@{/admin/subject-add}" class="btn btn-success">
+                    <i class="fas fa-plus-circle"></i> Thêm môn học mới
+                </a>
+            </div>
+        </div>
+
+        <!-- Thông báo -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/admin/subjects}" method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="keyword" class="form-label">Từ khóa</label>
+                        <input type="text" class="form-control" id="keyword" name="keyword" 
+                               th:value="${param.keyword}" placeholder="Tên môn học hoặc mã môn học">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="departmentId" class="form-label">Khoa</label>
+                        <select class="form-select" id="departmentId" name="departmentId">
+                            <option value="">-- Tất cả khoa --</option>
+                            <option th:each="dept : ${departments}" 
+                                    th:value="${dept.id}" 
+                                    th:text="${dept.departmentName}"
+                                    th:selected="${param.departmentId != null && param.departmentId[0] == dept.id.toString()}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search"></i> Tìm kiếm
+                        </button>
+                        <a th:href="@{/admin/subjects}" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> Đặt lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Danh sách môn học -->
+        <div class="card shadow">
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(subjects)}" class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Không có môn học nào trong hệ thống.
+                </div>
+
+                <div th:if="${not #lists.isEmpty(subjects)}" class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Mã môn học</th>
+                                <th>Tên môn học</th>
+                                <th>Số tín chỉ</th>
+                                <th>Số lượng bài học</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="subject : ${subjects}">
+                                <td th:text="${subject.id}"></td>
+                                <td th:text="${subject.subjectName}"></td>
+                                <td th:text="${subject.credits}"></td>
+                                <td th:text="${subject.numberOfLessons}"></td>
+                                <td>
+                                    <div class="btn-group" sec:authorize="hasAuthority('Admin')">
+                                        <a th:href="@{'/admin/subject-update/' + ${subject.id}}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i> Sửa
+                                        </a>
+                                        <a th:href="@{'/admin/subject-delete/' + ${subject.id}}" class="btn btn-sm btn-danger"
+                                           onclick="return confirm('Bạn có chắc chắn muốn xóa môn học này?');">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
+</body>
+</html>

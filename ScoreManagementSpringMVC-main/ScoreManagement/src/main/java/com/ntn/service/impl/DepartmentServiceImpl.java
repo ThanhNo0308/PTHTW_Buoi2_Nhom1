@@ -35,4 +35,19 @@ public class DepartmentServiceImpl implements DepartmentService{
     public boolean deleteDepartment(int departmentId) {
         return this.departRepo.deleteDepartment(departmentId);
     }
+    
+    @Override
+    public Department getDepartmentById(int departmentId) {
+        return this.departRepo.getDepartmentById(departmentId);
+    }
+    
+    @Override
+    public boolean hasRelatedData(int departmentId) {
+        return this.departRepo.hasRelatedData(departmentId);
+    }
+    
+    @Override
+    public long countDepartments() {
+        return this.departRepo.countDepartments();
+    }
 }

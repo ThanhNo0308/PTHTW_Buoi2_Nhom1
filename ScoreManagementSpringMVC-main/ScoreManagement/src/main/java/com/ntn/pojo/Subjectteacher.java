@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.Serializable;
 import java.util.List;
 import jakarta.persistence.Basic;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,9 +20,9 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
+import java.util.Set;
 
 /**
  *
@@ -35,10 +36,12 @@ import jakarta.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Subjectteacher.findById", query = "SELECT s FROM Subjectteacher s WHERE s.id = :id")})
 public class Subjectteacher implements Serializable {
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "subjectTeacherId")
+    private Set<Classscoretypes> classscoretypesSet;
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
-    @NotNull
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Id")
     private Integer id;
@@ -151,6 +154,15 @@ public class Subjectteacher implements Serializable {
     @Override
     public String toString() {
         return teacherId + " - " + subjectId;
+    }
+
+    @XmlTransient
+    public Set<Classscoretypes> getClassscoretypesSet() {
+        return classscoretypesSet;
+    }
+
+    public void setClassscoretypesSet(Set<Classscoretypes> classscoretypesSet) {
+        this.classscoretypesSet = classscoretypesSet;
     }
     
 }

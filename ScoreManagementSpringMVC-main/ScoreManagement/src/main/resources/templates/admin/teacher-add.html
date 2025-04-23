@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head>
+        <meta charset="UTF-8">
+        <title>Thêm Giảng viên mới</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+
+    <div class="container mt-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user-plus"></i> Thêm Giảng viên mới</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <!-- Form thêm giảng viên -->
+                <form th:action="@{/admin/teacher-add}" method="post" th:object="${teacher}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="teacherName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="teacherName" th:field="*{teacherName}" required>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('teacherName')}" th:errors="*{teacherName}"></div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" th:field="*{email}" required>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="phoneNumber" class="form-label">Số điện thoại</label>
+                            <input type="text" class="form-control" id="phoneNumber" th:field="*{phoneNumber}">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="address" class="form-label">Địa chỉ</label>
+                            <input type="text" class="form-control" id="address" th:field="*{address}">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="gender" class="form-label">Giới tính <span class="text-danger">*</span></label>
+                            <!-- Binding giới tính đúng kiểu Short -->
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="gender" id="genderMale" value="1" checked>
+                                <label class="form-check-label" for="genderMale">Nam</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="0">
+                                <label class="form-check-label" for="genderFemale">Nữ</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="birthdate" class="form-label">Ngày sinh <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="birthdate" th:field="*{birthdate}" required>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('birthdate')}" th:errors="*{birthdate}"></div>
+                        </div>
+
+                        <!-- Thay đoạn code hiện tại về department -->
+                        <div class="col-md-6 mb-3">
+                            <label for="departmentId" class="form-label">Khoa <span class="text-danger">*</span></label>
+                            <!-- Thay đổi name từ departmentId.id thành chỉ departmentId -->
+                            <select class="form-select" id="departmentId" name="departmentIdValue" required>
+                                <option value="">-- Chọn khoa --</option>
+                                <option th:each="dept : ${departments}" 
+                                        th:value="${dept.id}" 
+                                        th:text="${dept.departmentName}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-end">
+                        <a th:href="@{/admin/teachers}" class="btn btn-secondary">Hủy</a>
+                        <button type="submit" class="btn btn-primary">Lưu giảng viên</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="base :: footer"></div>
+</body>
+</html>

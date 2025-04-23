@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head>
+        <meta charset="UTF-8">
+        <title>Thêm lớp học mới</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Thêm lớp học mới</h4>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+
+                        <form th:action="@{/admin/class-add}" th:object="${class}" method="post">
+                            <div class="mb-3">
+                                <label for="className" class="form-label">Tên lớp <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="className" th:field="*{className}" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('className')}" th:errors="*{className}"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="majorId" class="form-label">Ngành <span class="text-danger">*</span></label>
+                                <select class="form-select" id="majorId" name="majorId.id" required>
+                                    <option value="">-- Chọn ngành --</option>
+                                    <option th:each="major : ${majors}" 
+                                            th:value="${major.id}" 
+                                            th:text="${major.majorName + ' - ' + major.trainingTypeId.trainingTypeName}">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="teacherId" class="form-label">Giảng viên chủ nhiệm</label>
+                                <select class="form-select" id="teacherId" name="teacherId.id">
+                                    <option value="">-- Chọn giảng viên --</option>
+                                    <option th:each="teacher : ${teachers}" th:value="${teacher.id}" th:text="${teacher.teacherName}"></option>
+                                </select>
+                            </div>
+
+                            <div class="text-end mt-4">
+                                <a th:href="@{/admin/classes}" class="btn btn-secondary me-2">Hủy</a>
+                                <button type="submit" class="btn btn-primary">Lưu lớp học</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="base :: footer"></div>
+</body>
+</html>

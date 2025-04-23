@@ -41,6 +41,13 @@ import jakarta.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Forumcomment.findByCreatedAt", query = "SELECT f FROM Forumcomment f WHERE f.createdAt = :createdAt")})
 public class Forumcomment implements Serializable {
 
+    @Size(max = 255)
+    @Column(name = "Title")
+    private String title;
+    @Size(max = 3000)
+    @Column(name = "Content")
+    private String content;
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -48,12 +55,6 @@ public class Forumcomment implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Id")
     private Integer id;
-    @Size(max = 255)
-    @Column(name = "Title")
-    private String title;
-    @Size(max = 3000)
-    @Column(name = "Content")
-    private String content;
     @Column(name = "CreatedAt")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
@@ -84,21 +85,6 @@ public class Forumcomment implements Serializable {
         this.id = id;
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
 
     public Date getCreatedAt() {
         return createdAt;
@@ -164,6 +150,22 @@ public class Forumcomment implements Serializable {
     @Override
     public String toString() {
         return "com.hcmou.pojo.Forumcomment[ id=" + id + " ]";
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
     
 }

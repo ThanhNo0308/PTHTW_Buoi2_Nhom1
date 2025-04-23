@@ -17,10 +17,10 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class ClassServiceImpl implements ClassService {
-    
+
     @Autowired
     private ClassRepository classRepo;
-    
+
     @Override
     public List<Class> getClasses() {
         return this.classRepo.getClasses();
@@ -29,6 +29,11 @@ public class ClassServiceImpl implements ClassService {
     @Override
     public List<Class> getClassesByMajorId(int majorId) {
         return this.classRepo.getClassesByMajorId(majorId);
+    }
+    
+    @Override
+    public List<Class> getClassesByKeyword(String keyword) {
+        return classRepo.getClassesByKeyword(keyword);
     }
 
     @Override
@@ -40,5 +45,34 @@ public class ClassServiceImpl implements ClassService {
     public boolean addOrUpdateClass(Class classes) {
         return this.classRepo.addOrUpdateClass(classes);
     }
-    
+
+    @Override
+    public Class getClassById(int classId) {
+        return this.classRepo.getClassById(classId);
+    }
+
+    @Override
+    public boolean updateScoreColumns(int classId, int additionalColumns,
+            String column3Name, String column4Name, String column5Name) {
+        return this.classRepo.updateScoreColumns(classId, additionalColumns,
+                column3Name, column4Name, column5Name);
+    }
+
+    @Override
+    public List<Class> getClassesByTeacher(int teacherId) {
+        return this.classRepo.getClassesByTeacher(teacherId);
+    }
+
+    @Override
+    public int countClasses() {
+        return this.classRepo.countClasses();
+    }
+
+    @Override
+    public boolean updateClassConfiguration(int classId, boolean enableAttendance,
+            boolean enableActivityScoring, String gradingPolicy) {
+        return this.classRepo.updateClassConfiguration(classId, enableAttendance,
+                enableActivityScoring, gradingPolicy);
+    }
+
 }

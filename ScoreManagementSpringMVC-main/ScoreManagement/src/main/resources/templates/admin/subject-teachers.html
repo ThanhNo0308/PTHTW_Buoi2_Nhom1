@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head>
+        <meta charset="UTF-8">
+        <title>Quản lý phân công giảng dạy</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-chalkboard-teacher"></i> Quản lý phân công giảng dạy
+            </h2>
+
+            <div sec:authorize="hasAuthority('Admin')">
+                <a th:href="@{/admin/subjTeach/add}" class="btn btn-success">
+                    <i class="fas fa-plus-circle"></i> Thêm phân công mới
+                </a>
+            </div>
+        </div>
+
+        <!-- Thông báo -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Lọc theo giảng viên hoặc môn học -->
+        <!-- Lọc theo giảng viên, môn học, khoa và hệ đào tạo -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row mb-3">
+                    <!-- Lọc theo giảng viên -->
+                    <div class="col-md-6">
+                        <form th:action="@{/admin/subjTeach}" method="get">
+                            <div class="input-group">
+                                <select name="teacherId" class="form-select">
+                                    <option value="">-- Chọn giảng viên --</option>
+                                    <option th:each="teacher : ${teachers}" 
+                                            th:value="${teacher.id}" 
+                                            th:text="${teacher.teacherName}"
+                                            th:selected="${param.teacherId != null && param.teacherId[0] == teacher.id.toString()}">
+                                    </option>
+                                </select>
+                                <button class="btn btn-outline-secondary" type="submit">Lọc theo giảng viên</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Lọc theo môn học -->
+                    <div class="col-md-6">
+                        <form th:action="@{/admin/subjTeach}" method="get">
+                            <div class="input-group">
+                                <select name="subjectId" class="form-select">
+                                    <option value="">-- Chọn môn học --</option>
+                                    <option th:each="subject : ${subjects}" 
+                                            th:value="${subject.id}" 
+                                            th:text="${subject.subjectName}"
+                                            th:selected="${param.subjectId != null && param.subjectId[0] == subject.id.toString()}">
+                                    </option>
+                                </select>
+                                <button class="btn btn-outline-secondary" type="submit">Lọc theo môn học</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <!-- Lọc theo khoa -->
+                    <div class="col-md-6">
+                        <form th:action="@{/admin/subjTeach}" method="get">
+                            <div class="input-group">
+                                <select name="departmentId" class="form-select">
+                                    <option value="">-- Chọn khoa --</option>
+                                    <option th:each="dept : ${departments}" 
+                                            th:value="${dept.id}" 
+                                            th:text="${dept.departmentName}"
+                                            th:selected="${param.departmentId != null && param.departmentId[0] == dept.id.toString()}">
+                                    </option>
+                                </select>
+                                <button class="btn btn-outline-secondary" type="submit">Lọc theo khoa</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12 text-center">
+                        <a th:href="@{/admin/subjTeach}" class="btn btn-secondary">
+                            <i class="fas fa-sync"></i> Xóa tất cả bộ lọc
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh sách phân công -->
+        <div class="card shadow">
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(subjectTeachers)}" class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Không có phân công giảng dạy nào trong hệ thống.
+                </div>
+
+                <div th:if="${not #lists.isEmpty(subjectTeachers)}" class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Môn học</th>
+                                <th>Giảng viên</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="subjTeach : ${subjectTeachers}">
+                                <td th:text="${subjTeach.id}"></td>
+                                <td th:text="${subjTeach.subjectId.subjectName}"></td>
+                                <td th:text="${subjTeach.teacherId.teacherName}"></td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{'/admin/subjTeach/update/' + ${subjTeach.id}}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i> Sửa
+                                        </a>
+                                        <a th:href="@{'/admin/subjTeach/delete/' + ${subjTeach.id}}" class="btn btn-sm btn-danger"
+                                           onclick="return confirm('Bạn có chắc chắn muốn xóa phân công này?');">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="base :: footer"></div>
+</body>
+</html>

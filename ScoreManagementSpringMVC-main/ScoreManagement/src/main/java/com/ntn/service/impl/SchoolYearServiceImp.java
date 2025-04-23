@@ -5,6 +5,8 @@
 package com.ntn.service.impl;
 
 import com.ntn.pojo.Schoolyear;
+import com.ntn.pojo.Subjectteacher;
+import com.ntn.pojo.Typescore;
 import com.ntn.repository.SchoolYearRepository;
 import com.ntn.repository.impl.SchoolYearRepositoryImp;
 import com.ntn.service.SchoolYearService;
@@ -17,16 +19,70 @@ import org.springframework.stereotype.Service;
  * @author vhuunghia
  */
 @Service
-public class SchoolYearServiceImp implements SchoolYearService{
+public class SchoolYearServiceImp implements SchoolYearService {
+
     @Autowired
-    private SchoolYearRepository schoolYearRepository;
-    
-    
+    private SchoolYearRepository schoolYearRepo;
+
     @Override
-    public List<Schoolyear> getListSchoolYear(String currentYear){
-        
-        
-        
-        return this.schoolYearRepository.getListSchoolYear(currentYear);
+    public List<Schoolyear> getListSchoolYear(String currentYear) {
+        return this.schoolYearRepo.getListSchoolYear(currentYear);
     }
+
+    @Override
+    public int getCurrentSchoolYearId() {
+        return this.schoolYearRepo.getCurrentSchoolYearId();
+    }
+
+    @Override
+    public List<Schoolyear> getAllSchoolYears() {
+        return this.schoolYearRepo.getAllSchoolYears();
+    }
+
+    @Override
+    public Subjectteacher getSubJectTeacherById(int id) {
+        return this.schoolYearRepo.getSubJectTeacherById(id);
+    }
+
+    @Override
+    public Typescore getScoreTypeByName(String name) {
+        return this.schoolYearRepo.getScoreTypeByName(name);
+    }
+
+    @Override
+    public boolean addOrUpdateSchoolYear(Schoolyear schoolYear) {
+        return this.schoolYearRepo.addOrUpdateSchoolYear(schoolYear);
+    }
+
+    @Override
+    public boolean deleteSchoolYear(int schoolYearId) {
+        return this.schoolYearRepo.deleteSchoolYear(schoolYearId);
+    }
+
+    @Override
+    public Schoolyear getSchoolYearById(int schoolYearId) {
+        return this.schoolYearRepo.getSchoolYearById(schoolYearId);
+    }
+
+    @Override
+    public List<Schoolyear> getSchoolYearsByNameYear(String nameYear) {
+        return this.schoolYearRepo.getSchoolYearsByNameYear(nameYear);
+    }
+
+    @Override
+    public List<Schoolyear> getSchoolYearsBySemester(String semesterName) {
+        return this.schoolYearRepo.getSchoolYearsBySemester(semesterName);
+    }
+
+    @Override
+    public List<Schoolyear> getSchoolYearsByNameYearAndSemester(String nameYear, String semesterName) {
+        return this.schoolYearRepo.getSchoolYearsByNameYearAndSemester(nameYear, semesterName);
+    }
+
+    @Override
+    public boolean hasRelatedData(int schoolYearId) {
+        return this.schoolYearRepo.hasRelatedData(schoolYearId);
+    }
+    
+    
 }

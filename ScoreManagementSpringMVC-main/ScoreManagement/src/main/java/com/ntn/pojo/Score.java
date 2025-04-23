@@ -17,6 +17,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
@@ -61,7 +62,12 @@ public class Score implements Serializable {
     @ManyToOne(fetch = FetchType.EAGER)
     private Typescore scoreType;
 
+    @Transient
+    private Float averageScore;
+
     public Score() {
+        this.isDraft = false;
+        this.isLocked = false;
     }
 
     public Score(Integer id) {
@@ -92,8 +98,12 @@ public class Score implements Serializable {
         this.isDraft = isDraft;
     }
 
+    public Boolean isLocked() {
+        return this.isLocked;
+    }
+
     public Boolean getIsLocked() {
-        return isLocked;
+        return isLocked != null ? isLocked : false;
     }
 
     public void setIsLocked(Boolean isLocked) {
@@ -132,6 +142,14 @@ public class Score implements Serializable {
         this.scoreType = scoreType;
     }
 
+    public Float getAverageScore() {
+        return averageScore;
+    }
+
+    public void setAverageScore(Float averageScore) {
+        this.averageScore = averageScore;
+    }
+
     @Override
     public int hashCode() {
         int hash = 0;
@@ -154,7 +172,18 @@ public class Score implements Serializable {
 
     @Override
     public String toString() {
-        return "com.hcmou.pojo.Score[ id=" + id + " ]";
+        return String.format("Score[id=%s, value=%s]",
+                (id != null ? id : "null"),
+                (scoreValue != null ? scoreValue : "chưa có điểm"));
     }
     
+    public Float getWeightFromClassScoreType() {
+        if (this.getScoreType() == null || this.getStudentID() == null || 
+            this.getSubjectTeacherID() == null || this.getSchoolYearId() == null ||
+            this.getStudentID().getClassId() == null)
+            return null;
+            
+        return null;
+    }
+
 }

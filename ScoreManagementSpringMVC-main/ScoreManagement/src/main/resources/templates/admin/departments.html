@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý khoa</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+    
+    <div class="container mt-4">
+        <h2 class="mb-4">
+            <i class="fas fa-university me-2"></i> Quản lý khoa
+        </h2>
+        
+        <!-- Thông báo thành công -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+        <!-- Thông báo lỗi -->
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+        <!-- Nút thêm mới -->
+        <div class="mb-3" sec:authorize="hasAuthority('Admin')">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">
+                <i class="fas fa-plus me-1"></i> Thêm khoa mới
+            </button>
+        </div>
+        
+        <!-- Bảng khoa -->
+        <div class="card shadow">
+            <div class="card-body">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Tên khoa</th>
+                            <th scope="col" sec:authorize="hasAuthority('Admin')">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="dept : ${departments}">
+                            <td th:text="${dept.id}"></td>
+                            <td th:text="${dept.departmentName}"></td>
+                            <td sec:authorize="hasAuthority('Admin')">
+                                <button class="btn btn-sm btn-warning me-1" 
+                                        onclick="openEditModal(this)" 
+                                        th:data-id="${dept.id}" 
+                                        th:data-name="${dept.departmentName}">
+                                    <i class="fas fa-edit"></i> Sửa
+                                </button>
+                                <a th:href="@{'/admin/departments/delete/' + ${dept.id}}" class="btn btn-sm btn-danger"
+                                   onclick="return confirm('Bạn có chắc chắn muốn xóa khoa này?');">
+                                    <i class="fas fa-trash"></i> Xóa
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(departments)}">
+                            <td colspan="3" class="text-center">Không có khoa nào</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal thêm khoa -->
+    <div class="modal fade" id="addDepartmentModal" tabindex="-1" aria-labelledby="addDepartmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addDepartmentModalLabel">Thêm khoa mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/admin/departments/add}" th:object="${department}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="departmentName" class="form-label">Tên khoa <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="departmentName" th:field="*{departmentName}" required>
+                            <div class="text-danger" th:if="${#fields.hasErrors('departmentName')}" th:errors="*{departmentName}"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu khoa</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal cập nhật khoa -->
+    <div class="modal fade" id="editDepartmentModal" tabindex="-1" aria-labelledby="editDepartmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="editDepartmentModalLabel">Cập nhật khoa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/admin/departments/update}" method="post">
+                    <div class="modal-body">
+                        <input type="hidden" id="editDepartmentId" name="id">
+                        <div class="mb-3">
+                            <label for="editDepartmentName" class="form-label">Tên khoa <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editDepartmentName" name="departmentName" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
+    <script>
+        // Mở modal cập nhật và điền dữ liệu
+        function openEditModal(button) {
+            const id = button.getAttribute('data-id');
+            const name = button.getAttribute('data-name');
+            
+            // Điền dữ liệu vào modal
+            document.getElementById('editDepartmentId').value = id;
+            document.getElementById('editDepartmentName').value = name;
+            
+            // Mở modal
+            const editModal = new bootstrap.Modal(document.getElementById('editDepartmentModal'));
+            editModal.show();
+        }
+        
+        // Hiển thị modal thêm khi có lỗi validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('error') && urlParams.get('error') === 'validation') {
+                const addModal = new bootstrap.Modal(document.getElementById('addDepartmentModal'));
+                addModal.show();
+            }
+        });
+    </script>
+</body>
+</html>

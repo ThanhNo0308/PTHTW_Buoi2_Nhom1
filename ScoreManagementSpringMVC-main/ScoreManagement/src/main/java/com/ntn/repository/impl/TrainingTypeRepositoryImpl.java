@@ -7,34 +7,174 @@ package com.ntn.repository.impl;
 import com.ntn.pojo.Trainingtype;
 import com.ntn.repository.TrainingTypeRepository;
 import java.util.List;
-import jakarta.persistence.Query;
+import org.hibernate.query.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- *
- * @author nguye
- */
+
 @Repository
 @Transactional
 public class TrainingTypeRepositoryImpl implements TrainingTypeRepository {
+
     @Autowired
     private LocalSessionFactoryBean factory;
+
     @Override
-    public List<Trainingtype> getTrainingType() {
-        Session s = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder b = s.getCriteriaBuilder();
-        CriteriaQuery<Trainingtype> q = b.createQuery(Trainingtype.class);
-        Root root = q.from(Trainingtype.class);
-        q.select(root); 
-        Query query = s.createQuery(q);
-        return query.getResultList();   
+    public List<Trainingtype> getTrainingTypes() {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            Query<Trainingtype> query = session.createQuery("FROM Trainingtype ORDER BY id", Trainingtype.class);
+            return query.getResultList();
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return new ArrayList<>();
+        }
     }
-    
+
+    @Override
+    public Trainingtype getTrainingTypeById(int id) {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            return session.get(Trainingtype.class, id);
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
+    public Trainingtype getTrainingTypeByName(String name) {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            Query<Trainingtype> query = session.createQuery("FROM Trainingtype WHERE trainingTypeName = :name", Trainingtype.class);
+            query.setParameter("name", name);
+            List<Trainingtype> result = query.getResultList();
+            if (!result.isEmpty()) {
+                return result.get(0);
+            }
+            return null;
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
+    public boolean addTrainingType(Trainingtype trainingType) {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            session.save(trainingType);
+            return true;
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean updateTrainingType(Trainingtype trainingType) {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            Trainingtype existingType = session.get(Trainingtype.class, trainingType.getId());
+            if (existingType != null) {
+                existingType.setTrainingTypeName(trainingType.getTrainingTypeName());
+                session.update(existingType);
+                return true;
+            }
+            return false;
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean deleteTrainingType(int id) {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            Trainingtype trainingType = session.get(Trainingtype.class, id);
+            if (trainingType != null) {
+                session.delete(trainingType);
+                return true;
+            }
+            return false;
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean hasRelatedMajors(int trainingTypeId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            Query<Long> query = session.createQuery(
+                    "SELECT COUNT(m) FROM Major m WHERE m.trainingTypeId.id = :trainingTypeId", Long.class);
+            query.setParameter("trainingTypeId", trainingTypeId);
+            return query.getSingleResult() > 0;
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return true; // Mặc định trả về true để đảm bảo an toàn
+        }
+    }
+
+    @Override
+    public int countTrainingTypes() {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            Query<Long> query = session.createQuery("SELECT COUNT(t) FROM Trainingtype t", Long.class);
+            return query.getSingleResult().intValue();
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return 0;
+        }
+    }
+
+    @Override
+    public int countMajorsByTrainingType(int trainingTypeId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            Query<Long> query = session.createQuery(
+                    "SELECT COUNT(m) FROM Major m WHERE m.trainingTypeId.id = :trainingTypeId", Long.class);
+            query.setParameter("trainingTypeId", trainingTypeId);
+            return query.getSingleResult().intValue();
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return 0;
+        }
+    }
+
+    @Override
+    public Map<Integer, Integer> getMajorsCountByTrainingType() {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            Map<Integer, Integer> results = new HashMap<>();
+
+            Query<Object[]> query = session.createQuery(
+                    "SELECT t.id, COUNT(m) FROM Trainingtype t LEFT JOIN t.majorSet m GROUP BY t.id", Object[].class);
+
+            List<Object[]> rows = query.getResultList();
+            for (Object[] row : rows) {
+                Integer trainingTypeId = (Integer) row[0];
+                Long count = (Long) row[1];
+                results.put(trainingTypeId, count.intValue());
+            }
+
+            return results;
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return new HashMap<>();
+        }
+    }
+
 }

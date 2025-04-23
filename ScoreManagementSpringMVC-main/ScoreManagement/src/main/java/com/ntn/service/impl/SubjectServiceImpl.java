@@ -13,12 +13,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-/**
- *
- * @author nguye
- */
 @Service
-public class SubjectServiceImpl implements SubjectService{
+public class SubjectServiceImpl implements SubjectService {
+
     @Autowired
     private SubjectRepository subjRepo;
 
@@ -26,44 +23,63 @@ public class SubjectServiceImpl implements SubjectService{
     public List<Subject> getSubjects() {
         return this.subjRepo.getSubjects();
     }
+
     @Override
-    public List<Subject> getListSubjectById(List<Integer> listSubjectID ) {
+    public List<Subject> getListSubjectById(List<Integer> listSubjectID) {
         return this.subjRepo.getListSubjectById(listSubjectID);
     }
+
     @Override
-    public List<Subjectteacher> getSubjectTeacherByTeacherID(int TeacherID){
+    public List<Subject> getSubjectsByDepartmentId(Integer departmentId) {
+        return this.subjRepo.getSubjectsByDepartmentId(departmentId);
+    }
+
+    @Override
+    public List<Subject> getSubjectsByDepartmentIdAndKeyword(Integer departmentId, String keyword) {
+        return this.subjRepo.getSubjectsByDepartmentIdAndKeyword(departmentId, keyword);
+    }
+
+    @Override
+    public List<Subject> getSubjectsByKeyword(String keyword) {
+        return this.subjRepo.getSubjectsByKeyword(keyword);
+    }
+
+    @Override
+    public List<Subjectteacher> getSubjectTeacherByTeacherID(int TeacherID) {
         return this.subjRepo.getSubjectTeacherByTeacherID(TeacherID);
     }
+
     @Override
     public List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher,
             int schoolYearID) {
-        
+
         return this.subjRepo.getStudentsubjectteacherBySubjectTeacherID(listsubjectteacher, schoolYearID);
     }
-    
+
     @Override
     public List<Integer> getSubjectTeacherId(List<Studentsubjectteacher> studentSubjectTeacher) {
- 
+
         return this.subjRepo.getSubjectTeacherId(studentSubjectTeacher);
     }
+
     @Override
     public List<Integer> getSubjectIdByListSubjectTeacherId(List<Integer> listSubjectTeacherId) {
-        
+
         return this.subjRepo.getSubjectIdByListSubjectTeacherId(listSubjectTeacherId);
     }
-    
+
     @Override
     public List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID, int selectedSchoolYearId) {
         return this.subjRepo.getListStudentsubjectteacher(subjectteacherID, selectedSchoolYearId);
     }
-    
+
     @Override
     public List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID, int schoolyearID) {
         return this.subjRepo.getListStudentsubjectteacherByStudentID(studentID, schoolyearID);
     }
-    
+
     @Override
-    public List<Subjectteacher> getSubjectTeacherByListSubjectTeacherId(List<Studentsubjectteacher> listStudentSubjectTeacher ) {
+    public List<Subjectteacher> getSubjectTeacherByListSubjectTeacherId(List<Studentsubjectteacher> listStudentSubjectTeacher) {
         return this.subjRepo.getSubjectTeacherByListSubjectTeacherId(listStudentSubjectTeacher);
     }
 
@@ -74,6 +90,12 @@ public class SubjectServiceImpl implements SubjectService{
 
     @Override
     public boolean deleteSubject(int subjectId) {
-        return this.deleteSubject(subjectId);
+        return this.subjRepo.deleteSubject(subjectId);
     }
+
+    @Override
+    public Subject getSubjectById(int subjectId) {
+        return this.subjRepo.getSubjectById(subjectId);
+    }
+
 }

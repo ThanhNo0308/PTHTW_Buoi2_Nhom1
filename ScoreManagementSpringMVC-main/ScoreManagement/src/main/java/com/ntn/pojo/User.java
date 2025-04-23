@@ -54,29 +54,6 @@ import jakarta.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "User.findByActive", query = "SELECT u FROM User u WHERE u.active = :active")})
 public class User implements Serializable {
 
-    public enum Role {
-        Admin,
-        Teacher,
-        Student
-    }
-
-    private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Basic(optional = false)
-    @Column(name = "Id")
-    private Integer id;
-    @Column(name = "Gender")
-    private Short gender;
-    @Column(name = "Birthdate")
-    @Temporal(TemporalType.DATE)
-    private Date birthdate;
-    @OneToMany(mappedBy = "userId")
-    @JsonIgnore
-    private List<Forumcomment> forumcommentList;
-    @OneToMany(mappedBy = "userId")
-    @JsonIgnore
-    private List<Forum> forumList;
     @Size(max = 125)
     @Column(name = "Name")
     private String name;
@@ -109,6 +86,30 @@ public class User implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(name = "Role")
     private Role role;
+
+    public enum Role {
+        Admin,
+        Teacher,
+        Student
+    }
+
+    private static final long serialVersionUID = 1L;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Basic(optional = false)
+    @Column(name = "Id")
+    private Integer id;
+    @Column(name = "Gender")
+    private Short gender;
+    @Column(name = "Birthdate")
+    @Temporal(TemporalType.DATE)
+    private Date birthdate;
+    @OneToMany(mappedBy = "userId")
+    @JsonIgnore
+    private List<Forumcomment> forumcommentList;
+    @OneToMany(mappedBy = "userId")
+    @JsonIgnore
+    private List<Forum> forumList;
 
     public User() {
     }
@@ -248,12 +249,20 @@ public class User implements Serializable {
         this.image = image;
     }
 
+    public boolean isActive() {
+        return "Active".equalsIgnoreCase(this.active);
+    }
+
     public String getActive() {
-        return active;
+        return this.active;
     }
 
     public void setActive(String active) {
         this.active = active;
+    }
+
+    public void setActive(boolean isActive) {
+        this.active = isActive ? "Active" : "Inactive";
     }
 
     public Role getRole() {

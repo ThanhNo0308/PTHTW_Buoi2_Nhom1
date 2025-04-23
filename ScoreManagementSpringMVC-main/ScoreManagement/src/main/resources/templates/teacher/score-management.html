@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head>
+        <meta charset="UTF-8">
+        <title>Quản lý Điểm Lớp</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2><i class="fas fa-clipboard-list"></i> Quản lý Điểm Lớp</h2>
+            <a th:href="@{'/teacher/classes/' + ${classroom.id}}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0 d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fas fa-info-circle"></i> 
+                        Thông tin: <span th:text="${classroom.className}"></span> - 
+                        <span th:text="${subject.subjectName}"></span> - 
+                        <span th:text="${schoolYear.nameYear + ' - ' + schoolYear.semesterName}"></span>
+                    </span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Form nhập điểm -->
+                <form th:action="@{'/teacher/classes/' + ${classroom.id} + '/scores/save'}" method="post" class="score-form">
+                    <input type="hidden" name="subjectTeacherId" th:value="${subjectTeacherId}" />
+                    <input type="hidden" name="schoolYearId" th:value="${schoolYearId}" />
+                    <input type="hidden" name="saveMode" id="saveMode" value="final" />
+                    <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
+
+                    <!-- Nút thêm loại điểm -->
+                    <div class="mb-3 d-flex align-items-center">
+                        <!-- 1. Thêm modal để thêm loại điểm -->
+                        <!-- Thay đổi modal thêm loại điểm -->
+                        <div class="modal fade" id="addScoreTypeModal" tabindex="-1" aria-labelledby="addScoreTypeModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="addScoreTypeModalLabel">Thêm loại điểm mới</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label for="scoreTypeSelect" class="form-label">Chọn loại điểm có sẵn</label>
+                                            <select class="form-select mb-2" id="scoreTypeSelect">
+                                                <option value="">-- Chọn loại điểm có sẵn hoặc thêm mới --</option>
+                                                <!-- Các option sẽ được thêm qua JavaScript -->
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="newScoreTypeName" class="form-label">Tên loại điểm mới</label>
+                                            <input type="text" class="form-control" id="newScoreTypeName" name="newScoreTypeName">
+                                            <small class="form-text text-muted">Nhập tên mới hoặc để trống nếu đã chọn loại điểm có sẵn.</small>
+                                        </div>
+                                        <!-- Đã loại bỏ phần nhập hệ số -->
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                        <button type="button" class="btn btn-primary" id="saveScoreTypeBtn">Lưu</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Modal Cấu hình trọng số điểm-->
+                        <div class="modal fade" id="configureWeightsModal" tabindex="-1" aria-labelledby="configureWeightsModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="configureWeightsModalLabel">Cấu hình trọng số điểm</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="alert alert-info mb-3">
+                                            Tổng trọng số các loại điểm phải bằng 100%
+                                            <div id="totalWeightDisplay" class="fw-bold mt-2">
+                                                Tổng hiện tại: <span id="totalWeight">0</span>%
+                                            </div>
+                                        </div>
+
+                                        <form id="weightConfigForm" novalidate>
+                                            <!-- Phần cấu hình điểm giữa kỳ và cuối kỳ -->
+                                            <div class="mb-3">
+                                                <label for="weight-Giữa kỳ" class="form-label">Điểm giữa kỳ (%)</label>
+                                                <input type="number" class="form-control weight-input" id="weight-Giữa kỳ" 
+                                                       data-score-type="Giữa kỳ" min="0" max="100" value="40" required>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="weight-Cuối kỳ" class="form-label">Điểm cuối kỳ (%)</label>
+                                                <input type="number" class="form-control weight-input" id="weight-Cuối kỳ" 
+                                                       data-score-type="Cuối kỳ" min="0" max="100" value="60" required>
+                                            </div>
+
+                                            <!-- Các loại điểm khác sẽ được thêm tự động bằng JavaScript -->
+                                            <div id="additional-weights"></div>
+                                        </form>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                        <button type="button" class="btn btn-primary" id="saveWeightsBtn">Lưu cấu hình</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Thêm nút mở modal rõ ràng -->
+                        <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addScoreTypeModal">
+                            <i class="fas fa-plus"></i> Thêm loại điểm
+                        </button>
+                        <!-- Thêm ngay sau nút "Thêm loại điểm" -->
+                        <button type="button" class="btn btn-primary mb-3 ms-2" data-bs-toggle="modal" data-bs-target="#configureWeightsModal">
+                            <i class="fas fa-cog"></i> Cấu hình trọng số điểm
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="scoreTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Mã SV</th>
+                                    <th>Họ và tên</th>
+                            <th:block th:each="type : ${scoreTypes}">
+                                <th th:data-score-type="${type}" 
+                                    th:text="${type + ' (' + #numbers.formatDecimal(scoreWeights.get(type) * 100, 0, 0) + '%)'}"
+                                    th:class="${type != 'Giữa kỳ' && type != 'Cuối kỳ' ? 'custom-score-type' : ''}">
+                                </th>
+                            </th:block>
+                            <th>Điểm TB</th>
+                            <th>Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="student, stat : ${students}">
+                                    <td th:text="${stat.count}"></td>
+                                    <td th:text="${student.studentCode}"></td>
+                                    <td th:text="${student.firstName + ' ' + student.lastName}"></td>
+
+                                    <!-- Input điểm cho từng loại điểm -->
+                            <th:block th:each="type : ${scoreTypes}">
+                                <td>
+                                    <input type="number" class="form-control score-input" 
+                                           th:name="'scores[' + ${student.id} + '][' + ${type} + ']'"
+                                           th:data-weight="${scoreWeights.get(type)}"
+                                           th:data-score-type="${type}"
+                                           step="0.1" min="0" max="10" 
+                                           th:value="${studentScores[student.id]?.get(type)?.scoreValue}"
+                                           th:disabled="${studentScores[student.id]?.get(type)?.isLocked == true}" />
+
+                                    <input type="hidden" 
+                                           th:name="'scores[' + ${student.id} + '][' + ${type} + '].id'"
+                                           th:value="${studentScores[student.id]?.get(type)?.id}" />
+                                </td>
+                            </th:block>
+
+                            <td>
+                                <span class="average-score">-</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-primary lock-btn"
+                                            th:data-student-id="${student.id}"
+                                            th:data-locked="${studentScores[student.id]?.get('Giữa kỳ')?.isLocked == true}">
+                                        <i th:class="${studentScores[student.id]?.get('Giữa kỳ')?.isLocked == true ? 'fas fa-lock' : 'fas fa-unlock'}"></i>
+                                        <span th:text="${studentScores[student.id]?.get('Giữa kỳ')?.isLocked == true ? 'Mở khóa' : 'Khóa'}"></span>
+                                    </button>
+                                </div>
+                            </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Thay thế đoạn code này ở cuối form -->
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="button" class="btn btn-danger me-2" id="lock-all-btn">
+                            <i class="fas fa-lock"></i> Khóa tất cả
+                        </button>
+                        <button type="button" class="btn btn-info me-2" id="unlock-all-btn">
+                            <i class="fas fa-unlock"></i> Mở khóa tất cả
+                        </button>
+                        <button type="button" class="btn btn-secondary me-2" id="save-draft-btn">
+                            <i class="fas fa-edit"></i> Lưu nháp
+                        </button>
+                        <button type="button" class="btn btn-primary" id="save-final-btn">
+                            <i class="fas fa-save"></i> Lưu chính thức
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="base :: footer"></div>
+
+    <div th:replace="base :: scripts"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log("Khởi tạo script quản lý điểm");
+            const tableRows = document.querySelectorAll('#scoreTable tbody tr');
+            tableRows.forEach(row => calculateAverage(row));
+
+            // Thêm sự kiện khi thay đổi điểm
+            document.querySelectorAll('.score-input').forEach(input => {
+                input.addEventListener('input', function () {
+                    // Đảm bảo input có giá trị hợp lệ
+                    if (this.value !== '' && !isNaN(parseFloat(this.value))) {
+                        if (parseFloat(this.value) < 0)
+                            this.value = 0;
+                        if (parseFloat(this.value) > 10)
+                            this.value = 10;
+                    }
+
+                    // Tính lại điểm trung bình
+                    calculateAverage(this.closest('tr'));
+                });
+            });
+
+            // Khởi tạo Bootstrap Modal
+            const addScoreTypeModal = document.getElementById('addScoreTypeModal');
+            let scoreTypeModalInstance;
+
+            // Khởi tạo và xử lý modal cấu hình trọng số
+            const configureWeightsModal = document.getElementById('configureWeightsModal');
+            let weightsModalInstance;
+
+            if (configureWeightsModal) {
+                try {
+                    weightsModalInstance = new bootstrap.Modal(configureWeightsModal);
+
+                    // Khi modal được hiển thị, cập nhật giá trị từ weights
+                    configureWeightsModal.addEventListener('shown.bs.modal', function () {
+                        // Cập nhật các trọng số hiện tại vào form
+                        for (const scoreType in weights) {
+                            const input = document.getElementById(`weight-${scoreType}`);
+                            if (input) {
+                                input.value = Math.round(weights[scoreType] * 100);
+                            } else {
+                                // Nếu không tìm thấy input, có thể cần tạo mới (loại điểm được thêm sau)
+                                addWeightInputToForm(scoreType, weights[scoreType]);
+                            }
+                        }
+                        // Cập nhật hiển thị tổng trọng số
+                        updateTotalWeightDisplay();
+                    });
+
+                    // Thêm sự kiện input cho tất cả các trọng số
+                    document.addEventListener('input', function (event) {
+                        if (event.target.classList.contains('weight-input')) {
+                            updateTotalWeightDisplay();
+                        }
+                    });
+
+                    // Nút lưu cấu hình
+                    document.getElementById('saveWeightsBtn').addEventListener('click', function () {
+                        saveWeightConfiguration();
+                    });
+                } catch (error) {
+                    console.error("Lỗi khởi tạo modal cấu hình trọng số:", error);
+                }
+            }
+
+            function loadWeightConfiguration() {
+                const classId = window.location.pathname.split('/classes/')[1].split('/')[0];
+                const subjectTeacherId = document.querySelector('input[name="subjectTeacherId"]').value;
+                const schoolYearId = document.querySelector('input[name="schoolYearId"]').value;
+                const contextPath = window.location.pathname.split('/')[1];
+                const baseUrl = contextPath ? '/' + contextPath : '';
+
+                fetch(`${baseUrl}/scores/score-types/weights?classId=${classId}&subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success && data.weights) {
+                                weights = data.weights;
+                                console.log("Loaded weights from server:", weights);
+
+                                // Cập nhật hiển thị
+                                document.querySelectorAll('th[data-score-type]').forEach(th => {
+                                    const type = th.getAttribute('data-score-type');
+                                    if (weights[type]) {
+                                        const weightPercent = Math.round(weights[type] * 100);
+                                        th.textContent = `${type} (${weightPercent}%)`;
+                                    }
+                                });
+
+                                // Tính lại điểm trung bình
+                                recalculateAllAverages();
+                                isWeightConfigured = true;
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error loading weights:", error);
+                        });
+            }
+
+            // Hàm thêm input trọng số mới vào form
+            function addWeightInputToForm(scoreType, weightValue = 0) {
+                const container = document.getElementById('additional-weights');
+                if (!container)
+                    return;
+
+                // Kiểm tra xem đã có input cho loại điểm này chưa
+                if (document.getElementById(`weight-${scoreType}`)) {
+                    return;
+                }
+
+                const weightPercent = Math.round(weightValue * 100);
+
+                const div = document.createElement('div');
+                div.className = 'mb-3';
+                div.innerHTML = `
+        <label for="weight-${scoreType}" class="form-label">Điểm ${scoreType} (%)</label>
+        <input type="number" class="form-control weight-input" id="weight-${scoreType}" 
+               data-score-type="${scoreType}" min="0" max="100" value="${weightPercent}" required>
+    `;
+
+                container.appendChild(div);
+            }
+
+// Hàm cập nhật hiển thị tổng trọng số
+            function updateTotalWeightDisplay() {
+                const inputs = document.querySelectorAll('.weight-input');
+                let total = 0;
+
+                inputs.forEach(input => {
+                    const value = parseInt(input.value) || 0;
+                    total += value;
+                });
+
+                const totalElement = document.getElementById('totalWeight');
+                if (totalElement) {
+                    totalElement.textContent = total;
+
+                    // Hiển thị cảnh báo nếu tổng khác 100%
+                    const displayElement = document.getElementById('totalWeightDisplay');
+                    if (displayElement) {
+                        if (total === 100) {
+                            displayElement.classList.remove('text-danger');
+                            displayElement.classList.add('text-success');
+                        } else {
+                            displayElement.classList.remove('text-success');
+                            displayElement.classList.add('text-danger');
+                        }
+                    }
+                }
+
+                return total;
+            }
+
+            function validateScoreForm() {
+                // Kiểm tra có điểm nào được nhập không
+                let hasInputs = false;
+                document.querySelectorAll('input.score-input').forEach(input => {
+                    if (input.value && input.value.trim() !== '') {
+                        hasInputs = true;
+                    }
+                });
+
+                if (!hasInputs) {
+                    alert('Vui lòng nhập ít nhất một điểm trước khi lưu!');
+                    return false;
+                }
+
+                // Kiểm tra giá trị điểm hợp lệ
+                let valid = true;
+                document.querySelectorAll('input.score-input').forEach(input => {
+                    if (input.value && input.value.trim() !== '') {
+                        const value = parseFloat(input.value);
+                        if (isNaN(value) || value < 0 || value > 10) {
+                            valid = false;
+                            input.classList.add('is-invalid');
+                            alert('Điểm phải là số từ 0-10');
+                        } else {
+                            input.classList.remove('is-invalid');
+                        }
+                    }
+                });
+
+                return valid;
+            }
+
+            // Hàm lưu cấu hình trọng số
+            function saveWeightConfiguration() {
+                const inputs = document.querySelectorAll('.weight-input');
+                const total = updateTotalWeightDisplay();
+
+                if (total !== 100) {
+                    alert('Tổng trọng số phải bằng 100%. Hiện tại: ' + total + '%');
+                    return;
+                }
+
+                // Thu thập trọng số từ form
+                const configuredWeights = {};
+                inputs.forEach(input => {
+                    const scoreType = input.dataset.scoreType;
+                    const percent = parseInt(input.value) || 0;
+                    configuredWeights[scoreType] = percent / 100;
+                });
+
+                // Lấy thông số API
+                const subjectTeacherId = document.querySelector('input[name="subjectTeacherId"]').value;
+                const schoolYearId = document.querySelector('input[name="schoolYearId"]').value;
+                const classId = window.location.pathname.split('/classes/')[1].split('/')[0];
+                const contextPath = window.location.pathname.split('/')[1];
+                const baseUrl = contextPath ? '/' + contextPath : '';
+
+                console.log("Lưu cấu hình trọng số:", configuredWeights);
+
+                fetch(`${baseUrl}/scores/classes/${classId}/scores/configure-weights?subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(configuredWeights)
+                })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                // Cập nhật weights object
+                                weights = configuredWeights;
+
+                                // Cập nhật hiển thị cột điểm
+                                document.querySelectorAll('th[data-score-type]').forEach(th => {
+                                    const type = th.getAttribute('data-score-type');
+                                    if (weights[type]) {
+                                        const weightPercent = Math.round(weights[type] * 100);
+                                        th.textContent = `${type} (${weightPercent}%)`;
+                                    }
+                                });
+
+                                // Cập nhật data-weight cho tất cả input
+                                document.querySelectorAll('input.score-input').forEach(input => {
+                                    // Lấy loại điểm từ name attribute
+                                    const nameMatch = input.name.match(/\[(.*?)\]/g);
+                                    if (nameMatch && nameMatch.length >= 2) {
+                                        const scoreType = nameMatch[1].replace('[', '').replace(']', '');
+                                        if (weights[scoreType]) {
+                                            input.dataset.weight = weights[scoreType];
+                                        }
+                                    }
+                                });
+
+                                // Tính lại điểm trung bình
+                                recalculateAllAverages();
+
+                                // Đánh dấu đã cấu hình
+                                isWeightConfigured = true;
+
+                                // Đóng modal
+                                if (weightsModalInstance) {
+                                    weightsModalInstance.hide();
+                                }
+
+                                alert('Đã lưu cấu hình trọng số thành công!');
+                            } else {
+                                alert('Lỗi: ' + (data.message || 'Không thể lưu cấu hình trọng số'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Lỗi khi lưu cấu hình trọng số:', error);
+                            alert('Đã xảy ra lỗi khi lưu cấu hình: ' + error.message);
+                        });
+            }
+
+            // Thay đổi hàm loadExistingScoreTypes() để lấy loại điểm theo lớp
+            function loadExistingScoreTypes() {
+                const contextPath = window.location.pathname.split('/')[1];
+                const baseUrl = contextPath ? '/' + contextPath : '';
+
+                // Lấy classId, subjectTeacherId và schoolYearId từ URL hoặc input hidden
+                const classId = window.location.pathname.split('/classes/')[1].split('/')[0];
+                const subjectTeacherId = document.querySelector('input[name="subjectTeacherId"]').value;
+                const schoolYearId = document.querySelector('input[name="schoolYearId"]').value;
+
+                // Gọi API mới để lấy loại điểm theo lớp
+                fetch(`${baseUrl}/scores/score-types/by-class?classId=${classId}&subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(scoreTypes => {
+                            const scoreTypeSelect = document.getElementById('scoreTypeSelect');
+                            // Xóa options cũ trừ option mặc định
+                            while (scoreTypeSelect.options.length > 1) {
+                                scoreTypeSelect.remove(1);
+                            }
+
+                            // Thêm các loại điểm từ API (trừ Giữa kỳ và Cuối kỳ)
+                            scoreTypes.forEach(type => {
+                                if (type !== 'Giữa kỳ' && type !== 'Cuối kỳ') {
+                                    const option = document.createElement('option');
+                                    option.value = type;
+                                    option.textContent = type;
+                                    scoreTypeSelect.appendChild(option);
+                                }
+                            });
+
+                            console.log("Loaded score types:", scoreTypes);
+                        })
+                        .catch(error => {
+                            console.error("Error loading score types:", error);
+                        });
+            }
+
+            // Gọi hàm load khi modal được mở
+            addScoreTypeModal.addEventListener('shown.bs.modal', function () {
+                loadExistingScoreTypes();
+                setTimeout(() => {
+                    const nameInput = document.getElementById('newScoreTypeName');
+                    if (nameInput) {
+                        nameInput.focus();
+                        console.log("Input đã được focus");
+                    }
+                }, 300);
+            });
+
+            // Thêm xử lý cho select loại điểm
+            const scoreTypeSelect = document.getElementById('scoreTypeSelect');
+            const newScoreTypeName = document.getElementById('newScoreTypeName');
+
+            // Thay đổi xử lý cho select loại điểm
+            if (scoreTypeSelect && newScoreTypeName) {
+                scoreTypeSelect.addEventListener('change', function () {
+                    if (this.value) {
+                        // Nếu đã chọn từ danh sách, cho phép để trống tên mới
+                        newScoreTypeName.value = '';
+                        // Không disable input, chỉ thông báo có thể để trống
+                        newScoreTypeName.placeholder = "Đã chọn từ danh sách có sẵn";
+                    } else {
+                        // Reset placeholder khi chưa chọn
+                        newScoreTypeName.placeholder = "";
+                    }
+                });
+            }
+
+            if (addScoreTypeModal) {
+                try {
+                    scoreTypeModalInstance = new bootstrap.Modal(addScoreTypeModal);
+                    console.log("Modal đã khởi tạo thành công");
+
+                    // Fix vấn đề form validation
+                    const modalBody = addScoreTypeModal.querySelector('.modal-body');
+                    if (modalBody && !modalBody.querySelector('form')) {
+                        const formContent = modalBody.innerHTML;
+                        modalBody.innerHTML = `<form novalidate>${formContent}</form>`;
+                    }
+
+                    // Fix lỗi focus
+                    addScoreTypeModal.addEventListener('shown.bs.modal', function () {
+                        setTimeout(() => {
+                            const nameInput = document.getElementById('newScoreTypeName');
+                            if (nameInput) {
+                                nameInput.focus();
+                                console.log("Input đã được focus");
+                            }
+                        }, 300);
+                    });
+                } catch (error) {
+                    console.error("Lỗi khởi tạo modal:", error);
+                }
+            }
+
+            // KHỞI TẠO TRỌNG SỐ ĐIỂM - GIỮA KỲ 40%, CUỐI KỲ 60%
+            let weights = {
+                'Giữa kỳ': 0.4,
+                'Cuối kỳ': 0.6
+            };
+
+            let isWeightConfigured = false;
+
+            // Biến theo dõi % hiện có của điểm giữa kỳ (ban đầu 40%)
+            let midtermPercentage = 40;
+
+            // Biến đếm số loại điểm hiện tại
+            let currentScoreTypes = 2; // Mặc định có 2 loại: Giữa kỳ và Cuối kỳ
+            const MAX_SCORE_TYPES = 5;
+
+            // Tính điểm trung bình khi trang tải xong
+            initializeAverageScores();
+
+            // 1. XỬ LÝ THÊM LOẠI ĐIỂM MỚI
+            const saveScoreTypeBtn = document.getElementById('saveScoreTypeBtn');
+            // Trong hàm xử lý nút saveScoreTypeBtn
+            // Thay thế logic xử lý nút saveScoreTypeBtn
+            if (saveScoreTypeBtn) {
+                saveScoreTypeBtn.addEventListener('click', function () {
+                    // Reset validation styling
+                    const nameInput = document.getElementById('newScoreTypeName');
+                    const selectInput = document.getElementById('scoreTypeSelect');
+
+                    nameInput.classList.remove('is-invalid');
+                    selectInput.classList.remove('is-invalid');
+
+                    // Xác định loại điểm được chọn hoặc nhập mới
+                    let scoreTypeName = '';
+
+                    // Nếu đã chọn từ dropdown
+                    if (selectInput.value) {
+                        scoreTypeName = selectInput.value;
+                    }
+                    // Nếu đã nhập tên mới
+                    else if (nameInput.value.trim()) {
+                        scoreTypeName = nameInput.value.trim();
+                    }
+
+                    // Validate input - phải có ít nhất 1 trong 2
+                    if (!scoreTypeName) {
+                        nameInput.classList.add('is-invalid');
+                        selectInput.classList.add('is-invalid');
+                        alert('Vui lòng chọn loại điểm có sẵn hoặc nhập tên loại điểm mới!');
+                        return;
+                    }
+
+                    // Kiểm tra số lượng loại điểm
+                    if (currentScoreTypes >= MAX_SCORE_TYPES) {
+                        alert(`Không thể thêm quá ${MAX_SCORE_TYPES} loại điểm!`);
+                        return;
+                    }
+
+                    // Kiểm tra trùng tên loại điểm
+                    const existingTypes = Array.from(document.querySelectorAll('th[data-score-type]'))
+                            .map(th => th.getAttribute('data-score-type'));
+
+                    if (existingTypes.includes(scoreTypeName)) {
+                        nameInput.classList.add('is-invalid');
+                        alert('Loại điểm này đã tồn tại!');
+                        return;
+                    }
+
+                    // Xác định đường dẫn API
+                    const contextPath = window.location.pathname.split('/')[1];
+                    const baseUrl = contextPath ? '/' + contextPath : '';
+                    console.log("API Base URL:", baseUrl);
+
+                    const classId = window.location.pathname.split('/classes/')[1].split('/')[0];
+                    const subjectTeacherId = document.querySelector('input[name="subjectTeacherId"]').value;
+                    const schoolYearId = document.querySelector('input[name="schoolYearId"]').value;
+
+
+                    // Gọi API để lưu loại điểm mới
+                    fetch(`${baseUrl}/scores/score-types/add`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            scoreType: scoreTypeName,
+                            weight: 0, // Trọng số mặc định là 0, sẽ cấu hình sau
+                            classId: classId,
+                            subjectTeacherId: subjectTeacherId,
+                            schoolYearId: schoolYearId
+                        })
+                    })
+                            .then(response => {
+                                console.log("API response status:", response.status);
+                                if (!response.ok) {
+                                    throw new Error(`HTTP error! Status: ${response.status}`);
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                console.log("API response data:", data);
+                                if (data.success) {
+                                    // Thiết lập trọng số mặc định cho loại điểm mới (0 vì chưa được cấu hình)
+                                    weights[scoreTypeName] = 0;
+
+                                    // Thêm cột mới vào bảng với trọng số 0% (tạm thời)
+                                    addNewScoreColumn(scoreTypeName, 0);
+
+                                    // Thêm trọng số mới vào form cấu hình
+                                    addWeightInputToForm(scoreTypeName, 0);
+
+                                    // Đóng modal
+                                    if (scoreTypeModalInstance) {
+                                        scoreTypeModalInstance.hide();
+                                    }
+
+                                    // Reset form
+                                    nameInput.value = '';
+                                    selectInput.selectedIndex = 0;
+
+                                    // Tăng số loại điểm hiện tại
+                                    currentScoreTypes++;
+
+                                    // Hiển thị thông báo cần cấu hình lại trọng số
+                                    isWeightConfigured = false;
+                                    alert('Thêm loại điểm thành công! Vui lòng cấu hình lại trọng số điểm.');
+
+                                    // Mở modal cấu hình trọng số
+                                    if (weightsModalInstance) {
+                                        setTimeout(() => {
+                                            weightsModalInstance.show();
+                                        }, 500);
+                                    }
+                                } else {
+                                    alert('Lỗi: ' + (data.message || 'Không thể thêm loại điểm'));
+                                }
+                            })
+                            .catch(error => {
+                                console.error("API error:", error);
+                                alert('Đã xảy ra lỗi khi thêm loại điểm: ' + error.message);
+                            });
+                });
+            }
+
+            // 2. XỬ LÝ KHÓA ĐIỂM CHO TỪNG SINH VIÊN
+            document.querySelectorAll('.lock-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const studentId = this.getAttribute('data-student-id');
+                    const isLocked = this.getAttribute('data-locked') === 'true';
+                    const row = this.closest('tr');
+
+                    // Kiểm tra xem có điểm nào được nhập hay không
+                    let hasScores = false;
+                    row.querySelectorAll('input.score-input').forEach(input => {
+                        if (input.value && input.value.trim() !== '') {
+                            hasScores = true;
+                        }
+                    });
+
+                    // Nếu chưa có điểm và đang định khóa
+                    if (!hasScores && !isLocked) {
+                        alert('Hiện tại chưa có điểm để khóa.');
+                        return;
+                    }
+
+
+
+                    // Lấy thông tin cần thiết
+                    const subjectTeacherId = document.querySelector('input[name="subjectTeacherId"]').value;
+                    const schoolYearId = document.querySelector('input[name="schoolYearId"]').value;
+                    const contextPath = window.location.pathname.split('/')[1];
+                    const baseUrl = contextPath ? '/' + contextPath : '';
+
+                    console.log(`Khóa/mở khóa điểm cho sinh viên ${studentId}, locked=${!isLocked}`);
+
+                    // Gọi API để khóa/mở khóa điểm
+                    fetch(`${baseUrl}/scores/lock`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            studentId: parseInt(studentId),
+                            subjectTeacherId: parseInt(subjectTeacherId),
+                            schoolYearId: parseInt(schoolYearId),
+                            lock: !isLocked
+                        })
+                    })
+                            .then(response => {
+                                console.log("Lock API status:", response.status);
+                                if (!response.ok) {
+                                    throw new Error(`HTTP error! Status: ${response.status}`);
+                                }
+                                return response.json();
+                            })
+                            // Trong file score-management.html - khoảng dòng 725-776
+                            .then(data => {
+                                console.log("Lock response:", data);
+                                if (data.success) {
+                                    // Cập nhật giao diện - inputs
+                                    row.querySelectorAll('input.score-input').forEach(input => {
+                                        input.disabled = !isLocked;
+                                    });
+
+                                    try {
+                                        // Cập nhật nút hoàn toàn bằng cách thay thế nội dung HTML
+                                        if (isLocked) {
+                                            // Đang khóa -> mở khóa
+                                            this.innerHTML = '<i class="fas fa-lock"></i> <span>Mở khóa</span>';
+                                            this.setAttribute('data-locked', 'false');
+                                        } else {
+                                            // Đang mở -> khóa
+                                            this.innerHTML = '<i class="fas fa-unlock"></i> <span>Khóa</span>';
+                                            this.setAttribute('data-locked', 'true');
+                                        }
+                                    } catch (e) {
+                                        console.error("Lỗi khi cập nhật UI:", e);
+                                    }
+
+                                    // Hiển thị thông báo
+                                    alert(data.message || 'Đã cập nhật trạng thái khóa');
+                                } else {
+                                    alert('Lỗi: ' + (data.message || 'Không thể cập nhật trạng thái'));
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                alert('Đã xảy ra lỗi khi cập nhật trạng thái khóa: ' + error.message);
+                            });
+                });
+            });
+
+            // 3. XỬ LÝ KHÓA TẤT CẢ ĐIỂM
+            const lockAllBtn = document.getElementById('lock-all-btn');
+            if (lockAllBtn) {
+                lockAllBtn.addEventListener('click', function () {
+                    if (confirm('Bạn có chắc chắn muốn khóa tất cả điểm?')) {
+                        const subjectTeacherId = document.querySelector('input[name="subjectTeacherId"]').value;
+                        const schoolYearId = document.querySelector('input[name="schoolYearId"]').value;
+                        const classId = window.location.pathname.split('/classes/')[1].split('/')[0];
+                        const contextPath = window.location.pathname.split('/')[1];
+                        const baseUrl = contextPath ? '/' + contextPath : '';
+
+                        console.log("Khóa tất cả điểm", {classId, subjectTeacherId, schoolYearId});
+
+                        fetch(`${baseUrl}/scores/lock-all`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                classId: parseInt(classId),
+                                subjectTeacherId: parseInt(subjectTeacherId),
+                                schoolYearId: parseInt(schoolYearId),
+                                lock: true
+                            })
+                        })
+                                .then(response => {
+                                    console.log("Lock all API status:", response.status);
+                                    if (!response.ok) {
+                                        throw new Error(`HTTP error! Status: ${response.status}`);
+                                    }
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    console.log("Lock all response:", data);
+                                    if (data.success) {
+                                        // Cập nhật giao diện
+                                        document.querySelectorAll('input.score-input').forEach(input => {
+                                            input.disabled = true;
+                                        });
+
+                                        document.querySelectorAll('.lock-btn').forEach(btn => {
+                                            const icon = btn.querySelector('i');
+                                            const text = btn.querySelector('span');
+
+                                            if (icon && text) {
+                                                document.querySelectorAll('.lock-btn').forEach(btn => {
+                                                    // Thay thế toàn bộ HTML thay vì thao tác riêng từng phần
+                                                    btn.innerHTML = '<i class="fas fa-lock"></i> <span>Mở khóa</span>';
+                                                    btn.setAttribute('data-locked', 'true');
+                                                });
+                                            }
+                                        });
+
+                                        alert(data.message || 'Đã khóa tất cả điểm thành công!');
+                                    } else {
+                                        alert('Lỗi: ' + (data.message || 'Không thể khóa tất cả điểm'));
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    alert('Đã xảy ra lỗi khi khóa tất cả điểm: ' + error.message);
+                                });
+                    }
+                });
+            }
+
+            // 4. XỬ LÝ MỞ KHÓA TẤT CẢ ĐIỂM
+            const unlockAllBtn = document.getElementById('unlock-all-btn');
+            if (unlockAllBtn) {
+                unlockAllBtn.addEventListener('click', function () {
+                    if (confirm('Bạn có chắc chắn muốn mở khóa tất cả điểm?')) {
+                        const subjectTeacherId = document.querySelector('input[name="subjectTeacherId"]').value;
+                        const schoolYearId = document.querySelector('input[name="schoolYearId"]').value;
+                        const classId = window.location.pathname.split('/classes/')[1].split('/')[0];
+                        const contextPath = window.location.pathname.split('/')[1];
+                        const baseUrl = contextPath ? '/' + contextPath : '';
+
+                        console.log("Mở khóa tất cả điểm", {classId, subjectTeacherId, schoolYearId});
+
+                        fetch(`${baseUrl}/scores/lock-all`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                classId: parseInt(classId),
+                                subjectTeacherId: parseInt(subjectTeacherId),
+                                schoolYearId: parseInt(schoolYearId),
+                                lock: false
+                            })
+                        })
+                                .then(response => {
+                                    console.log("Unlock all API status:", response.status);
+                                    if (!response.ok) {
+                                        throw new Error(`HTTP error! Status: ${response.status}`);
+                                    }
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    console.log("Unlock all response:", data);
+                                    if (data.success) {
+                                        // Cập nhật giao diện
+                                        document.querySelectorAll('input.score-input').forEach(input => {
+                                            input.disabled = false;
+                                        });
+
+                                        document.querySelectorAll('.lock-btn').forEach(btn => {
+                                            const icon = btn.querySelector('i');
+                                            const text = btn.querySelector('span');
+
+                                            if (icon && text) {
+                                                document.querySelectorAll('.lock-btn').forEach(btn => {
+                                                    // Thay thế toàn bộ HTML thay vì thao tác riêng từng phần
+                                                    btn.innerHTML = '<i class="fas fa-unlock"></i> <span>Khóa</span>';
+                                                    btn.setAttribute('data-locked', 'false');
+                                                });
+                                            }
+                                        });
+
+                                        alert(data.message || 'Đã mở khóa tất cả điểm thành công!');
+                                    } else {
+                                        alert('Lỗi: ' + (data.message || 'Không thể mở khóa tất cả điểm'));
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    alert('Đã xảy ra lỗi khi mở khóa tất cả điểm: ' + error.message);
+                                });
+                    }
+                });
+            }
+
+         
+
+            // Hàm thêm cột điểm mới
+            function addNewScoreColumn(scoreType, weightPercent) {
+                // Lấy tham chiếu đến hàng tiêu đề
+                const headerRow = document.querySelector('#scoreTable thead tr');
+                if (!headerRow) {
+                    console.error("Không tìm thấy hàng tiêu đề");
+                    return;
+                }
+
+                // Tạo ô tiêu đề mới
+                const headerCell = document.createElement('th');
+                headerCell.setAttribute('data-score-type', scoreType);
+                headerCell.textContent = `${scoreType} (${weightPercent}%)`;
+
+                // Thêm nút xóa
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-sm btn-link text-danger p-0 ms-2';
+                deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                deleteBtn.title = 'Xóa loại điểm';
+                deleteBtn.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    removeScoreColumn(scoreType);
+                });
+                headerCell.appendChild(deleteBtn);
+
+                // Định vị để chèn vào trước cột Giữa kỳ
+                const midtermCellIndex = Array.from(headerRow.children).findIndex(cell =>
+                    cell.getAttribute('data-score-type') === 'Giữa kỳ');
+
+                if (midtermCellIndex >= 0) {
+                    headerRow.insertBefore(headerCell, headerRow.children[midtermCellIndex]);
+                } else {
+                    // Nếu không tìm thấy, chèn đúng vị trí tương đối
+                    const finalCellIndex = Array.from(headerRow.children).findIndex(cell =>
+                        cell.getAttribute('data-score-type') === 'Cuối kỳ');
+
+                    if (finalCellIndex >= 0) {
+                        headerRow.insertBefore(headerCell, headerRow.children[finalCellIndex]);
+                    } else {
+                        // Chèn vào cuối, trước cột Điểm TB
+                        const avgCellIndex = Array.from(headerRow.children).findIndex(cell =>
+                            cell.textContent.includes('Điểm TB'));
+
+                        if (avgCellIndex >= 0) {
+                            headerRow.insertBefore(headerCell, headerRow.children[avgCellIndex]);
+                        } else {
+                            headerRow.appendChild(headerCell);
+                        }
+                    }
+                }
+
+                // Thêm ô nhập điểm cho mỗi sinh viên
+                document.querySelectorAll('#scoreTable tbody tr').forEach(row => {
+                    const cell = document.createElement('td');
+                    const studentId = row.querySelector('.lock-btn').getAttribute('data-student-id');
+                    const isDisabled = row.querySelector('.lock-btn').getAttribute('data-locked') === 'true';
+
+                    // QUAN TRỌNG: Thêm thuộc tính data-weight với giá trị từ weights
+                    const weight = weights[scoreType] || 0;
+
+                    cell.innerHTML = `
+            <input type="number" class="form-control score-input" 
+                   name="scores[${studentId}][${scoreType}]"
+                   data-weight="${weight}"
+                   step="0.1" min="0" max="10" ${isDisabled ? 'disabled' : ''} />
+            <input type="hidden" 
+                   name="scores[${studentId}][${scoreType}].id" value="" />
+        `;
+
+                    // Chèn vào vị trí tương ứng với header
+                    if (midtermCellIndex >= 0 && row.children.length > midtermCellIndex) {
+                        row.insertBefore(cell, row.children[midtermCellIndex]);
+                    } else {
+                        const finalCellIndex = Array.from(row.children).findIndex((_, index) => {
+                            const header = headerRow.children[index];
+                            return header && header.getAttribute('data-score-type') === 'Cuối kỳ';
+                        });
+
+                        if (finalCellIndex >= 0) {
+                            row.insertBefore(cell, row.children[finalCellIndex]);
+                        } else {
+                            const avgCellIndex = Array.from(headerRow.children).findIndex(cell =>
+                                cell.textContent.includes('Điểm TB'));
+
+                            if (avgCellIndex >= 0 && row.children.length > avgCellIndex) {
+                                row.insertBefore(cell, row.children[avgCellIndex]);
+                            } else {
+                                row.appendChild(cell);
+                            }
+                        }
+                    }
+
+                    // Gắn sự kiện tính điểm trung bình
+                    const input = cell.querySelector('input.score-input');
+                    input.addEventListener('input', function () {
+                        calculateAverage(row);
+                    });
+                });
+            }
+
+            // Hàm xóa cột điểm
+            // Hàm xóa cột điểm
+            // Hàm xóa cột điểm
+            function removeScoreColumn(scoreType) {
+                if (scoreType === 'Giữa kỳ' || scoreType === 'Cuối kỳ') {
+                    alert('Không thể xóa cột điểm mặc định!');
+                    return;
+                }
+
+                if (confirm(`Bạn có chắc chắn muốn xóa cột điểm "${scoreType}"?`)) {
+                    const classId = window.location.pathname.split('/classes/')[1].split('/')[0];
+                    const subjectTeacherId = document.querySelector('input[name="subjectTeacherId"]').value;
+                    const schoolYearId = document.querySelector('input[name="schoolYearId"]').value;
+                    const contextPath = window.location.pathname.split('/')[1];
+                    const baseUrl = contextPath ? '/' + contextPath : '';
+
+                    // Xóa cột khỏi header
+                    const headerCell = document.querySelector(`th[data-score-type="${scoreType}"]`);
+                    if (!headerCell)
+                        return;
+
+                    // Lấy % của loại điểm hiện tại (để hiển thị)
+                    const weightText = headerCell.textContent;
+                    const weightMatch = weightText.match(/\((\d+)%\)/);
+                    const weightPercent = weightMatch ? parseInt(weightMatch[1]) : 0;
+
+                    // Xác định vị trí của cột
+                    const headerRow = headerCell.parentElement;
+                    const columnIndex = Array.from(headerRow.children).indexOf(headerCell);
+
+                    // Gọi API để xóa loại điểm khỏi bảng classscoretypes
+                    fetch(`${baseUrl}/scores/score-types/remove`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            scoreType: scoreType,
+                            classId: classId,
+                            subjectTeacherId: subjectTeacherId,
+                            schoolYearId: schoolYearId
+                        })
+                    })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    // Xóa cột khỏi tất cả hàng
+                                    document.querySelectorAll('#scoreTable tbody tr').forEach(row => {
+                                        if (row.children[columnIndex]) {
+                                            row.removeChild(row.children[columnIndex]);
+                                        }
+                                    });
+
+                                    // Xóa header
+                                    headerRow.removeChild(headerCell);
+
+                                    // Xóa khỏi đối tượng weights
+                                    delete weights[scoreType];
+
+                                    // Giảm số loại điểm hiện tại
+                                    currentScoreTypes--;
+
+                                    // Xóa input trong form cấu hình nếu có
+                                    const weightInput = document.getElementById(`weight-${scoreType}`);
+                                    if (weightInput) {
+                                        weightInput.closest('.mb-3').remove();
+                                    }
+
+                                    // Đánh dấu cần cấu hình lại
+                                    isWeightConfigured = false;
+
+                                    // Cập nhật hiển thị trọng số
+                                    updateTotalWeightDisplay();
+
+                                    // Tính lại điểm trung bình cho tất cả hàng
+                                    recalculateAllAverages();
+
+                                    // Hiển thị thông báo
+                                    alert(`Đã xóa loại điểm ${scoreType}. Vui lòng cấu hình lại trọng số điểm.`);
+
+                                    // Mở modal cấu hình
+                                    if (weightsModalInstance) {
+                                        setTimeout(() => {
+                                            weightsModalInstance.show();
+                                        }, 500);
+                                    }
+                                } else {
+                                    alert('Lỗi: ' + (data.message || 'Không thể xóa loại điểm'));
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                alert('Đã xảy ra lỗi: ' + error.message);
+                            });
+                }
+            }
+
+            // Hàm cập nhật hiển thị trọng số
+            function updateWeightDisplay() {
+                document.querySelectorAll('th[data-score-type]').forEach(th => {
+                    const scoreType = th.getAttribute('data-score-type');
+                    if (weights[scoreType]) {
+                        const percent = Math.round(weights[scoreType] * 100);
+
+                        // Lưu lại các phần tử con (như nút xóa)
+                        const children = Array.from(th.children);
+
+                        // Cập nhật text
+                        th.textContent = `${scoreType} (${percent}%)`;
+
+                        // Thêm lại các phần tử con
+                        children.forEach(child => th.appendChild(child));
+                    }
+                });
+            }
+
+            // Hàm tính điểm trung bình cho một hàng
+            // Thay thế hoặc cập nhật hàm tính điểm trung bình
+            // Tìm và cập nhật hàm calculateAverage
+            function calculateAverage(row) {
+                let totalWeightedScore = 0;
+                let totalWeight = 0;
+
+                // Lấy tất cả input điểm trong row này
+                const scoreInputs = row.querySelectorAll('input.score-input');
+
+                scoreInputs.forEach(input => {
+                    // Lấy loại điểm từ name attribute của input
+                    const nameMatch = input.name.match(/\[(.*?)\]/g);
+                    if (nameMatch && nameMatch.length >= 2) {
+                        const scoreType = nameMatch[1].replace('[', '').replace(']', '');
+                        const scoreValue = parseFloat(input.value) || 0;
+
+                        if (input.value.trim() !== '' && !isNaN(scoreValue)) {
+                            // Lấy weight từ đối tượng weights
+                            const weight = weights[scoreType] || 0;
+                            totalWeightedScore += scoreValue * weight;
+                            totalWeight += weight;
+                        }
+                    }
+                });
+
+                // Tìm phần tử hiển thị điểm trung bình
+                const avgElement = row.querySelector('.average-score');
+                if (avgElement) {
+                    if (totalWeight > 0) {
+                        const avgScore = (totalWeightedScore / totalWeight).toFixed(2);
+                        avgElement.textContent = avgScore;
+                    } else {
+                        avgElement.textContent = '-';
+                    }
+                }
+            }
+
+            // Hàm tính điểm trung bình cho tất cả các hàng
+            function recalculateAllAverages() {
+                document.querySelectorAll('#scoreTable tbody tr').forEach(row => {
+                    calculateAverage(row);
+                });
+            }
+
+            // Hàm khởi tạo tính điểm trung bình
+            function initializeAverageScores() {
+                document.querySelectorAll('#scoreTable tbody tr').forEach(row => {
+                    calculateAverage(row);
+                });
+            }
+
+            // Đảm bảo điểm trung bình được tính đúng khi load trang
+            setTimeout(() => {
+                console.log("Tính toán điểm trung bình cho tất cả hàng...");
+                const tableRows = document.querySelectorAll('#scoreTable tbody tr');
+                tableRows.forEach(row => {
+                    calculateAverage(row);
+                });
+            }, 500);
+            loadWeightConfiguration();
+
+
+        });
+    </script>
+</body>
+</html>

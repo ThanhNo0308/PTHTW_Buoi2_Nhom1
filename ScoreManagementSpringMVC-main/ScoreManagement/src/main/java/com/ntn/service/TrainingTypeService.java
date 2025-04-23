@@ -6,11 +6,27 @@ package com.ntn.service;
 
 import com.ntn.pojo.Trainingtype;
 import java.util.List;
+import java.util.Map;
 
-/**
- *
- * @author nguye
- */
 public interface TrainingTypeService {
-     List<Trainingtype> getTrainingType();
+
+    List<Trainingtype> getTrainingTypes();
+
+    Trainingtype getTrainingTypeById(int id);
+
+    Trainingtype getTrainingTypeByName(String name);
+
+    boolean addTrainingType(Trainingtype trainingType);
+
+    boolean updateTrainingType(Trainingtype trainingType);
+
+    boolean deleteTrainingType(int id);
+
+    boolean hasRelatedMajors(int trainingTypeId);
+
+    int countTrainingTypes();
+
+    int countMajorsByTrainingType(int trainingTypeId);
+
+    Map<Integer, Integer> getMajorsCountByTrainingType();
 }

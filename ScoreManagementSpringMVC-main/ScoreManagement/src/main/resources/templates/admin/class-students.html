@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách sinh viên lớp</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+    
+    <div class="container mt-4">
+        <!-- Thông báo -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-users"></i> Sinh viên lớp 
+                    <span th:if="${class != null}" th:text="${class.className}"></span>
+                </h5>
+                <a th:href="@{/admin/classes}" class="btn btn-light btn-sm">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách lớp
+                </a>
+            </div>
+            <div class="card-body">
+                <!-- Tìm kiếm -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <form th:action="@{/admin/class-students/{classId}(classId=${class.id})}" method="get" class="d-flex">
+                            <div class="input-group">
+                                <input type="text" name="keyword" class="form-control" 
+                                       placeholder="Tìm theo mã SV, họ tên, email..." 
+                                       th:value="${param.keyword}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Tìm
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a th:href="@{/admin/student-add/{classId}(classId=${class.id})}" class="btn btn-success">
+                            <i class="fas fa-plus-circle"></i> Thêm sinh viên
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>MSSV</th>
+                                <th>Họ và tên</th>
+                                <th>Giới tính</th>
+                                <th>Ngày sinh</th>
+                                <th>Email</th>
+                                <th>Số điện thoại</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${students.isEmpty()}">
+                                <td colspan="9" class="text-center">Không có sinh viên nào trong lớp này</td>
+                            </tr>
+                            <tr th:each="student, stat : ${students}">
+                                <td th:text="${stat.count}"></td>
+                                <td th:text="${student.studentCode}"></td>
+                                <td th:text="${student.lastName + ' ' + student.firstName}"></td>
+                                <td>
+                                    <span th:if="${student.gender == 1}">Nam</span>
+                                    <span th:if="${student.gender == 0}">Nữ</span>
+                                </td>
+                                <td th:text="${#dates.format(student.birthdate, 'dd/MM/yyyy')}"></td>
+                                <td th:text="${student.email}"></td>
+                                <td th:text="${student.phone}"></td>
+                                <td>
+                                    <span th:if="${student.status == 'Active'}" class="badge bg-success">Đang học</span>
+                                    <span th:if="${student.status == 'Inactive'}" class="badge bg-secondary">Nghỉ học</span>
+                                    <span th:if="${student.status == 'Graduated'}" class="badge bg-info">Đã tốt nghiệp</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a th:href="@{/admin/student-update/{id}(id=${student.id})}" class="btn btn-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a th:href="@{/admin/student-delete/{id}(id=${student.id})}" 
+                                           class="btn btn-danger"
+                                           onclick="return confirm('Bạn có chắc chắn muốn xóa sinh viên này?');">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="base :: footer"></div>
+</body>
+</html>

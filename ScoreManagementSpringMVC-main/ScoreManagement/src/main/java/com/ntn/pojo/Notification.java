@@ -37,6 +37,10 @@ import jakarta.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Notification.findByCreatedAt", query = "SELECT n FROM Notification n WHERE n.createdAt = :createdAt")})
 public class Notification implements Serializable {
 
+    @Size(max = 512)
+    @Column(name = "Message")
+    private String message;
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -44,9 +48,6 @@ public class Notification implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Id")
     private Integer id;
-    @Size(max = 512)
-    @Column(name = "Message")
-    private String message;
     @Column(name = "CreatedAt")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
@@ -72,13 +73,6 @@ public class Notification implements Serializable {
         this.id = id;
     }
 
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
 
     public Date getCreatedAt() {
         return createdAt;
@@ -127,6 +121,14 @@ public class Notification implements Serializable {
     @Override
     public String toString() {
         return "com.hcmou.pojo.Notification[ id=" + id + " ]";
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
     
 }

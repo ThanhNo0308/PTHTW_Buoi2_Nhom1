@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{base}">
+    <head>
+        <title>Trang sinh viên</title>
+        <th:block th:replace="base :: styles"></th:block>
+    </head>
+    <body>
+        <div th:replace="base :: header"></div>
+        <div>
+            <div class="container mt-4">
+                <h1>Chào mừng, <span th:text="${#authentication.principal.username}"></span>!</h1>
+
+                <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <i class="fas fa-graduation-cap mr-1"></i>
+                                Điểm số
+                            </div>
+                            <div class="card-body">
+                                <a th:href="@{/student-scores}" class="btn btn-primary btn-lg btn-block mb-3">
+                                    <i class="fas fa-chart-line mr-2"></i> Xem điểm của tôi
+                                </a>
+                                <p>Xem bảng điểm của tất cả các môn học của bạn.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <i class="fas fa-users mr-1"></i>
+                                Lớp học
+                            </div>
+                            <div class="card-body">
+                                <a href="#" class="btn btn-info btn-lg btn-block mb-3">
+                                    <i class="fas fa-users mr-2"></i> Thông tin lớp
+                                </a>
+                                <p>Xem thông tin về lớp học và danh sách các bạn cùng lớp.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <i class="fas fa-user mr-1"></i>
+                                Thông tin cá nhân
+                            </div>
+                            <div class="card-body">
+                                <h5>Thông tin sinh viên</h5>
+                                <table class="table">
+                                    <tr>
+                                        <th>Mã sinh viên:</th>
+                                        <td th:text="${student.studentCode}">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Họ và tên:</th>
+                                        <td th:text="${student.studentName}">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Email:</th>
+                                        <td th:text="${student.email}">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Lớp:</th>
+                                        <td th:text="${student.classId.className}">-</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:replace="base :: footer"></div>
+    </body>
+</html>

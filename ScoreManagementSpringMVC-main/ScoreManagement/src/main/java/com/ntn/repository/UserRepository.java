@@ -15,19 +15,34 @@ import java.util.List;
  */
 public interface UserRepository {
 
-//    List<User> getUsers();
-
     User getUserByUsername(String username);
+
+    User getUserByEmail(String email);
 
     boolean authUser(String username, String password);
 
     User addUser(User user);
+
     User addTeacherUser(User user);
+
     boolean findEmail(String email);
+
     List<Student> getStudentbyEmail(String email);
+
     List<Teacher> getTeacherByEmail(String email);
+
     boolean findTeacherEmail(String email);
+
     boolean authAdminUser(String username, String password);
+
     boolean authTeacherUser(String username, String password);
+
     boolean authStudentUser(String username, String password);
+
+    List<User> getUsers();
+
+    User getUserById(int id);
+
+    boolean updateUser(User user);
+    boolean deleteUser(int id);
 }

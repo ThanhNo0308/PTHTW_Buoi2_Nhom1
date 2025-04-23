@@ -15,4 +15,7 @@ public interface DepartmentRepository {
     List<Department> getDepartments();
     boolean addOrUpdateDepartment(Department department);
     boolean deleteDepartment(int departmentId);
+    Department getDepartmentById(int departmentId);
+    boolean hasRelatedData(int departmentId);
+    long countDepartments();
 }

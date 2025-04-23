@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.Serializable;
 import java.util.List;
 import jakarta.persistence.Basic;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,10 +18,14 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
+import java.util.Date;
+import java.util.Set;
 
 /**
  *
@@ -38,25 +43,27 @@ import jakarta.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Schoolyear.findBySemesterName", query = "SELECT s FROM Schoolyear s WHERE s.semesterName = :semesterName")})
 public class Schoolyear implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-    @Id
-    @Basic(optional = false)
-    @NotNull
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id")
-    private Integer id;
     @Size(max = 50)
     @Column(name = "NameYear")
     private String nameYear;
-    @Size(max = 30)
     @Column(name = "YearStart")
-    private String yearStart;
-    @Size(max = 30)
+    @Temporal(TemporalType.DATE)
+    private Date yearStart;
     @Column(name = "YearEnd")
-    private String yearEnd;
+    @Temporal(TemporalType.DATE)
+    private Date yearEnd;
     @Size(max = 55)
     @Column(name = "SemesterName")
     private String semesterName;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "schoolYearId")
+    private Set<Classscoretypes> classscoretypesSet;
+
+    private static final long serialVersionUID = 1L;
+    @Id
+    @Basic(optional = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "Id")
+    private Integer id;
     @JsonIgnore
     @OneToMany(mappedBy = "schoolYearId")
     private List<Score> scoreList;
@@ -79,37 +86,6 @@ public class Schoolyear implements Serializable {
         this.id = id;
     }
 
-    public String getNameYear() {
-        return nameYear;
-    }
-
-    public void setNameYear(String nameYear) {
-        this.nameYear = nameYear;
-    }
-
-    public String getYearStart() {
-        return yearStart;
-    }
-
-    public void setYearStart(String yearStart) {
-        this.yearStart = yearStart;
-    }
-
-    public String getYearEnd() {
-        return yearEnd;
-    }
-
-    public void setYearEnd(String yearEnd) {
-        this.yearEnd = yearEnd;
-    }
-
-    public String getSemesterName() {
-        return semesterName;
-    }
-
-    public void setSemesterName(String semesterName) {
-        this.semesterName = semesterName;
-    }
 
     @XmlTransient
     public List<Score> getScoreList() {
@@ -152,6 +128,45 @@ public class Schoolyear implements Serializable {
     @Override
     public String toString() {
         return nameYear + " - " + semesterName;
+    }
+    @XmlTransient
+    public Set<Classscoretypes> getClassscoretypesSet() {
+        return classscoretypesSet;
+    }
+    public void setClassscoretypesSet(Set<Classscoretypes> classscoretypesSet) {
+        this.classscoretypesSet = classscoretypesSet;
+    }
+
+    public String getNameYear() {
+        return nameYear;
+    }
+
+    public void setNameYear(String nameYear) {
+        this.nameYear = nameYear;
+    }
+
+    public Date getYearStart() {
+        return yearStart;
+    }
+
+    public void setYearStart(Date yearStart) {
+        this.yearStart = yearStart;
+    }
+
+    public Date getYearEnd() {
+        return yearEnd;
+    }
+
+    public void setYearEnd(Date yearEnd) {
+        this.yearEnd = yearEnd;
+    }
+
+    public String getSemesterName() {
+        return semesterName;
+    }
+
+    public void setSemesterName(String semesterName) {
+        this.semesterName = semesterName;
     }
     
 }

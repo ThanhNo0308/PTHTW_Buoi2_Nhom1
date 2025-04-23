@@ -21,11 +21,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
+import java.util.Set;
 
-/**
- *
- * @author Kiet
- */
 @Entity
 @Table(name = "typescore")
 @XmlRootElement
@@ -34,10 +31,12 @@ import jakarta.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Typescore.findByScoreType", query = "SELECT t FROM Typescore t WHERE t.scoreType = :scoreType")})
 public class Typescore implements Serializable {
 
+    @OneToMany(mappedBy = "scoreType")
+    private Set<Classscoretypes> classscoretypesSet;
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
-    @NotNull
     @Size(min = 1, max = 50)
     @Column(name = "ScoreType")
     private String scoreType;
@@ -92,6 +91,15 @@ public class Typescore implements Serializable {
     @Override
     public String toString() {
         return scoreType;
+    }
+
+    @XmlTransient
+    public Set<Classscoretypes> getClassscoretypesSet() {
+        return classscoretypesSet;
+    }
+
+    public void setClassscoretypesSet(Set<Classscoretypes> classscoretypesSet) {
+        this.classscoretypesSet = classscoretypesSet;
     }
     
 }

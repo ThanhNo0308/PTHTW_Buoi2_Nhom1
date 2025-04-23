@@ -1,34 +1,58 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Interface.java to edit this template
- */
 package com.ntn.repository;
-
 
 import com.ntn.pojo.ListScoreDTO;
 import com.ntn.pojo.Score;
 import com.ntn.pojo.Student;
+import com.ntn.pojo.Typescore;
 import java.util.List;
-import java.util.Map;
 
 /**
- *
- * @author Kiet
+ * Repository xử lý dữ liệu điểm sinh viên
  */
-
-
 public interface ScoreRepository {
+    
     List<Score> getScores();
+    
     Score getScoreById(int id);
+    
     List<Score> getScoreByStudentCode(String studentCode);
+    
     List<Score> getScoreByStudentFullName(String firstName, String lastName);
+    
+    List<Score> findByStudent(Student student);
+    
     List<Score> getSubjectScoresByStudentCode(String studentCode);
+    
     List<Score> getSubjectScoresByStudentCodeAndSchoolYear(String studentCode, int schoolYearId);
+   
     List<Score> getListScoreBySubjectTeacherIdAndSchoolYearId(int subjectTeacherID, int schoolYearId);
+    
     List<Score> getListScoreBySubjectTeacherIdAndSchoolYearIdAndStudentId(int subjectTeacherID, int schoolYearId, int studentID);
+    
     boolean saveListScoreByListScoreDTO(ListScoreDTO listScoreDTO);
-    List<Map<String, Object>> convertListScoreByListScoreDTO(ListScoreDTO listScoreDTO);
-    List<Student> convertListScoreToStudent(ListScoreDTO listScoreDTO);
+    
+    boolean saveScores(List<Score> scores);
+    
+    List<Score> getScoresBySubjectTeacherIdAndClassIdAndSchoolYearId(int subjectTeacherId, int classId, int schoolYearId);
+    
+    int countScoreTypesBySubjectTeacher(int subjectTeacherId);
+    
+    boolean addScoreType(String typeName, int subjectTeacherId);
+    
+    Student getStudentByCode(String studentCode);
+    
+    Score getScoreByStudentSubjectSchoolYearAndType(
+            int studentId, int subjectTeacherId, int schoolYearId, String scoreType);
+    
+    List<Typescore> getAllScoreTypes();
+    
+    Typescore getScoreTypeByName(String name);
+    
+    boolean addScoreType(Typescore newType);
+    
+    boolean saveScore(Score score);
+    
+    boolean updateScoreLockStatus(int scoreId, boolean locked);
     
     
 }

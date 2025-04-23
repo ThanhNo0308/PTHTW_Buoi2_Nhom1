@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
  */
 public interface UserService extends UserDetailsService{
     User getUserByUn(String username);
+    User getUserByEmail(String email);
     boolean authUser(String username, String password);
     User addUser(Map<String, String> params);
     boolean isEmailExists(String email);
@@ -24,4 +25,8 @@ public interface UserService extends UserDetailsService{
     boolean authAdminUser(String username, String password);
     boolean authTeacherUser(String username, String password);
     boolean authStudentUser(String username, String password);
+    List<User> getUsers();
+    User getUserById(int id);
+    boolean updateUser(User user);
+    boolean deleteUser(int id);
 }

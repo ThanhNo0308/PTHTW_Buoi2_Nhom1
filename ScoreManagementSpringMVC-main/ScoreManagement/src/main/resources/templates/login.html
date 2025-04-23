@@ -52,7 +52,7 @@
                                         Tên đăng nhập hoặc mật khẩu không đúng!
                                         <span class="closebtn" style="float:right;cursor:pointer;">&times;</span>
                                     </div>
-                                    <div th:if="${param.roleError}" class="box_alert_fail_login alert alert-danger mt-3">
+                                    <div th:if="${param.invalid_session}" class="box_alert_fail_login alert alert-danger mt-3">
                                         Bạn đã chọn sai vai trò. Hãy kiểm tra lại.
                                         <span class="closebtn" style="float:right;cursor:pointer;">&times;</span>
                                     </div>

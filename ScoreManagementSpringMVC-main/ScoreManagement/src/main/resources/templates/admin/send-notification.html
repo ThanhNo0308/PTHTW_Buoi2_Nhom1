@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>Gửi Thông Báo</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+    
+    <div class="container mt-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-bell"></i> Gửi Thông Báo</h5>
+            </div>
+            <div class="card-body">
+                <!-- Thông báo thành công -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                
+                <!-- Form gửi thông báo -->
+                <form th:action="@{/admin/send-notification}" method="post">
+                    <div class="mb-3">
+                        <label for="classId" class="form-label">Gửi đến</label>
+                        <select class="form-select" id="classId" name="classId">
+                            <option value="">Tất cả sinh viên</option>
+                            <option th:each="class : ${classes}" th:value="${class.id}" th:text="${class.className}"></option>
+                        </select>
+                        <div class="form-text">Chọn "Tất cả sinh viên" để gửi thông báo cho tất cả sinh viên hoặc chọn một lớp cụ thể.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="subject" name="subject" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Nội dung <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                    </div>
+                    
+                    <div class="text-end mt-3">
+                        <a th:href="@{/admin/pageAdmin}" class="btn btn-secondary">Hủy</a>
+                        <button type="submit" class="btn btn-primary">Gửi thông báo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="base :: footer"></div>
+</body>
+</html>

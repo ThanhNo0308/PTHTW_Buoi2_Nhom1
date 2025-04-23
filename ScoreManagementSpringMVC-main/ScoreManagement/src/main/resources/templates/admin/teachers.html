@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head>
+        <meta charset="UTF-8">
+        <title>Quản lý Giảng viên</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-chalkboard-teacher"></i> Quản lý Giảng viên</h2>
+            <a href="#" th:href="@{/admin/teacher-add}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Thêm Giảng viên
+            </a>
+        </div>
+        <!-- Form tìm kiếm giảng viên -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/admin/teachers}" method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="departmentId" class="form-label">Khoa:</label>
+                        <select class="form-select" id="departmentId" name="departmentId">
+                            <option value="">-- Tất cả khoa --</option>
+                            <option th:each="dept : ${departments}" 
+                                    th:value="${dept.id}" 
+                                    th:text="${dept.departmentName}"
+                                    th:selected="${param.departmentId != null && param.departmentId[0] == dept.id.toString()}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="keyword" class="form-label">Từ khóa:</label>
+                        <input type="text" class="form-control" id="keyword" name="keyword" 
+                               th:value="${param.keyword}" placeholder="Tên, email hoặc số điện thoại...">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Tìm kiếm
+                        </button>
+                        <a th:href="@{/admin/teachers}" class="btn btn-secondary ms-2">
+                            <i class="fas fa-redo"></i> Đặt lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- Thông báo -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Bảng giảng viên -->
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Mã GV</th>
+                                <th>Họ và tên</th>
+                                <th>Email</th>
+                                <th>Số điện thoại</th>
+                                <th>Tài khoản</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="teacher : ${teachers}">
+                                <td th:text="${teacher.id}"></td>
+                                <td th:text="${teacher.teacherName}"></td>
+                                <td th:text="${teacher.email}"></td>
+                                <td th:text="${teacher.phoneNumber}"></td>
+                                <td th:text="${teacherUserMap.containsKey(teacher.id) ? teacherUserMap.get(teacher.id) : 'Chưa có tài khoản'}"></td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{'/admin/teacher-update/' + ${teacher.id}}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i> Sửa
+                                        </a>
+                                        <a th:href="@{'/admin/teacher-delete/' + ${teacher.id}}" class="btn btn-sm btn-danger"
+                                           onclick="return confirm('Bạn có chắc chắn muốn xóa giảng viên này?');">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
+</body>
+</html>

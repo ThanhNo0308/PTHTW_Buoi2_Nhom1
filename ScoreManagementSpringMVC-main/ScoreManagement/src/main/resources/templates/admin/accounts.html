@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head>
+        <meta charset="UTF-8">
+        <title>Quản lý tài khoản</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col">
+                <h2 class="mb-4">
+                    <i class="fas fa-user-cog me-2"></i> Quản lý tài khoản
+                </h2>
+
+                <!-- Thông báo thành công -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i> <span th:text="${successMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <!-- Thông báo lỗi -->
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i> <span th:text="${errorMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <!-- Thống kê -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="fas fa-users fa-3x text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="text-muted mb-0">Tổng số tài khoản</h6>
+                                        <h2 class="mb-0" th:text="${accounts.size()}">0</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="fas fa-user-check fa-3x text-success"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="text-muted mb-0">Tài khoản hoạt động</h6>
+                                        <h2 class="mb-0" th:text="${activeCount}">0</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="fas fa-user-times fa-3x text-danger"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="text-muted mb-0">Tài khoản ngừng hoạt động</h6>
+                                        <h2 class="mb-0" th:text="${accounts.size() - activeCount}">0</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card danh sách tài khoản -->
+                <div class="card shadow">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Danh sách tài khoản</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th width="5%">STT</th>
+                                        <th width="20%">Họ và tên</th>
+                                        <th width="20%">Email</th>
+                                        <th width="15%">Tên đăng nhập</th>
+                                        <th width="15%">Vai trò</th>
+                                        <th width="10%">Trạng thái</th>
+                                        <th width="15%" sec:authorize="hasAuthority('Admin')">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="account, iStat : ${accounts}">
+                                        <td th:text="${iStat.count}"></td>
+                                        <td th:text="${account.name}"></td>
+                                        <td th:text="${account.email}"></td>
+                                        <td th:text="${account.username}"></td>
+                                        <td>
+                                            <span class="badge" 
+                                                  th:classappend="${account.role == 'Admin' ? 'bg-danger' : (account.role == 'Teacher' ? 'bg-primary' : 'bg-success')}"
+                                                  th:text="${account.role}">
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge" th:classappend="${account.isActive()} ? 'bg-success' : 'bg-danger'"
+                                                  th:text="${account.isActive()} ? 'Hoạt động' : 'Vô hiệu'">
+                                            </span>
+                                        </td>
+                                        <!-- Thêm nút xóa vào bảng tài khoản -->
+                                        <td sec:authorize="hasAuthority('Admin')">
+                                            <button class="btn btn-sm btn-warning me-1" 
+                                                    onclick="openEditModal(this)" 
+                                                    th:data-id="${account.id}" 
+                                                    th:data-name="${account.name}"
+                                                    th:data-email="${account.email}"
+                                                    th:data-username="${account.username}"
+                                                    th:data-role="${account.role}"
+                                                    th:data-active="${account.active}">
+                                                <i class="fas fa-edit"></i> Sửa
+                                            </button>
+                                            <a th:href="@{'/admin/accounts/toggle-status/' + ${account.id}}" 
+                                               class="btn btn-sm"
+                                               th:classappend="${account.active == 'Active'} ? 'btn-danger' : 'btn-success'"
+                                               th:title="${account.active == 'Active'} ? 'Vô hiệu hóa' : 'Kích hoạt'">
+                                                <i class="fas" th:classappend="${account.active == 'Active'} ? 'fa-ban' : 'fa-check'"></i>
+                                            </a>
+                                            <a th:href="@{'/admin/accounts/delete/' + ${account.id}}" 
+                                               class="btn btn-sm btn-danger ms-1"
+                                               onclick="return confirm('Bạn có chắc chắn muốn xóa tài khoản này không? Hành động này không thể hoàn tác!')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(accounts)}">
+                                        <td colspan="7" class="text-center">Không có tài khoản nào</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal sửa tài khoản -->
+    <div class="modal fade" id="editAccountModal" tabindex="-1" aria-labelledby="editAccountModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="editAccountModalLabel">Cập nhật tài khoản</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/admin/accounts/update}" method="post">
+                    <div class="modal-body">
+                        <input type="hidden" id="editAccountId" name="id">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editName" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="editEmail" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editUsername" class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editUsername" name="username" required readonly>
+                            <div class="form-text text-muted">Tên đăng nhập không thể thay đổi.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPassword" class="form-label">Mật khẩu mới (để trống nếu không thay đổi)</label>
+                            <input type="password" class="form-control" id="editPassword" name="password">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editRole" class="form-label">Vai trò <span class="text-danger">*</span></label>
+                            <select class="form-select" id="editRole" name="role" required>
+                                <option value="">-- Chọn vai trò --</option>
+                                <option value="Admin">Giáo vụ</option>
+                                <option value="Teacher">Giảng viên</option>
+                                <option value="Student">Sinh viên</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editActive" name="active">
+                                <label class="form-check-label" for="editActive">
+                                    Tài khoản hoạt động
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
+
+    <script>
+        // Mở modal cập nhật và điền dữ liệu
+        function openEditModal(button) {
+            const id = button.getAttribute('data-id');
+            const name = button.getAttribute('data-name');
+            const email = button.getAttribute('data-email');
+            const username = button.getAttribute('data-username');
+            const role = button.getAttribute('data-role');
+            const active = button.getAttribute('data-active') === 'true';
+
+            // Điền dữ liệu vào modal
+            document.getElementById('editAccountId').value = id;
+            document.getElementById('editName').value = name;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editUsername').value = username;
+            document.getElementById('editRole').value = role;
+            document.getElementById('editActive').checked = active;
+
+            // Mở modal
+            const editModal = new bootstrap.Modal(document.getElementById('editAccountModal'));
+            editModal.show();
+        }
+    </script>
+</body>
+</html>

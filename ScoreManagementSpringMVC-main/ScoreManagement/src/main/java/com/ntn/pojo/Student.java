@@ -22,7 +22,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.xml.bind.annotation.XmlRootElement;
@@ -50,13 +49,6 @@ import jakarta.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Student.findByStatus", query = "SELECT s FROM Student s WHERE s.status = :status")})
 public class Student implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-    @Id
-    @Basic(optional = false)
-    @NotNull
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id")
-    private Integer id;
     @Size(max = 50)
     @Column(name = "StudentCode")
     private String studentCode;
@@ -66,24 +58,16 @@ public class Student implements Serializable {
     @Size(max = 125)
     @Column(name = "LastName")
     private String lastName;
-    @Column(name = "Gender")
-    private Short gender;
     @Size(max = 65)
     @Column(name = "IdentifyCard")
     private String identifyCard;
     @Size(max = 100)
     @Column(name = "Hometown")
     private String hometown;
-    @Column(name = "Birthdate")
-    @Temporal(TemporalType.DATE)
-    private Date birthdate;
     // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
-    @NotNull
-    @Size(min = 6, max = 255)
-    @Email
-    @Column(name = "email", unique = true)
+    @Size(max = 100)
+    @Column(name = "Email")
     private String email;
-
     // @Pattern(regexp="^\\(?(\\d{3})\\)?[- ]?(\\d{3})[- ]?(\\d{4})$", message="Invalid phone/fax format, should be as xxx-xxx-xxxx")//if the field contains phone or fax number consider using this annotation to enforce field validation
     @Size(max = 50)
     @Column(name = "Phone")
@@ -91,6 +75,20 @@ public class Student implements Serializable {
     @Size(max = 30)
     @Column(name = "Status")
     private String status;
+
+    private static final long serialVersionUID = 1L;
+    @Id
+    @Basic(optional = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "Id")
+    private Integer id;
+    @Column(name = "Gender")
+    private Short gender;
+    @Column(name = "Birthdate")
+    @Temporal(TemporalType.DATE)
+    private Date birthdate;
+    // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
+    @NotNull
     @JoinColumn(name = "ClassId", referencedColumnName = "Id")
     @ManyToOne
     private Class classId;
@@ -119,29 +117,6 @@ public class Student implements Serializable {
         this.id = id;
     }
 
-    public String getStudentCode() {
-        return studentCode;
-    }
-
-    public void setStudentCode(String studentCode) {
-        this.studentCode = studentCode;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
 
     public Short getGender() {
         return gender;
@@ -151,21 +126,6 @@ public class Student implements Serializable {
         this.gender = gender;
     }
 
-    public String getIdentifyCard() {
-        return identifyCard;
-    }
-
-    public void setIdentifyCard(String identifyCard) {
-        this.identifyCard = identifyCard;
-    }
-
-    public String getHometown() {
-        return hometown;
-    }
-
-    public void setHometown(String hometown) {
-        this.hometown = hometown;
-    }
 
     public Date getBirthdate() {
         return birthdate;
@@ -183,21 +143,6 @@ public class Student implements Serializable {
         this.email = email;
     }
 
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
 
     public Class getClassId() {
         return classId;
@@ -257,6 +202,62 @@ public class Student implements Serializable {
     @Override
     public String toString() {
         return firstName + " " + lastName;
+    }
+
+    public String getStudentCode() {
+        return studentCode;
+    }
+
+    public void setStudentCode(String studentCode) {
+        this.studentCode = studentCode;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getIdentifyCard() {
+        return identifyCard;
+    }
+
+    public void setIdentifyCard(String identifyCard) {
+        this.identifyCard = identifyCard;
+    }
+
+    public String getHometown() {
+        return hometown;
+    }
+
+    public void setHometown(String hometown) {
+        this.hometown = hometown;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
 }

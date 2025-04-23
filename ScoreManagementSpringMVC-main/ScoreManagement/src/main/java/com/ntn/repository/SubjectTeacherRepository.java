@@ -13,4 +13,11 @@ import java.util.List;
  */
 public interface SubjectTeacherRepository {
     List<Subjectteacher> getSubjectTeachers();
+    List<Subjectteacher> getAllSubjectTeachers();
+    Subjectteacher getSubjectTeacherById(int id);
+    boolean addOrUpdateSubjectTeacher(Subjectteacher subjectTeacher);
+    boolean deleteSubjectTeacher(int id);
+    List<Subjectteacher> getSubjectTeachersByTeacherId(int teacherId);
+    List<Subjectteacher> getSubjectTeachersBySubjectId(Integer subjectId);
+    List<Subjectteacher> getSubjectTeachersByDepartmentId(int departmentId);
 }

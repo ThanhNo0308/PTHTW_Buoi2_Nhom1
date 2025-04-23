@@ -22,25 +22,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @author Kiet
  */
 @Controller
-@ControllerAdvice
 public class IndexController {
 
-    
-     @Autowired
-    private TrainingTypeService trainService;
-    
-    @Autowired
-    private DepartmentService departService;
-    
-      @ModelAttribute
-    public void commonAttr(Model model) {
-        model.addAttribute("departments", this.departService.getDepartments());
-         model.addAttribute("trainingTypes", this.trainService.getTrainingType());
-    }
     @RequestMapping("/")
     public String index(Model model){
-      
         return "index";
-
     }
 }

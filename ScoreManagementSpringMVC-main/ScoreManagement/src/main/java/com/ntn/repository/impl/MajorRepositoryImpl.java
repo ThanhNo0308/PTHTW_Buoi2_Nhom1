@@ -4,7 +4,9 @@
  */
 package com.ntn.repository.impl;
 
+import com.ntn.pojo.Department;
 import com.ntn.pojo.Major;
+import com.ntn.pojo.Trainingtype;
 import com.ntn.repository.MajorRepository;
 import java.util.List;
 import jakarta.persistence.Query;
@@ -12,6 +14,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import java.util.ArrayList;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,18 +59,61 @@ public class MajorRepositoryImpl implements MajorRepository {
     }
 
     @Override
+    public List<Major> getMajorsByDepartmentAndTrainingType(Integer departmentId, Integer trainingTypeId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Major> query = builder.createQuery(Major.class);
+        Root<Major> root = query.from(Major.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        if (departmentId != null) {
+            predicates.add(builder.equal(root.get("departmentId").get("id"), departmentId));
+        }
+
+        if (trainingTypeId != null) {
+            predicates.add(builder.equal(root.get("trainingTypeId").get("id"), trainingTypeId));
+        }
+
+        if (!predicates.isEmpty()) {
+            query.where(builder.and(predicates.toArray(new Predicate[0])));
+        }
+
+        query.orderBy(builder.asc(root.get("majorName")));
+
+        return session.createQuery(query).getResultList();
+    }
+
+    @Override
     public boolean addOrUpdateMajor(Major major) {
-        Session s = this.factory.getObject().getCurrentSession();
+        Session session = this.factory.getObject().getCurrentSession();
         try {
-            if (major.getId() == null) {
-                s.save(major);
-            } else {
-                s.update(major);
+            // Kiểm tra và cập nhật Department nếu cần
+            if (major.getDepartmentId() != null && major.getDepartmentId().getId() != null) {
+                Department dept = session.get(Department.class, major.getDepartmentId().getId());
+                major.setDepartmentId(dept);
             }
 
+            // Kiểm tra và cập nhật TrainingType nếu cần
+            if (major.getTrainingTypeId() != null && major.getTrainingTypeId().getId() != null) {
+                Trainingtype type = session.get(Trainingtype.class, major.getTrainingTypeId().getId());
+                major.setTrainingTypeId(type);
+            }
+
+            // Lưu hoặc cập nhật ngành học
+            if (major.getId() == null) {
+                // Thêm mới - không cần ID
+                session.persist(major);
+            } else {
+                // Cập nhật - đã có ID
+                session.merge(major);
+            }
+            session.flush();  
+            System.out.println("Saved major with ID: " + major.getId());
             return true;
-        } catch (HibernateException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
+            System.err.println("Error saving major: " + ex.getMessage());
             return false;
         }
     }
@@ -85,6 +131,30 @@ public class MajorRepositoryImpl implements MajorRepository {
             }
         }
         return false; // Trả về false nếu không tìm thấy Major để xóa hoặc có lỗi xảy ra
+    }
+
+    @Override
+    public int countMajors() {
+        Session s = this.factory.getObject().getCurrentSession();
+        Query query = s.createQuery("SELECT COUNT(m) FROM Major m");
+        return ((Long) query.getSingleResult()).intValue();
+    }
+
+    @Override
+    public List<Major> getMajors() {
+        Session s = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = s.getCriteriaBuilder();
+        CriteriaQuery<Major> query = builder.createQuery(Major.class);
+        Root<Major> root = query.from(Major.class);
+        query.select(root);
+
+        return s.createQuery(query).getResultList();
+    }
+
+    @Override
+    public Major getMajorById(int majorId) {
+        Session s = this.factory.getObject().getCurrentSession();
+        return s.get(Major.class, majorId);
     }
 
 }

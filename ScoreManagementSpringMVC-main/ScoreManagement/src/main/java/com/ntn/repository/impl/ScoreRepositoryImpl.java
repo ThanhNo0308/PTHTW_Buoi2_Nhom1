@@ -1,45 +1,26 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.ntn.repository.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ntn.pojo.ListScoreDTO;
-import com.ntn.pojo.Schoolyear;
+import com.ntn.pojo.ScoreDTO;
 import com.ntn.pojo.Score;
 import com.ntn.pojo.Student;
-import com.ntn.pojo.Studentsubjectteacher;
-import com.ntn.pojo.Subject;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Typescore;
-import com.ntn.repository.SchoolYearRepository;
 import com.ntn.repository.ScoreRepository;
-import java.lang.reflect.Array;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- *
- * @author vhuunghia
- */
 @Repository
 @Transactional
 public class ScoreRepositoryImpl implements ScoreRepository {
@@ -47,370 +28,388 @@ public class ScoreRepositoryImpl implements ScoreRepository {
     @Autowired
     private LocalSessionFactoryBean factory;
 
-    @Autowired
-    private SchoolYearRepository schoolRepo;
-
     @Override
-    @Transactional
     public List<Score> getScores() {
-        Session s;
-        s = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder b = s.getCriteriaBuilder();
-        CriteriaQuery<Score> cq = b.createQuery(Score.class);
-        Root root = cq.from(Score.class);
-        cq.select(root);
-
-        Query query = s.createQuery(cq);
-
-        return query.getResultList();
+        Session session = this.factory.getObject().getCurrentSession();
+        Query q = session.createQuery("FROM Score");
+        return q.getResultList();
     }
 
     @Override
     public Score getScoreById(int id) {
-        Session s = this.factory.getObject().getCurrentSession();
-        return s.get(Score.class, id);
+        Session session = this.factory.getObject().getCurrentSession();
+        return session.get(Score.class, id);
     }
 
     @Override
     public List<Score> getScoreByStudentCode(String studentCode) {
-        Session s;
-        s = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder b = s.getCriteriaBuilder();
-        CriteriaQuery<Score> cq = b.createQuery(Score.class);
-        Root<Score> scoreRoot = cq.from(Score.class);
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Score> query = builder.createQuery(Score.class);
+        Root<Score> root = query.from(Score.class);
 
-        // Join với bảng Student để lấy thông tin dựa trên studentCode
-        Join<Score, Student> studentJoin = scoreRoot.join("studentID", JoinType.INNER); // "student" là tên thuộc tính trong Score class
+        query.where(builder.equal(root.get("studentID").get("studentCode"), studentCode));
 
-        cq.select(scoreRoot);
-        cq.where(b.equal(studentJoin.get("studentCode"), studentCode));
-
-        Query query = s.createQuery(cq);
-
-        return query.getResultList();
+        Query q = session.createQuery(query);
+        return q.getResultList();
     }
 
     @Override
     public List<Score> getScoreByStudentFullName(String firstName, String lastName) {
-        Session s;
-        s = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder b = s.getCriteriaBuilder();
-        CriteriaQuery<Score> cq = b.createQuery(Score.class);
-        Root<Score> scoreRoot = cq.from(Score.class);
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Score> query = builder.createQuery(Score.class);
+        Root<Score> root = query.from(Score.class);
 
-        // Join với bảng Student để lấy thông tin dựa trên họ tên
-        Join<Score, Student> studentJoin = scoreRoot.join("studentID", JoinType.INNER); // "student" là tên thuộc tính trong Score class
+        Predicate firstNamePredicate = builder.like(root.get("studentID").get("firstName"), "%" + firstName + "%");
+        Predicate lastNamePredicate = builder.like(root.get("studentID").get("lastName"), "%" + lastName + "%");
 
-        // Thêm điều kiện truy vấn theo họ tên sinh viên
-        cq.select(scoreRoot);
-        cq.where(
-                b.and(
-                        b.equal(studentJoin.get("firstName"), firstName),
-                        b.equal(studentJoin.get("lastName"), lastName)
-                )
-        );
+        query.where(builder.and(firstNamePredicate, lastNamePredicate));
 
-        Query query = s.createQuery(cq);
-
-        return query.getResultList();
+        Query q = session.createQuery(query);
+        return q.getResultList();
     }
 
-    //TEST
+    @Override
+    public List<Score> findByStudent(Student student) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Score> query = builder.createQuery(Score.class);
+        Root<Score> root = query.from(Score.class);
+
+        query.where(builder.equal(root.get("studentID"), student));
+
+        Query q = session.createQuery(query);
+        return q.getResultList();
+    }
+
     @Override
     public List<Score> getSubjectScoresByStudentCode(String studentCode) {
-        Session session = factory.getObject().getCurrentSession();
-        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-        CriteriaQuery<Score> criteriaQuery = criteriaBuilder.createQuery(Score.class);
-        Root<Score> scoreRoot = criteriaQuery.from(Score.class);
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Score> query = builder.createQuery(Score.class);
+        Root<Score> root = query.from(Score.class);
 
-        // Join với bảng Student để lấy thông tin dựa trên studentCode
-        Join<Score, Student> studentJoin = scoreRoot.join("studentID", JoinType.INNER);
-        criteriaQuery.where(criteriaBuilder.equal(studentJoin.get("studentCode"), studentCode));
+        query.where(builder.equal(root.get("studentID").get("studentCode"), studentCode));
+        query.orderBy(builder.asc(root.get("subjectTeacherID").get("subjectId").get("subjectName")));
 
-        // Join với bảng SubjectTeacher để lấy thông tin môn học và giáo viên
-        Join<Score, Subjectteacher> subjectTeacherJoin = scoreRoot.join("subjectTeacherID", JoinType.INNER);
-        Join<Subjectteacher, Subject> subjectJoin = subjectTeacherJoin.join("subjectId", JoinType.INNER);
-
-        criteriaQuery.select(scoreRoot);
-
-        Query query = session.createQuery(criteriaQuery);
-
-        return query.getResultList();
+        Query q = session.createQuery(query);
+        return q.getResultList();
     }
 
     @Override
     public List<Score> getSubjectScoresByStudentCodeAndSchoolYear(String studentCode, int schoolYearId) {
-        Session session = factory.getObject().getCurrentSession();
-        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-        CriteriaQuery<Score> criteriaQuery = criteriaBuilder.createQuery(Score.class);
-        Root<Score> scoreRoot = criteriaQuery.from(Score.class);
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Score> query = builder.createQuery(Score.class);
+        Root<Score> root = query.from(Score.class);
 
-        Join<Score, Student> studentJoin = scoreRoot.join("studentID", JoinType.INNER);
-        Join<Score, Subjectteacher> subjectTeacherJoin = scoreRoot.join("subjectTeacherID", JoinType.INNER);
-        Join<Subjectteacher, Studentsubjectteacher> studentsubjectJoin = subjectTeacherJoin.join("studentsubjectteacherList", JoinType.INNER);
+        Predicate p1 = builder.equal(root.get("studentID").get("studentCode"), studentCode);
+        Predicate p2 = builder.equal(root.get("schoolYearId").get("id"), schoolYearId);
 
-        criteriaQuery.where(
-                criteriaBuilder.and(
-                        criteriaBuilder.equal(studentJoin.get("studentCode"), studentCode),
-                        criteriaBuilder.equal(studentsubjectJoin.get("schoolYearId"), schoolYearId)
-                )
-        );
+        query.where(builder.and(p1, p2));
+        query.orderBy(builder.asc(root.get("subjectTeacherID").get("subjectId").get("subjectName")));
 
-        criteriaQuery.select(scoreRoot);
-
-        Query query = session.createQuery(criteriaQuery);
-
-        return query.getResultList();
+        Query q = session.createQuery(query);
+        return q.getResultList();
     }
 
     @Override
     public List<Score> getListScoreBySubjectTeacherIdAndSchoolYearId(int subjectTeacherID, int schoolYearId) {
-        Session s = this.factory.getObject().getCurrentSession();
-        Query q = s.createQuery("FROM Score WHERE schoolYearId.id = :schoolYearId and subjectTeacherID.id = :subjectTeacherID");
-        q.setParameter("schoolYearId", schoolYearId);
-        q.setParameter("subjectTeacherID", subjectTeacherID);
-        List<Score> listscores = q.getResultList();
-        return listscores;
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Score> query = builder.createQuery(Score.class);
+        Root<Score> root = query.from(Score.class);
+
+        Predicate p1 = builder.equal(root.get("subjectTeacherID").get("id"), subjectTeacherID);
+        Predicate p2 = builder.equal(root.get("schoolYearId").get("id"), schoolYearId);
+
+        query.where(builder.and(p1, p2));
+
+        Query q = session.createQuery(query);
+        return q.getResultList();
     }
 
     @Override
-    public List<Score> getListScoreBySubjectTeacherIdAndSchoolYearIdAndStudentId(int subjectTeacherID, int schoolYearId, int studentID) {
-        Session s = this.factory.getObject().getCurrentSession();
-        Query q = s.createQuery("FROM Score WHERE schoolYearId.id = :schoolYearId and subjectTeacherID.id = :subjectTeacherID and studentID.id = :studentID");
-        q.setParameter("studentID", studentID);
-        q.setParameter("schoolYearId", schoolYearId);
-        q.setParameter("subjectTeacherID", subjectTeacherID);
-        List<Score> listscores = q.getResultList();
-        return listscores;
+    public List<Score> getListScoreBySubjectTeacherIdAndSchoolYearIdAndStudentId(
+            int subjectTeacherID, int schoolYearId, int studentID) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Score> query = builder.createQuery(Score.class);
+        Root<Score> root = query.from(Score.class);
+
+        Predicate p1 = builder.equal(root.get("subjectTeacherID").get("id"), subjectTeacherID);
+        Predicate p2 = builder.equal(root.get("schoolYearId").get("id"), schoolYearId);
+        Predicate p3 = builder.equal(root.get("studentID").get("id"), studentID);
+
+        query.where(builder.and(p1, p2, p3));
+
+        Query q = session.createQuery(query);
+        return q.getResultList();
     }
 
     @Override
-    public List<Map<String, Object>> convertListScoreByListScoreDTO(ListScoreDTO listScoreDTO) {
-        List<Map<String, Object>> listScore = listScoreDTO.getListScore();
-        if (listScore != null && !listScore.isEmpty()) {
-            for (int i = 0; i < listScore.size(); i++) {
-                Map<String, Object> scoreMap = listScore.get(i);
-
-                if (scoreMap.containsKey("finalTermScore") && scoreMap.get("finalTermScore") != null) {
-                    String finalTermScoreStr = scoreMap.get("finalTermScore").toString();
-                    if (!finalTermScoreStr.isEmpty()) {
-                        float finalTermScore = Float.parseFloat(finalTermScoreStr);
-                        finalTermScore = Math.round(finalTermScore * 10.0f) / 10.0f;
-                        scoreMap.put("finalTermScore", finalTermScore);
-                    }
-                }
-
-                if (scoreMap.containsKey("midTermScore") && scoreMap.get("midTermScore") != null) {
-                    String midTermScoreStr = scoreMap.get("midTermScore").toString();
-                    if (!midTermScoreStr.isEmpty()) {
-                        float midTermScore = Float.parseFloat(midTermScoreStr);
-                        midTermScore = Math.round(midTermScore * 10.0f) / 10.0f;
-                        scoreMap.put("midTermScore", midTermScore);
-                    }
-                }
-                // Kiểm tra và chuyển đổi các cột Bonus3, Bonus4, Bonus5
-                if (scoreMap.containsKey("Bonus3") && scoreMap.get("Bonus3") != null) {
-                    String bonus3Str = scoreMap.get("Bonus3").toString();
-                    if (!bonus3Str.isEmpty()) {
-                        float bonus3Score = Float.parseFloat(bonus3Str);
-                        bonus3Score = Math.round(bonus3Score * 10.0f) / 10.0f;
-                        scoreMap.put("Bonus3", bonus3Score);
-                    }
-                }
-                if (scoreMap.containsKey("Bonus4") && scoreMap.get("Bonus4") != null) {
-                    String bonus3Str = scoreMap.get("Bonus4").toString();
-                    if (!bonus3Str.isEmpty()) {
-                        float bonus3Score = Float.parseFloat(bonus3Str);
-                        bonus3Score = Math.round(bonus3Score * 10.0f) / 10.0f;
-                        scoreMap.put("Bonus4", bonus3Score);
-                    }
-                }
-                if (scoreMap.containsKey("Bonus5") && scoreMap.get("Bonus5") != null) {
-                    String bonus3Str = scoreMap.get("Bonus5").toString();
-                    if (!bonus3Str.isEmpty()) {
-                        float bonus3Score = Float.parseFloat(bonus3Str);
-                        bonus3Score = Math.round(bonus3Score * 10.0f) / 10.0f;
-                        scoreMap.put("Bonus5", bonus3Score);
-                    }
-                }
-
-                listScore.set(i, scoreMap); // Cập nhật lại đúng dòng đó trong listScore
-
-            }
-
-        }
-
-        return listScore;
-    }
-
-    @Override
-    public List<Student> convertListScoreToStudent(ListScoreDTO listScoreDTO) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        List<Map<String, Object>> listScore = listScoreDTO.getListScore();
-
-        List<Student> studentList = new ArrayList<>();
-
-        for (int i = 0; i < listScore.size(); i++) {
-            Map<String, Object> scoreMap = listScore.get(i);
-            Map<String, Object> studentMap = (Map<String, Object>) scoreMap.get("student");
-            Student student = objectMapper.convertValue(studentMap, Student.class);
-            studentList.add(student);
-        }
-        return studentList;
-    }
-
-    @Override
+    @Transactional
     public boolean saveListScoreByListScoreDTO(ListScoreDTO listScoreDTO) {
-        Session s = this.factory.getObject().getCurrentSession();
-        ObjectMapper objectMapper = new ObjectMapper();
-        int selectedSchoolYearId = listScoreDTO.getSelectedSchoolYearId();
-        int selectedSubjectTeacherId = listScoreDTO.getSelectedSubjectTeacherId();
-        boolean isSuccess = false;
-        List<Student> studentList = this.convertListScoreToStudent(listScoreDTO);
+        Session session = this.factory.getObject().getCurrentSession();
 
-        List<Map<String, Object>> listScore = this.convertListScoreByListScoreDTO(listScoreDTO);
+        try {
+            // Lấy Subjectteacher
+            Subjectteacher st = session.get(Subjectteacher.class, listScoreDTO.getSubjectTeacherId());
 
-        Map<String, String> columnNameMapping = new HashMap<>();
-        columnNameMapping.put("midTermScore", "Giữa kỳ");
-        columnNameMapping.put("finalTermScore", "Cuối kỳ");
-        columnNameMapping.put("Bonus3", "Bonus3");
-        columnNameMapping.put("Bonus4", "Bonus4");
-        columnNameMapping.put("Bonus5", "Bonus5");
+            // Lấy các điểm hiện có
+            List<Score> currentScores = getListScoreBySubjectTeacherIdAndSchoolYearId(
+                    listScoreDTO.getSubjectTeacherId(), listScoreDTO.getSchoolYearId());
 
-        for (Student student : studentList) {
-            // Kiểm tra xem điểm đã tồn tại cho học sinh, năm học, môn học và loại điểm nào
-            Query q = s.createQuery("FROM Score WHERE schoolYearId.id = :schoolYearId and subjectTeacherID.id = :subjectTeacherID and studentID.id = :studentID and scoreType.scoreType in ('Giữa kỳ', 'Cuối kỳ', 'Bonus3', 'Bonus4', 'Bonus5')");
-            q.setParameter("schoolYearId", selectedSchoolYearId);
-            q.setParameter("subjectTeacherID", selectedSubjectTeacherId);
-            q.setParameter("studentID", student.getId());
-
-            List<Score> scores = q.getResultList();
-
-            // Kiểm tra nếu có điểm đã tồn tại
-            if (!scores.isEmpty()) {
-                for (Map<String, Object> listScoreItem : listScore) {
-                    Map<String, Object> studentMap = (Map<String, Object>) listScoreItem.get("student");
-                    Student student1 = objectMapper.convertValue(studentMap, Student.class);
-                    for (Score score : scores) {
-                        int scoreStudentId = score.getStudentID().getId();
-                        String scoreType = score.getScoreType().getScoreType();
-
-                        if (student1 != null) {
-                            if (student1.getId() == scoreStudentId) {
-                                // So sánh và cập nhật điểm từ listScore
-                                if ("Giữa kỳ".equals(scoreType)) {
-                                    Float midTermScore = (Float) listScoreItem.get("midTermScore");
-                                    if (midTermScore != null) {
-                                        score.setScoreValue(midTermScore);
-                                        s.update(score);
-                                        isSuccess = true;
-
-                                    }
-                                } else if ("Cuối kỳ".equals(scoreType)) {
-                                    Float finalTermScore = (Float) listScoreItem.get("finalTermScore");
-                                    if (finalTermScore != null) {
-                                        score.setScoreValue(finalTermScore);
-                                        s.update(score);
-                                        isSuccess = true;
-
-                                    }
-                                } else if ("Bonus3".equals(scoreType)) {
-                                    Float bonus3 = (Float) listScoreItem.get("Bonus3");
-                                    if (bonus3 != null) {
-                                        score.setScoreValue(bonus3);
-                                        s.update(score);
-                                        isSuccess = true;
-
-                                    }
-                                } else if ("Bonus4".equals(scoreType)) {
-                                    Float bonus4 = (Float) listScoreItem.get("Bonus4");
-                                    if (bonus4 != null) {
-                                        score.setScoreValue(bonus4);
-                                        s.update(score);
-                                        isSuccess = true;
-
-                                    }
-                                } else if ("Bonus5".equals(scoreType)) {
-                                    Float bonus5 = (Float) listScoreItem.get("Bonus5");
-                                    if (bonus5 != null) {
-                                        score.setScoreValue(bonus5);
-                                        s.update(score);
-                                        isSuccess = true;
-
-                                    }
-                                }
-
-                            }
-                        }
-                    }
-
-                }
-
+            // Xóa các điểm hiện có
+            for (Score score : currentScores) {
+                session.delete(score);
             }
-            for (Map<String, Object> listScoreItem : listScore) {
-//               
-                Schoolyear schoolyear = this.schoolRepo.getSchoolYearById(selectedSchoolYearId);
-                Subjectteacher subjectTeacher = this.schoolRepo.getSubJectTeacherById(selectedSubjectTeacherId);
-                Map<String, Object> studentMap = (Map<String, Object>) listScoreItem.get("student");
-                    Student student1 = objectMapper.convertValue(studentMap, Student.class);
 
-                if (student1 != null) {
-                    if (student.getId() == student1.getId()) {
-                        // Lấy danh sách các cột điểm trong listScore của học sinh
-                        Set<String> listScoreColumns = listScoreItem.keySet();
-                        listScoreColumns.remove("student");
-                        for (String column : listScoreColumns) {
-                            boolean columnExistsInScores = false;
+            // Thêm các điểm mới
+            for (ScoreDTO scoreDTO : listScoreDTO.getScores()) {
+                Score score = new Score();
+                score.setSubjectTeacherID(st);
 
-                            // Kiểm tra xem cột điểm đã tồn tại trong scores của học sinh hay chưa
-                            for (Score score : scores) {
-                                String scoreType = score.getScoreType().getScoreType();
+                // Lấy Student
+                Student student = session.get(Student.class, scoreDTO.getStudentId());
+                score.setStudentID(student);
 
-                                // Sử dụng mapping để ánh xạ tên cột điểm sang tên loại điểm
-                                if (columnNameMapping.containsKey(column) && columnNameMapping.get(column).equals(scoreType)) {
-                                    columnExistsInScores = true;
-                                    break;
-                                }
-                            }
+                // Lấy Typescore
+                Typescore type = session.get(Typescore.class, scoreDTO.getTypeScoreId());
+                score.setScoreType(type); // Sửa từ setTypeScoreID thành setScoreType
 
-                            // Nếu cột điểm không tồn tại trong scores, thêm mới
-                            if (!columnExistsInScores) {
-                                Object columnValue = listScoreItem.get(column);
+                // Điều chỉnh kiểu dữ liệu từ Double sang Float
+                score.setScoreValue(scoreDTO.getScore().floatValue()); // Sửa từ setScore thành setScoreValue
 
-                                // Kiểm tra xem columnValue có trả về null không
-                                if (columnValue != null && !columnValue.toString().isEmpty()) {
-                                    float scoreValue = Float.parseFloat(columnValue.toString());
-                                    scoreValue = Math.round(scoreValue * 10.0f) / 10.0f;
-                                    // Tạo một bản ghi Score mới và thêm vào cơ sở dữ liệu
-                                    Score newScore = new Score();
-                                    newScore.setSchoolYearId(schoolyear);
-                                    newScore.setSubjectTeacherID(subjectTeacher);
-                                    newScore.setStudentID(student);
-                                    newScore.setScoreValue(scoreValue);
+                // Thiết lập trạng thái dựa trên isLocked
+                score.setIsDraft(!listScoreDTO.isLocked()); // Sửa từ setStatus thành setIsDraft
+                score.setIsLocked(listScoreDTO.isLocked()); // Sửa từ setStatus thành setIsLocked
 
-                                    // Sử dụng mapping để ánh xạ tên cột điểm sang tên loại điểm
-                                    if (columnNameMapping.containsKey(column)) {
-                                        newScore.setScoreType(this.schoolRepo.getScoreTypeByName(columnNameMapping.get(column)));
-                                    } else {
-                                        // Xử lý trường hợp không có ánh xạ tên cột điểm
-                                        // Có thể đặt một giá trị mặc định hoặc xử lý tùy theo logic của bạn
-                                    }
-
-                                    newScore.setIsDraft(false);
-                                    newScore.setIsLocked(true);
-
-                                    s.save(newScore);
-                                    isSuccess = true;
-                                }
-                            }
-
-                        }
-                        break;
-                    }
-                }
+                session.save(score);
             }
+
+            return true;
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return false;
         }
-        return isSuccess;
+    }
 
+    @Override
+    @Transactional
+    public boolean saveScores(List<Score> scores) {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            for (Score score : scores) {
+                session.saveOrUpdate(score);
+                session.flush(); 
+            }
+            return true;
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public List<Score> getScoresBySubjectTeacherIdAndClassIdAndSchoolYearId(
+            int subjectTeacherId, int classId, int schoolYearId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Score> query = builder.createQuery(Score.class);
+        Root<Score> root = query.from(Score.class);
+
+        // Join với Student để lấy thông tin lớp
+        Join<Score, Student> studentJoin = root.join("studentID");
+
+        Predicate p1 = builder.equal(root.get("subjectTeacherID").get("id"), subjectTeacherId);
+        Predicate p2 = builder.equal(studentJoin.get("classId").get("id"), classId);
+        Predicate p3 = builder.equal(root.get("schoolYearId").get("id"), schoolYearId);
+
+        query.where(builder.and(p1, p2, p3));
+
+        Query q = session.createQuery(query);
+        return q.getResultList();
+    }
+
+    @Override
+    public int countScoreTypesBySubjectTeacher(int subjectTeacherId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        String hql = "SELECT COUNT(DISTINCT ts.id) FROM Score s "
+                + "JOIN s.typeScoreID ts "
+                + "WHERE s.subjectTeacherID.id = :subjectTeacherId";
+
+        Query<Long> q = session.createQuery(hql, Long.class);
+        q.setParameter("subjectTeacherId", subjectTeacherId);
+
+        return q.getSingleResult().intValue();
+    }
+
+    @Override
+    @Transactional
+    public boolean addScoreType(String typeName, int subjectTeacherId) {
+        Session session = this.factory.getObject().getCurrentSession();
+
+        try {
+            // Kiểm tra xem loại điểm đã tồn tại chưa
+            String checkHql = "FROM Typescore ts WHERE ts.scoreType = :typeName";
+            Query<Typescore> checkQuery = session.createQuery(checkHql, Typescore.class);
+            checkQuery.setParameter("typeName", typeName);
+            List<Typescore> existingTypes = checkQuery.getResultList();
+
+            Typescore typeScore;
+            if (existingTypes.isEmpty()) {
+                // Tạo loại điểm mới nếu chưa tồn tại
+                typeScore = new Typescore();
+                typeScore.setScoreType(typeName);
+                session.save(typeScore);
+            } else {
+                typeScore = existingTypes.get(0);
+            }
+
+            // Lấy danh sách sinh viên thuộc môn học của giảng viên
+            String studentHql = "SELECT DISTINCT s.studentID FROM Score s "
+                    + "WHERE s.subjectTeacherID.id = :subjectTeacherId";
+            Query<Student> studentQuery = session.createQuery(studentHql, Student.class);
+            studentQuery.setParameter("subjectTeacherId", subjectTeacherId);
+            List<Student> students = studentQuery.getResultList();
+
+            // Lấy thông tin Subjectteacher
+            Subjectteacher st = session.get(Subjectteacher.class, subjectTeacherId);
+
+            // Tạo điểm mới cho mỗi sinh viên với loại điểm mới
+            for (Student student : students) {
+                Score newScore = new Score();
+                newScore.setStudentID(student);
+                newScore.setSubjectTeacherID(st);
+                newScore.setScoreType(typeScore); // Sửa từ setTypeScoreID thành setScoreType
+                newScore.setScoreValue(0.0f); // Sửa từ setScore thành setScoreValue
+                newScore.setIsDraft(true); // Sửa từ setStatus(0) thành setIsDraft(true)
+                newScore.setIsLocked(false); // Sửa thêm isLocked = false
+
+                session.save(newScore);
+            }
+
+            return true;
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public Student getStudentByCode(String studentCode) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Student> query = builder.createQuery(Student.class);
+        Root<Student> root = query.from(Student.class);
+
+        query.where(builder.equal(root.get("studentCode"), studentCode));
+
+        try {
+            return session.createQuery(query).getSingleResult();
+        } catch (Exception e) {
+            return null; // Trả về null nếu không tìm thấy sinh viên
+        }
+    }
+
+    @Override
+    public List<Typescore> getAllScoreTypes() {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Typescore> query = builder.createQuery(Typescore.class);
+        Root<Typescore> root = query.from(Typescore.class);
+        query.select(root);
+        return session.createQuery(query).getResultList();
+    }
+
+    @Override
+    public Typescore getScoreTypeByName(String name) {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            String hql = "FROM Typescore t WHERE t.scoreType = :name";
+            Query<Typescore> query = session.createQuery(hql, Typescore.class);
+            query.setParameter("name", name);
+            return query.uniqueResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
+    public boolean addScoreType(Typescore newType) {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            session.save(newType);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean saveScore(Score score) {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            if (score.getId() == null) {
+                session.save(score);
+            } else {
+                session.update(score);
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Triển khai trong ScoreRepositoryImpl
+    @Override
+    @Transactional
+    public boolean updateScoreLockStatus(int scoreId, boolean locked) {
+        try {
+            System.out.println("Updating score lock status - ID: " + scoreId + ", locked: " + locked);
+            Session session = this.factory.getObject().getCurrentSession();
+            Score score = session.get(Score.class, scoreId);
+
+            if (score != null) {
+                score.setIsLocked(locked);
+                session.update(score);
+                System.out.println("Score lock status updated successfully");
+                return true;
+            } else {
+                System.out.println("Score not found with ID: " + scoreId);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Error updating score lock status: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public Score getScoreByStudentSubjectSchoolYearAndType(int studentId, int subjectTeacherId, int schoolYearId, String scoreType) {
+        Session session = this.factory.getObject().getCurrentSession();
+
+        String hql = "FROM Score s WHERE s.studentID.id = :studentId AND "
+                + "s.subjectTeacherID.id = :subjectTeacherId AND "
+                + "s.schoolYearId.id = :schoolYearId AND "
+                + "s.scoreType.scoreType = :scoreType";
+
+        Query<Score> query = session.createQuery(hql, Score.class);
+        query.setParameter("studentId", studentId);
+        query.setParameter("subjectTeacherId", subjectTeacherId);
+        query.setParameter("schoolYearId", schoolYearId);
+        query.setParameter("scoreType", scoreType);
+
+        try {
+            return query.getSingleResult();
+        } catch (jakarta.persistence.NoResultException ex) {
+            return null;
+        }
     }
 }

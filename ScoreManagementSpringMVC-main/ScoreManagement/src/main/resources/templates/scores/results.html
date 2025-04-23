@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>Bảng điểm sinh viên</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+    
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-chart-bar"></i> Bảng điểm sinh viên
+            </h2>
+            
+            <a th:href="@{/scores/search}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại tìm kiếm
+            </a>
+        </div>
+        
+        <!-- Thông tin sinh viên -->
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2 mb-2">
+                        <strong>Mã SV:</strong> <span th:text="${student.studentCode}"></span>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <strong>Họ tên:</strong> <span th:text="${student.firstName + ' ' + student.lastName}"></span>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <strong>Lớp:</strong> <span th:text="${student.classId.className}"></span>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <strong>Năm học:</strong> <span th:text="${currentSchoolYear.yearStart + '-' + currentSchoolYear.yearEnd}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bảng điểm -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Bảng điểm học kỳ <span th:text="${currentSchoolYear.semesterName}"></span></h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="scoreTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>STT</th>
+                                <th>Mã môn học</th>
+                                <th>Tên môn học</th>
+                                <th>Số tín chỉ</th>
+                                <th>GK</th>
+                                <th>CK</th>
+                                <th>Điểm TB</th>
+                                <th>Kết quả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="score, stat : ${scores}">
+                                <td th:text="${stat.index + 1}"></td>
+                                <td th:text="${score.subjectTeacherID.subjectId.subjectCode}"></td>
+                                <td th:text="${score.subjectTeacherID.subjectId.subjectName}"></td>
+                                <td th:text="${score.subjectTeacherID.subjectId.credits}"></td>
+                                <td th:text="${score.midtermScore != null ? #numbers.formatDecimal(score.midtermScore, 1, 1) : '-'}"></td>
+                                <td th:text="${score.finalScore != null ? #numbers.formatDecimal(score.finalScore, 1, 1) : '-'}"></td>
+                                <td th:text="${score.averageScore != null ? #numbers.formatDecimal(score.averageScore, 1, 1) : '-'}"></td>
+                                <td>
+                                    <span th:if="${score.averageScore != null && score.averageScore >= 5.0}" class="badge bg-success">Đạt</span>
+                                    <span th:if="${score.averageScore != null && score.averageScore < 5.0}" class="badge bg-danger">Không đạt</span>
+                                    <span th:if="${score.averageScore == null}" class="badge bg-secondary">Chưa có điểm</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-info">
+                                <th colspan="3">Điểm trung bình học kỳ</th>
+                                <th th:text="${scores.isEmpty() ? 0 : #numbers.formatDecimal(scores.stream().filter(s -> s.averageScore != null).mapToDouble(s -> s.averageScore * s.subjectTeacherID.subjectId.credits).sum() / scores.stream().filter(s -> s.averageScore != null).mapToInt(s -> s.subjectTeacherID.subjectId.credits).sum(), 1, 2)}"></th>
+                                <th colspan="4"></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <!-- Form chọn học kỳ khác -->
+                <div class="mt-4">
+                    <form th:action="@{/scores/search-by-student}" method="get" class="row g-3">
+                        <input type="hidden" name="studentCode" th:value="${student.studentCode}">
+                        <div class="col-md-4">
+                            <label for="otherSchoolYearId" class="form-label">Xem học kỳ khác</label>
+                            <select class="form-select" id="otherSchoolYearId" name="schoolYearId" onchange="this.form.submit()">
+                                <option value="">-- Chọn học kỳ --</option>
+                                <option th:each="year : ${schoolYears}" 
+                                        th:value="${year.id}" 
+                                        th:text="${year.yearStart + '-' + year.yearEnd + ' (' + year.semesterName + ')'}"
+                                        th:selected="${year.id == currentSchoolYear.id}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-8 d-flex justify-content-end align-items-end">
+                            <span sec:authorize="hasAuthority('Student')">
+                                <a href="#" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#printReportModal">
+                                    <i class="fas fa-print"></i> In bảng điểm
+                                </a>
+                            </span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal In Bảng Điểm -->
+    <div class="modal fade" id="printReportModal" tabindex="-1" aria-labelledby="printReportModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="printReportModalLabel">In bảng điểm</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Chọn định dạng bảng điểm bạn muốn in:</p>
+                    <div class="d-grid gap-2">
+                        <a th:href="@{'/scores/export-pdf?studentCode=' + ${student.studentCode} + '&schoolYearId=' + ${currentSchoolYear.id}}" 
+                           class="btn btn-primary" target="_blank">
+                            <i class="fas fa-file-pdf"></i> Xuất file PDF
+                        </a>
+                        <a th:href="@{'/scores/export-csv?studentCode=' + ${student.studentCode} + '&schoolYearId=' + ${currentSchoolYear.id}}"
+                           class="btn btn-success">
+                            <i class="fas fa-file-excel"></i> Xuất file CSV
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="base :: footer"></div>
+</body>
+</html>

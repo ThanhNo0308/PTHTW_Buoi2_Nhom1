@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>Quản lý hệ thống điểm</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-user-graduate"></i> Danh sách sinh viên</h2>
+        </div>
+        <!-- Form lọc và tìm kiếm sinh viên -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/admin/students}" method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="classId" class="form-label">Lớp:</label>
+                        <select class="form-select" id="classId" name="classId">
+                            <option value="">-- Tất cả lớp --</option>
+                            <option th:each="class : ${classes}" 
+                                    th:value="${class.id}" 
+                                    th:text="${class.className}"
+                                    th:selected="${param.classId != null && param.classId[0] == class.id.toString()}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="keyword" class="form-label">Từ khóa:</label>
+                        <input type="text" class="form-control" id="keyword" name="keyword" 
+                               th:value="${param.keyword}" placeholder="Mã SV, tên, email...">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Tìm kiếm
+                        </button>
+                        <a th:href="@{/admin/students}" class="btn btn-secondary ms-2">
+                            <i class="fas fa-redo"></i> Đặt lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Mã Sinh Viên</th>
+                                <th>Họ</th>
+                                <th>Tên</th>
+                                <th>Email</th>
+                                <th>Số điện thoại</th>
+                                <th>Lớp</th>
+                                <!-- Các cột khác nếu cần -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="student : ${students}">
+                                <td th:text="${student.id}"></td>
+                                <td th:text="${student.studentCode}"></td>
+                                <td th:text="${student.firstName}"></td>
+                                <td th:text="${student.lastName}"></td>
+                                <td th:text="${student.email}"></td>
+                                <td th:text="${student.phone}"></td>
+                                <td th:text="${student.classId}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý hệ đào tạo</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+    
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col">
+                <h2 class="mb-4">
+                    <i class="fas fa-graduation-cap me-2"></i> Quản lý hệ đào tạo
+                </h2>
+                
+                <!-- Thông báo thành công -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i> <span th:text="${successMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                
+                <!-- Thông báo lỗi -->
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i> <span th:text="${errorMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                
+                <!-- Card danh sách hệ đào tạo -->
+                <div class="card shadow">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Danh sách hệ đào tạo</h5>
+                        <div sec:authorize="hasAuthority('Admin')">
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTrainingTypeModal">
+                                <i class="fas fa-plus me-1"></i> Thêm hệ đào tạo
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Tên hệ đào tạo</th>
+                                        <th sec:authorize="hasAuthority('Admin')">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="trainingType : ${trainingTypes}">
+                                        <td th:text="${trainingType.id}"></td>
+                                        <td th:text="${trainingType.trainingTypeName}"></td>
+                                        <td sec:authorize="hasAuthority('Admin')">
+                                            <button class="btn btn-sm btn-warning me-1" 
+                                                    onclick="openEditModal(this)" 
+                                                    th:data-id="${trainingType.id}" 
+                                                    th:data-name="${trainingType.trainingTypeName}">
+                                                <i class="fas fa-edit"></i> Sửa
+                                            </button>
+                                            <a th:href="@{'/admin/training-types/delete/' + ${trainingType.id}}" 
+                                               class="btn btn-sm btn-danger"
+                                               onclick="return confirm('Bạn có chắc chắn muốn xóa hệ đào tạo này?')">
+                                                <i class="fas fa-trash"></i> Xóa
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(trainingTypes)}">
+                                        <td colspan="3" class="text-center">Không có hệ đào tạo nào</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal thêm hệ đào tạo -->
+    <div class="modal fade" id="addTrainingTypeModal" tabindex="-1" aria-labelledby="addTrainingTypeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addTrainingTypeModalLabel">Thêm hệ đào tạo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/admin/training-types/add}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="trainingTypeName" class="form-label">Tên hệ đào tạo <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="trainingTypeName" name="trainingTypeName" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal sửa hệ đào tạo -->
+    <div class="modal fade" id="editTrainingTypeModal" tabindex="-1" aria-labelledby="editTrainingTypeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="editTrainingTypeModalLabel">Cập nhật hệ đào tạo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/admin/training-types/update}" method="post">
+                    <div class="modal-body">
+                        <input type="hidden" id="editTrainingTypeId" name="id">
+                        <div class="mb-3">
+                            <label for="editTrainingTypeName" class="form-label">Tên hệ đào tạo <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editTrainingTypeName" name="trainingTypeName" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
+    
+    <script>
+        // Mở modal cập nhật và điền dữ liệu
+        function openEditModal(button) {
+            const id = button.getAttribute('data-id');
+            const name = button.getAttribute('data-name');
+            
+            // Điền dữ liệu vào modal
+            document.getElementById('editTrainingTypeId').value = id;
+            document.getElementById('editTrainingTypeName').value = name;
+            
+            // Mở modal
+            const editModal = new bootstrap.Modal(document.getElementById('editTrainingTypeModal'));
+            editModal.show();
+        }
+        
+        // Hiển thị modal thêm khi có lỗi validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('error') && urlParams.get('error') === 'validation') {
+                const addModal = new bootstrap.Modal(document.getElementById('addTrainingTypeModal'));
+                addModal.show();
+            }
+        });
+    </script>
+</body>
+</html>

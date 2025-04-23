@@ -13,6 +13,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
@@ -37,16 +39,19 @@ import jakarta.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Subject.findByNumberOfLessons", query = "SELECT s FROM Subject s WHERE s.numberOfLessons = :numberOfLessons")})
 public class Subject implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-    @Id
-    @Basic(optional = false)
-    @NotNull
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id")
-    private Integer id;
     @Size(max = 255)
     @Column(name = "SubjectName")
     private String subjectName;
+    @JoinColumn(name = "DepartmentID", referencedColumnName = "Id")
+    @ManyToOne
+    private Department departmentID;
+
+    private static final long serialVersionUID = 1L;
+    @Id
+    @Basic(optional = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "Id")
+    private Integer id;
     @Column(name = "Credits")
     private Integer credits;
     @Column(name = "NumberOfLessons")
@@ -70,13 +75,6 @@ public class Subject implements Serializable {
         this.id = id;
     }
 
-    public String getSubjectName() {
-        return subjectName;
-    }
-
-    public void setSubjectName(String subjectName) {
-        this.subjectName = subjectName;
-    }
 
     public Integer getCredits() {
         return credits;
@@ -126,6 +124,22 @@ public class Subject implements Serializable {
     @Override
     public String toString() {
         return subjectName;
+    }
+
+    public String getSubjectName() {
+        return subjectName;
+    }
+
+    public void setSubjectName(String subjectName) {
+        this.subjectName = subjectName;
+    }
+
+    public Department getDepartmentID() {
+        return departmentID;
+    }
+
+    public void setDepartmentID(Department departmentID) {
+        this.departmentID = departmentID;
     }
     
 }

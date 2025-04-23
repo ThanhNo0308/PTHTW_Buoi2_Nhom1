@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head>
+        <meta charset="UTF-8">
+        <title>Quản lý năm học</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-calendar-alt"></i> Quản lý năm học
+            </h2>
+
+            <div sec:authorize="hasAuthority('Admin')">
+                <a th:href="@{/admin/school-years/add}" class="btn btn-success">
+                    <i class="fas fa-plus-circle"></i> Thêm năm học mới
+                </a>
+            </div>
+        </div>
+
+        <!-- Thông báo -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Form lọc theo năm học -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/admin/school-years}" method="get" class="row g-3 align-items-end">
+                    <!-- Sửa phần lọc theo năm học -->
+                    <div class="col-md-4">
+                        <label for="year" class="form-label">Lọc theo năm học:</label>
+                        <select class="form-select" id="year" name="year" onchange="this.form.submit()">
+                            <option value="">-- Tất cả năm học --</option>
+                            <!-- Tạo một HashSet để lưu các giá trị duy nhất của nameYear -->
+                            <th:block th:with="uniqueYears=${new java.util.HashSet()}">
+                                <th:block th:each="year : ${schoolYears}">
+                                    <th:block th:if="${uniqueYears.add(year.nameYear)}">
+                                        <option th:value="${year.nameYear}" 
+                                                th:text="${year.nameYear}"
+                                                th:selected="${param.year != null && param.year[0] == year.nameYear}">
+                                        </option>
+                                    </th:block>
+                                </th:block>
+                            </th:block>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="semesterName" class="form-label">Lọc theo học kỳ:</label>
+                        <select class="form-select" id="semesterName" name="semesterName" onchange="this.form.submit()">
+                            <option value="">-- Tất cả học kỳ --</option>
+                            <!-- Tạo một HashSet để lưu các giá trị duy nhất -->
+                            <th:block th:with="uniqueSemesters=${new java.util.HashSet()}">
+                                <th:block th:each="year : ${schoolYears}">
+                                    <th:block th:if="${uniqueSemesters.add(year.semesterName)}">
+                                        <option th:value="${year.semesterName}"
+                                                th:text="${year.semesterName}"
+                                                th:selected="${param.semesterName != null && param.semesterName[0] == year.semesterName}">
+                                        </option>
+                                    </th:block>
+                                </th:block>
+                            </th:block>
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Danh sách năm học -->
+        <div class="card shadow">
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(schoolYears)}" class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Không có năm học nào trong hệ thống.
+                </div>
+
+                <div th:if="${not #lists.isEmpty(schoolYears)}" class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Năm học</th>
+                                <th>Học kỳ</th>
+                                <th>Ngày bắt đầu</th>
+                                <th>Ngày kết thúc</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="year : ${schoolYears}">
+                                <td th:text="${year.nameYear}"></td>
+                                <td th:text="${year.semesterName}"></td>
+                                <td th:text="${#dates.format(year.yearStart, 'dd/MM/yyyy')}"></td>
+                                <td th:text="${#dates.format(year.yearEnd, 'dd/MM/yyyy')}"></td>
+                                <td>
+                                    <!-- Hiển thị trạng thái "Hiện tại" nếu trùng với năm học hiện tại -->
+                                    <span th:if="${currentSchoolYear != null && year.id == currentSchoolYear.id}" class="badge bg-success">Hiện tại</span>
+
+                                    <!-- Nếu không phải năm học hiện tại, hiển thị trạng thái dựa trên năm -->
+                                    <span th:unless="${currentSchoolYear != null && year.id == currentSchoolYear.id}" 
+                                          th:with="currentYear=${T(java.time.Year).now().getValue()}, 
+                                          yearStartValue=${#strings.substring(year.yearStart, 0, 4)}"
+                                          th:class="${T(java.lang.Integer).parseInt(yearStartValue) >= currentYear} ? 'badge bg-info' : 'badge bg-secondary'"
+                                          th:text="${T(java.lang.Integer).parseInt(yearStartValue) >= currentYear} ? 'Sắp tới' : 'Đã kết thúc'">
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" sec:authorize="hasAuthority('Admin')">
+                                        <a th:href="@{'/admin/school-years/update/' + ${year.id}}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i> Sửa
+                                        </a>
+                                        <a th:href="@{'/admin/school-years/delete/' + ${year.id}}" class="btn btn-sm btn-danger"
+                                           onclick="return confirm('Bạn có chắc chắn muốn xóa năm học này?');">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="base :: footer"></div>
+</body>
+</html>
