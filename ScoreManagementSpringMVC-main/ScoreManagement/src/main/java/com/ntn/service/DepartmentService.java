@@ -7,10 +7,6 @@ package com.ntn.service;
 import com.ntn.pojo.Department;
 import java.util.List;
 
-/**
- *
- * @author nguye
- */
 public interface DepartmentService {
     List<Department> getDepartments();
     boolean addOrUpdateDepartment(Department department);

@@ -8,9 +8,6 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.web.multipart.MultipartFile;
 
-/**
- * Service xử lý điểm sinh viên
- */
 public interface ScoreService {
 
     Float getScoreWeight(Score score);
@@ -35,7 +32,6 @@ public interface ScoreService {
 
     boolean saveListScoreByListScoreDTO(ListScoreDTO listScoreDTO);
 
-    // Thêm các phương thức mới cho giảng viên
     boolean importScoresFromCsv(MultipartFile file, int subjectTeacherId, int schoolYearId) throws Exception;
 
     byte[] exportScoresToCsv(int subjectTeacherId, int classId, int schoolYearId) throws Exception;
@@ -54,16 +50,8 @@ public interface ScoreService {
 
     ListScoreDTO createListScoreDTO(List<Score> scores, int subjectTeacherId, int schoolYearId);
 
-    boolean addScoreType(String typeName, int subjectTeacherId);
-
-    Typescore getScoreTypeByName(String name);
-
-    boolean addScoreType(Typescore newType);
-
     Score getScoreByStudentSubjectSchoolYearAndType(
             int studentId, int subjectTeacherId, int schoolYearId, String scoreType);
-
-    List<Typescore> getAllScoreTypes();
 
     boolean saveScore(Score score);
 
@@ -78,11 +66,4 @@ public interface ScoreService {
 
     Map<String, Double> getScoreWeights(Integer subjectTeacherId, Integer schoolYearId);
 
-    List<String> getScoreTypesByClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId);
-
-    boolean addScoreTypeToClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType, Float weight);
-
-    boolean removeScoreTypeFromClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType);
-
-    boolean updateScoreTypeWeights(Integer classId, Integer subjectTeacherId, Integer schoolYearId, Map<String, Double> weights);
 }

@@ -18,10 +18,6 @@ import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- *
- * @author nguye
- */
 @Repository
 @Transactional
 public class ForumRepositoryImpl implements ForumRepository {
@@ -79,5 +75,30 @@ public class ForumRepositoryImpl implements ForumRepository {
             ex.printStackTrace();
             return false;
         }
+    }
+
+    @Override
+    public boolean updateForum(Forum forum) {
+        Session s = this.factory.getObject().getCurrentSession();
+        try {
+            s.update(forum);
+            return true;
+        } catch (HibernateException ex) {
+            System.err.println("== UPDATE FORUM ERROR: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public Forum getForumById(int id) {
+        Session s = this.factory.getObject().getCurrentSession();
+        try {
+            return s.get(Forum.class, id);
+        } catch (HibernateException ex) {
+            System.err.println("== GET FORUM BY ID ERROR: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return null;
     }
 }

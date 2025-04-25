@@ -71,16 +71,9 @@ public class SubjectTeacherController {
         model.addAttribute("subjects", subjectService.getSubjects());
         model.addAttribute("departments", departmentService.getDepartments());
         model.addAttribute("subjectTeachers", subjectTeachers);
+        model.addAttribute("subjectTeacher", new Subjectteacher());
 
         return "admin/subject-teachers";
-    }
-
-    @GetMapping("/admin/subjTeach/add")
-    public String subjectTeacherAddForm(Model model) {
-        model.addAttribute("subjectTeacher", new Subjectteacher());
-        model.addAttribute("subjects", subjectService.getSubjects());
-        model.addAttribute("teachers", teacherService.getTeachers());
-        return "admin/subject-teacher-add";
     }
 
     @PostMapping("/admin/subjTeach/add")
@@ -89,14 +82,12 @@ public class SubjectTeacherController {
             BindingResult bindingResult,
             @RequestParam(value = "subjectId.id", required = false) Integer subjectId,
             @RequestParam(value = "teacherId.id", required = false) Integer teacherId,
-            Model model,
             RedirectAttributes redirectAttributes) {
 
         try {
             if (bindingResult.hasErrors()) {
-                model.addAttribute("subjects", subjectService.getSubjects());
-                model.addAttribute("teachers", teacherService.getTeachers());
-                return "admin/subject-teacher-add";
+                redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng kiểm tra lại thông tin phân công");
+                return "redirect:/admin/subjTeach?error=add-validation";
             }
 
             // Xử lý Subject và Teacher thủ công
@@ -116,32 +107,14 @@ public class SubjectTeacherController {
                 redirectAttributes.addFlashAttribute("successMessage", "Phân công giảng dạy thành công");
                 return "redirect:/admin/subjTeach";
             } else {
-                model.addAttribute("errorMessage", "Không thể phân công giảng dạy");
-                model.addAttribute("subjects", subjectService.getSubjects());
-                model.addAttribute("teachers", teacherService.getTeachers());
-                return "admin/subject-teacher-add";
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể phân công giảng dạy");
+                return "redirect:/admin/subjTeach?error=add-validation";
             }
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
-            model.addAttribute("subjects", subjectService.getSubjects());
-            model.addAttribute("teachers", teacherService.getTeachers());
-            return "admin/subject-teacher-add";
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            return "redirect:/admin/subjTeach?error=add-validation";
         }
-    }
-
-    @GetMapping("/admin/subjTeach/update/{id}")
-    public String subjectTeacherUpdateForm(@PathVariable("id") int subjectTeacherId, Model model) {
-        Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
-
-        if (subjectTeacher == null) {
-            return "redirect:/admin/subjTeach?error=not-found";
-        }
-
-        model.addAttribute("subjectTeacher", subjectTeacher);
-        model.addAttribute("subjects", subjectService.getSubjects());
-        model.addAttribute("teachers", teacherService.getTeachers());
-        return "admin/subject-teacher-update";
     }
 
     @PostMapping("/admin/subjTeach/update")
@@ -150,14 +123,12 @@ public class SubjectTeacherController {
             BindingResult bindingResult,
             @RequestParam(value = "subjectId.id", required = false) Integer subjectId,
             @RequestParam(value = "teacherId.id", required = false) Integer teacherId,
-            Model model,
             RedirectAttributes redirectAttributes) {
 
         try {
             if (bindingResult.hasErrors()) {
-                model.addAttribute("subjects", subjectService.getSubjects());
-                model.addAttribute("teachers", teacherService.getTeachers());
-                return "admin/subject-teacher-update";
+                redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng kiểm tra lại thông tin phân công");
+                return "redirect:/admin/subjTeach?error=update-validation";
             }
 
             // Xử lý Subject và Teacher thủ công
@@ -177,17 +148,13 @@ public class SubjectTeacherController {
                 redirectAttributes.addFlashAttribute("successMessage", "Cập nhật phân công giảng dạy thành công");
                 return "redirect:/admin/subjTeach";
             } else {
-                model.addAttribute("errorMessage", "Không thể cập nhật phân công giảng dạy");
-                model.addAttribute("subjects", subjectService.getSubjects());
-                model.addAttribute("teachers", teacherService.getTeachers());
-                return "admin/subject-teacher-update";
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật phân công giảng dạy");
+                return "redirect:/admin/subjTeach?error=update-validation";
             }
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
-            model.addAttribute("subjects", subjectService.getSubjects());
-            model.addAttribute("teachers", teacherService.getTeachers());
-            return "admin/subject-teacher-update";
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            return "redirect:/admin/subjTeach?error=update-validation";
         }
     }
 

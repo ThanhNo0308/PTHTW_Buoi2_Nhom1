@@ -6,9 +6,6 @@ import com.ntn.pojo.Student;
 import com.ntn.pojo.Typescore;
 import java.util.List;
 
-/**
- * Repository xử lý dữ liệu điểm sinh viên
- */
 public interface ScoreRepository {
     
     List<Score> getScores();
@@ -35,20 +32,8 @@ public interface ScoreRepository {
     
     List<Score> getScoresBySubjectTeacherIdAndClassIdAndSchoolYearId(int subjectTeacherId, int classId, int schoolYearId);
     
-    int countScoreTypesBySubjectTeacher(int subjectTeacherId);
-    
-    boolean addScoreType(String typeName, int subjectTeacherId);
-    
-    Student getStudentByCode(String studentCode);
-    
-    Score getScoreByStudentSubjectSchoolYearAndType(
+     Score getScoreByStudentSubjectSchoolYearAndType(
             int studentId, int subjectTeacherId, int schoolYearId, String scoreType);
-    
-    List<Typescore> getAllScoreTypes();
-    
-    Typescore getScoreTypeByName(String name);
-    
-    boolean addScoreType(Typescore newType);
     
     boolean saveScore(Score score);
     

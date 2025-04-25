@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head>
+        <meta charset="UTF-8">
+        <title>Thông tin cá nhân</title>
+    <th:block th:replace="base :: styles"></th:block>
+    <style>
+        .profile-img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 5px solid #e9ecef;
+        }
+        .profile-header {
+            background: linear-gradient(to right, #4e73df, #224abe);
+            color: white;
+            border-radius: 0.25rem 0.25rem 0 0;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col-lg-12">
+                <h2 class="mb-3">
+                    <i class="fas fa-user-circle"></i> Thông tin cá nhân
+                </h2>
+            </div>
+        </div>
+
+        <!-- Thông báo -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="row">
+            <!-- Thông tin cá nhân -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow h-100">
+                    <div class="profile-header p-3">
+                        <h5 class="card-title mb-0"><i class="fas fa-id-card"></i> Thông tin người dùng</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-4">
+                            <img th:if="${user.image != null && !user.image.isEmpty()}" 
+                                 th:src="${user.image}" 
+                                 class="profile-img mb-3" alt="Profile Image">
+                            <img th:unless="${user.image != null && !user.image.isEmpty()}" 
+                                 th:src="@{/images/default-avatar.jpg}" 
+                                 class="profile-img mb-3" alt="Default Avatar">
+                            <h4 th:text="${user.name}">Tên người dùng</h4>
+                            <p class="text-muted">
+                                <span class="badge bg-primary" th:text="${user.role}">Vai trò</span>
+                            </p>
+                        </div>
+
+                        <hr>
+
+                        <form th:action="@{/profile/update}" method="post" class="text-start" id="profileForm" enctype="multipart/form-data">
+                            <input type="hidden" name="id" th:value="${user.id}">
+
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Họ và tên</label>
+                                <input type="text" class="form-control" id="name" name="name" th:value="${user.name}" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="gender" class="form-label">Giới tính</label>
+                                <select class="form-select" id="gender" name="gender">
+                                    <option value="Nam" th:selected="${user.gender == 1}">Nam</option>
+                                    <option value="Nữ" th:selected="${user.gender == 0}">Nữ</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="hometown" class="form-label">Quê quán</label>
+                                <input type="text" class="form-control" id="hometown" name="hometown" th:value="${user.hometown}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="identifyCard" class="form-label">CMND/CCCD</label>
+                                <input type="text" class="form-control" id="identifyCard" name="identifyCard" th:value="${user.identifyCard}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="birthdate" class="form-label">Ngày sinh</label>
+                                <input type="date" class="form-control" id="birthdate" name="birthdate" 
+                                       th:value="${user.birthdate != null ? #dates.format(user.birthdate, 'yyyy-MM-dd') : ''}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Số điện thoại</label>
+                                <input type="text" class="form-control" id="phone" name="phone" th:value="${user.phone}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="imageFile" class="form-label">Ảnh đại diện</label>
+                                <input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/*">
+                                <small class="form-text text-muted">Để trống nếu không muốn thay đổi ảnh đại diện.</small>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Lưu thông tin
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Đổi mật khẩu -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow h-50">
+                    <div class="profile-header p-3">
+                        <h5 class="card-title mb-0"><i class="fas fa-key"></i> Đổi mật khẩu</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Mật khẩu phải có ít nhất 6 ký tự và bao gồm chữ cái và số.
+                        </div>
+
+                        <form th:action="@{/profile/change-password}" method="post" id="passwordForm">
+                            <input type="hidden" name="id" th:value="${user.id}">
+
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label">Mật khẩu hiện tại <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="currentPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">Mật khẩu mới <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="newPassword" name="newPassword" 
+                                           required minlength="6" pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$">
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="newPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback">Mật khẩu phải có ít nhất 6 ký tự, bao gồm cả chữ và số.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="confirmPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback">Mật khẩu xác nhận không khớp.</div>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-warning" id="changePasswordBtn">
+                                    <i class="fas fa-key"></i> Đổi mật khẩu
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Thông tin tài khoản -->
+                <div class="card shadow mt-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="card-title mb-0"><i class="fas fa-user-lock"></i> Thông tin tài khoản</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label fw-bold">Tên đăng nhập:</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control-plaintext" readonly th:value="${user.username}">
+                            </div>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label fw-bold">Email:</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control-plaintext" readonly th:value="${user.email}">
+                            </div>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label fw-bold">Trạng thái:</label>
+                            <div class="col-sm-8">
+                                <span th:if="${user.active}" class="badge bg-success">Hoạt động</span>
+                                <span th:unless="${user.active}" class="badge bg-danger">Bị khóa</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin chi tiết theo vai trò -->
+        <div class="row mt-2" th:if="${roleSpecificInfo != null}">
+            <div class="col-lg-12">
+                <div class="card shadow">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle"></i> 
+                            <span th:if="${user.role == 'Student'}">Thông tin sinh viên</span>
+                            <span th:if="${user.role == 'Teacher'}">Thông tin giảng viên</span>
+                            <span th:if="${user.role == 'Admin'}">Thông tin quản trị viên</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Thông tin sinh viên -->
+                        <div th:if="${user.role == 'Student' && roleSpecificInfo != null}">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="fw-bold">Mã sinh viên:</label>
+                                    <p th:text="${roleSpecificInfo.id}"></p>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="fw-bold">Lớp:</label>
+                                    <p th:text="${roleSpecificInfo.classId != null ? roleSpecificInfo.classId.className : 'Chưa phân lớp'}"></p>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="fw-bold">Ngành học:</label>
+                                    <p th:text="${roleSpecificInfo.classId != null && roleSpecificInfo.classId.majorId != null ? 
+                                       roleSpecificInfo.classId.majorId.majorName : 'Chưa có thông tin'}"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Thông tin giảng viên -->
+                        <div th:if="${user.role == 'Teacher' && roleSpecificInfo != null}">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="fw-bold">Mã giảng viên:</label>
+                                    <p th:text="${roleSpecificInfo.id}"></p>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="fw-bold">Khoa:</label>
+                                    <p th:text="${roleSpecificInfo.departmentId != null ? roleSpecificInfo.departmentId.departmentName : 'Chưa phân khoa'}"></p>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="fw-bold">Chức vụ:</label>
+                                    <p th:text="${roleSpecificInfo.position != null ? roleSpecificInfo.position : 'Giảng viên'}"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
+
+    <script>
+        // Xử lý hiển thị/ẩn mật khẩu
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', function () {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    this.querySelector('i').classList.remove('fa-eye');
+                    this.querySelector('i').classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    this.querySelector('i').classList.remove('fa-eye-slash');
+                    this.querySelector('i').classList.add('fa-eye');
+                }
+            });
+        });
+
+        // Xác thực mật khẩu trùng khớp
+        document.getElementById('passwordForm').addEventListener('submit', function (event) {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                document.getElementById('confirmPassword').classList.add('is-invalid');
+                event.preventDefault();
+            } else {
+                document.getElementById('confirmPassword').classList.remove('is-invalid');
+            }
+        });
+
+        // Hiển thị phản hồi khi nhập mật khẩu mới
+        document.getElementById('newPassword').addEventListener('input', function () {
+            const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+            if (this.value.length > 0 && !regex.test(this.value)) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+
+        // Kiểm tra mật khẩu xác nhận khi nhập
+        document.getElementById('confirmPassword').addEventListener('input', function () {
+            const newPassword = document.getElementById('newPassword').value;
+            if (this.value !== newPassword) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+    </script>
+</body>
+</html>

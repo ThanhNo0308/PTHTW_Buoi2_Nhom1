@@ -36,6 +36,11 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    public List<Student> getStudentbyEmail(String email) {
+        return this.studRepo.getStudentbyEmail(email);
+    }
+
+    @Override
     public boolean addOrUpdateStudent(Student student) {
         return this.studRepo.addOrUpdateStudent(student);
     }

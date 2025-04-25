@@ -16,10 +16,21 @@
                 </h2>
             </div>
             <div class="col-md-4 text-end">
-                <a th:href="@{/admin/addForum}" class="btn btn-success">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addForumModal">
                     <i class="fas fa-plus-circle"></i> Thêm bài đăng mới
-                </a>
+                </button>
             </div>
+        </div>
+
+        <!-- Thông báo -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
         <div class="card shadow mb-4">
@@ -67,22 +78,147 @@
                         <p class="card-text" th:text="${forum.content}"></p>
                     </div>
                     <div class="card-footer bg-white d-flex justify-content-between">
-                        <a href="#" class="btn btn-sm btn-primary">
-                            <i class="fas fa-reply"></i> Phản hồi
-                        </a>
-                        <form th:action="@{/admin/deleteForum}" method="post" th:id="'delete-form-' + ${forum.id}" class="delete-form">
-                            <input type="hidden" name="forumId" th:value="${forum.id}">
-                            <button type="button" class="btn btn-sm btn-danger" th:onclick="'confirmDelete(' + ${forum.id} + ')'">
-                                <i class="fas fa-trash"></i> Xóa bài đăng
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-primary" onclick="openEditModal(this)"
+                                    th:data-id="${forum.id}"
+                                    th:data-title="${forum.title}"
+                                    th:data-description="${forum.description}"
+                                    th:data-content="${forum.content}"
+                                    th:data-subject-teacher="${forum.subjectTeacherId.id}">
+                                <i class="fas fa-edit"></i> Sửa
                             </button>
-                        </form>
+                            <form th:action="@{/admin/deleteForum}" method="post" th:id="'delete-form-' + ${forum.id}" class="delete-form">
+                                <input type="hidden" name="forumId" th:value="${forum.id}">
+                                <button type="button" class="btn btn-sm btn-danger" th:onclick="'confirmDelete(' + ${forum.id} + ')'">
+                                    <i class="fas fa-trash"></i> Xóa
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    
+    <!-- Modal Thêm Bài Đăng -->
+    <div class="modal fade" id="addForumModal" tabindex="-1" aria-labelledby="addForumModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addForumModalLabel"><i class="fas fa-plus-circle"></i> Thêm bài đăng mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/forum/add}" method="post" id="addForumForm">
+                        <div class="mb-3">
+                            <label for="addTitle" class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-heading"></i></span>
+                                <input type="text" name="title" class="form-control" id="addTitle" placeholder="Nhập tiêu đề bài đăng" required />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="addDescription" class="form-label">Mô tả ngắn <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-align-left"></i></span>
+                                <textarea name="description" class="form-control" id="addDescription" rows="2" placeholder="Mô tả ngắn gọn về bài đăng" required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="addContent" class="form-label">Nội dung chi tiết <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-paragraph"></i></span>
+                                <textarea name="content" class="form-control" id="addContent" rows="5" placeholder="Nội dung chi tiết của bài đăng" required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="addSubjTeachSelect" class="form-label">Giảng viên - Môn học <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-chalkboard-teacher"></i></span>
+                                <select class="form-select" name="subjectTeacherId.id" id="addSubjTeachSelect" required>
+                                    <option value="" disabled selected>-- Chọn giảng viên và môn học --</option>
+                                    <option th:each="subjteach : ${subjteachs}"
+                                            th:value="${subjteach.id}"
+                                            th:text="${subjteach.teacherId.teacherName + ' - ' + subjteach.subjectId.subjectName}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" form="addForumForm" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Lưu bài đăng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Sửa Bài Đăng -->
+    <div class="modal fade" id="editForumModal" tabindex="-1" aria-labelledby="editForumModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="editForumModalLabel"><i class="fas fa-edit"></i> Cập nhật bài đăng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/forum/update}" method="post" id="editForumForm">
+                        <input type="hidden" id="editForumId" name="id">
+                        
+                        <div class="mb-3">
+                            <label for="editTitle" class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-heading"></i></span>
+                                <input type="text" name="title" class="form-control" id="editTitle" required />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">Mô tả ngắn <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-align-left"></i></span>
+                                <textarea name="description" class="form-control" id="editDescription" rows="2" required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editContent" class="form-label">Nội dung chi tiết <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-paragraph"></i></span>
+                                <textarea name="content" class="form-control" id="editContent" rows="5" required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editSubjTeachSelect" class="form-label">Giảng viên - Môn học <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-chalkboard-teacher"></i></span>
+                                <select class="form-select" name="subjectTeacherId.id" id="editSubjTeachSelect" required>
+                                    <option value="" disabled>-- Chọn giảng viên và môn học --</option>
+                                    <option th:each="subjteach : ${subjteachs}"
+                                            th:value="${subjteach.id}"
+                                            th:text="${subjteach.teacherId.teacherName + ' - ' + subjteach.subjectId.subjectName}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" form="editForumForm" class="btn btn-warning">
+                        <i class="fas fa-save"></i> Cập nhật
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div th:replace="base :: footer"></div>
     <div th:replace="base :: scripts"></div>
@@ -101,6 +237,40 @@
                 document.getElementById("delete-form-" + forumId).submit();
             }
         }
+
+        // Mở modal chỉnh sửa và điền dữ liệu
+        function openEditModal(button) {
+            const id = button.getAttribute('data-id');
+            const title = button.getAttribute('data-title');
+            const description = button.getAttribute('data-description');
+            const content = button.getAttribute('data-content');
+            const subjectTeacherId = button.getAttribute('data-subject-teacher');
+
+            // Điền dữ liệu vào form
+            document.getElementById('editForumId').value = id;
+            document.getElementById('editTitle').value = title;
+            document.getElementById('editDescription').value = description;
+            document.getElementById('editContent').value = content;
+            document.getElementById('editSubjTeachSelect').value = subjectTeacherId;
+
+            // Mở modal
+            const editModal = new bootstrap.Modal(document.getElementById('editForumModal'));
+            editModal.show();
+        }
+
+        // Hiển thị modal thêm khi có lỗi validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('error') && urlParams.get('error') === 'add-validation') {
+                const addModal = new bootstrap.Modal(document.getElementById('addForumModal'));
+                addModal.show();
+            }
+            
+            if (urlParams.has('error') && urlParams.get('error') === 'update-validation') {
+                const editModal = new bootstrap.Modal(document.getElementById('editForumModal'));
+                editModal.show();
+            }
+        });
     </script>
 </body>
 </html>

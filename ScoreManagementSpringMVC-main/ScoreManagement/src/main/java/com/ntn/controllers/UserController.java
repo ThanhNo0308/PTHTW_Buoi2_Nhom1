@@ -4,6 +4,16 @@
  */
 package com.ntn.controllers;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import com.ntn.pojo.Student;
+import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
 import com.ntn.pojo.User.Role;
 import com.ntn.service.ClassService;
@@ -35,6 +45,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -66,6 +77,9 @@ public class UserController {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    private Cloudinary cloudinary;
 
     @GetMapping("/admin/register")
     public String showRegistrationForm(Model model) {
@@ -372,6 +386,173 @@ public class UserController {
         }
 
         return "redirect:/admin/accounts";
+    }
+
+    @GetMapping("/profile")
+    public String showProfilePage(Model model, Authentication authentication) {
+        if (authentication == null) {
+            return "redirect:/login";
+        }
+
+        String username = authentication.getName();
+        User user = userService.getUserByUn(username);
+
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        model.addAttribute("user", user);
+
+        // Thêm thông tin chi tiết theo vai trò
+        if (user.getRole().equals("Student")) {
+            List<Student> students = studentService.getStudentbyEmail(user.getEmail());
+            Student student = students != null && !students.isEmpty() ? students.get(0) : null;
+            model.addAttribute("roleSpecificInfo", student);
+        } else if (user.getRole().equals("Teacher")) {
+            Teacher teacher = teacherService.getTeacherByEmail(user.getEmail());
+            model.addAttribute("roleSpecificInfo", teacher);
+        }
+
+        return "profile";
+    }
+
+    @PostMapping("/profile/update")
+    public String updateProfile(
+            @RequestParam("id") int userId,
+            @RequestParam("name") String name,
+            @RequestParam("gender") String gender,
+            @RequestParam("hometown") String hometown,
+            @RequestParam(value = "birthdate", required = false) String birthdateStr,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "identifyCard", required = false) String identifyCard,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            // Kiểm tra xem user có tồn tại không
+            User existingUser = userService.getUserById(userId);
+
+            if (existingUser == null) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy thông tin người dùng!");
+                return "redirect:/profile";
+            }
+
+            // Cập nhật thông tin từ form
+            existingUser.setName(name);
+            Short genderValue = null;
+            if ("Nam".equals(gender)) {
+                genderValue = 1;
+            } else if ("Nữ".equals(gender)) {
+                genderValue = 0;
+            } else {
+                // Giá trị mặc định hoặc giá trị khác nếu cần
+                genderValue = -1;
+            }
+            existingUser.setGender(genderValue);
+            existingUser.setHometown(hometown);
+            existingUser.setPhone(phone);
+            existingUser.setIdentifyCard(identifyCard);
+
+            // Xử lý ngày sinh
+            if (birthdateStr != null && !birthdateStr.isEmpty()) {
+                try {
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                    Date birthdate = dateFormat.parse(birthdateStr);
+                    existingUser.setBirthdate(birthdate);
+                } catch (ParseException e) {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Định dạng ngày không hợp lệ!");
+                    return "redirect:/profile";
+                }
+            }
+
+            // Xử lý ảnh đại diện nếu có
+            if (imageFile != null && !imageFile.isEmpty()) {
+                try {
+                    Map<String, Object> result = cloudinary.uploader().upload(
+                            imageFile.getBytes(),
+                            ObjectUtils.asMap("resource_type", "auto")
+                    );
+                    existingUser.setImage((String) result.get("secure_url"));
+                } catch (Exception e) {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi tải lên ảnh: " + e.getMessage());
+                    return "redirect:/profile";
+                }
+            }
+
+            boolean success = userService.updateUser(existingUser);
+
+            if (success) {
+                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin cá nhân thành công!");
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra khi cập nhật thông tin!");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace(); // In lỗi chi tiết để debug
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+        }
+
+        return "redirect:/profile";
+    }
+
+    @PostMapping("/profile/change-password")
+    public String changePassword(
+            @RequestParam("id") int userId,
+            @RequestParam("currentPassword") String currentPassword,
+            @RequestParam("newPassword") String newPassword,
+            @RequestParam("confirmPassword") String confirmPassword,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            // Kiểm tra xem user có tồn tại không
+            User existingUser = userService.getUserById(userId);
+
+            if (existingUser == null) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy thông tin người dùng!");
+                return "redirect:/profile";
+            }
+
+            // Kiểm tra mật khẩu hiện tại
+            if (!passwordEncoder.matches(currentPassword, existingUser.getPassword())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Mật khẩu hiện tại không chính xác!");
+                return "redirect:/profile";
+            }
+
+            // Kiểm tra mật khẩu mới và xác nhận
+            if (!newPassword.equals(confirmPassword)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Mật khẩu xác nhận không khớp với mật khẩu mới!");
+                return "redirect:/profile";
+            }
+
+            // Kiểm tra độ phức tạp của mật khẩu
+            if (newPassword.length() < 6 || !newPassword.matches(".*[A-Za-z].*") || !newPassword.matches(".*\\d.*")) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Mật khẩu phải có ít nhất 6 ký tự, bao gồm cả chữ và số!");
+                return "redirect:/profile";
+            }
+
+            // Mã hóa và cập nhật mật khẩu mới
+            existingUser.setPassword(passwordEncoder.encode(newPassword));
+
+            boolean success = userService.updateUser(existingUser);
+
+            if (success) {
+                redirectAttributes.addFlashAttribute("successMessage", "Đổi mật khẩu thành công!");
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra khi đổi mật khẩu!");
+            }
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+        }
+
+        return "redirect:/profile";
+    }
+
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat.setLenient(false);
+        binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, true));
     }
 
 }

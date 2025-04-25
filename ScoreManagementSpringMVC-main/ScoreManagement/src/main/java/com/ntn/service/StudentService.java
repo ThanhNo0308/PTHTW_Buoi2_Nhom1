@@ -46,4 +46,6 @@ public interface StudentService {
     List<Student> getStudentsByKeyword(String keyword);
 
     List<Student> getStudentsByClassIdAndKeyword(Integer classId, String keyword);
+    
+     List<Student> getStudentbyEmail(String email);
 }

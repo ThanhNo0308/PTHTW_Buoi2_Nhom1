@@ -4,6 +4,7 @@
  */
 package com.ntn.repository.impl;
 
+import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.repository.SubjectTeacherRepository;
 import java.util.List;
@@ -12,6 +13,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import java.util.ArrayList;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
@@ -76,7 +78,7 @@ public class SubjectTeacherRepositoryImpl implements SubjectTeacherRepository {
         try {
             org.hibernate.query.NativeQuery query = session.createNativeQuery("DELETE FROM subjectteacher WHERE Id = :id");
             query.setParameter("id", id);
-            
+
             int result = query.executeUpdate();
             return result > 0;
         } catch (Exception e) {
@@ -133,6 +135,53 @@ public class SubjectTeacherRepositoryImpl implements SubjectTeacherRepository {
         query.where(builder.or(teacherPredicate, subjectPredicate));
 
         return session.createQuery(query).getResultList();
+    }
+
+    @Override
+    public Subjectteacher getSubJectTeacherById(int id) {
+        Session session = this.factory.getObject().getCurrentSession();
+        return session.get(Subjectteacher.class, id);
+    }
+
+    @Override
+    public List<Subjectteacher> getSubjectTeacherByTeacherID(int TeacherID) {
+        Session s = this.factory.getObject().getCurrentSession();
+        Query q = s.createQuery("FROM Subjectteacher WHERE teacherId.id = :TeacherID");
+        q.setParameter("TeacherID", TeacherID);
+        List<Subjectteacher> subjectTeacher = q.getResultList();
+        return subjectTeacher;
+    }
+
+    @Override
+    public List<Subjectteacher> getSubjectTeacherByListSubjectTeacherId(List<Studentsubjectteacher> listStudentSubjectTeacher) {
+        Session s = this.factory.getObject().getCurrentSession();
+
+        List<Integer> subjectTeacherIds = new ArrayList<>();
+
+        // Lặp qua danh sách và lấy ra subjectTeacherId của từng phần tử
+        for (Studentsubjectteacher studentSubjectTeacher : listStudentSubjectTeacher) {
+            subjectTeacherIds.add(studentSubjectTeacher.getSubjectTeacherId().getId());
+        }
+
+        // Sử dụng việc ghép chuỗi HQL
+        String queryString = "FROM Subjectteacher WHERE id IN (";
+        for (int i = 0; i < subjectTeacherIds.size(); i++) {
+            queryString += ":id" + i;
+            if (i < subjectTeacherIds.size() - 1) {
+                queryString += ", ";
+            }
+        }
+        queryString += ")";
+
+        Query q = s.createQuery(queryString);
+
+        // Đặt các tham số
+        for (int i = 0; i < subjectTeacherIds.size(); i++) {
+            q.setParameter("id" + i, subjectTeacherIds.get(i));
+        }
+
+        List<Subjectteacher> resultList = q.getResultList();
+        return resultList;
     }
 
 }

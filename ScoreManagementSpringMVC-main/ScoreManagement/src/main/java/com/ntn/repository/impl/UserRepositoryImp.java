@@ -25,10 +25,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- *
- * @author vhuunghia
- */
 @Repository
 @Transactional
 public class UserRepositoryImp implements UserRepository {
@@ -39,6 +35,8 @@ public class UserRepositoryImp implements UserRepository {
     private Environment env;
     @Autowired
     private BCryptPasswordEncoder passEncoder;
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
     public User getUserByUsername(String username) {
@@ -95,19 +93,6 @@ public class UserRepositoryImp implements UserRepository {
 
         // Kiểm tra xem danh sách có phần tử nào không
         return !students.isEmpty();
-    }
-
-    @Override
-    public List<Student> getStudentbyEmail(String email) {
-        Session s = this.factory.getObject().getCurrentSession();
-        Query q = s.createQuery("FROM Student WHERE email=:email");
-        q.setParameter("email", email);
-
-        // Lấy danh sách kết quả
-        List<Student> students = q.getResultList();
-
-        // Kiểm tra xem danh sách có phần tử nào không
-        return students;
     }
 
     @Override
@@ -189,29 +174,50 @@ public class UserRepositoryImp implements UserRepository {
         Session s = this.factory.getObject().getCurrentSession();
         try {
             // Lấy người dùng hiện tại từ database
-            User existingUser = s.get(User.class, user.getId());
+            User existingUser = this.getUserById(user.getId());
             if (existingUser == null) {
                 return false;
             }
 
-            // Chỉ cập nhật các trường không null
             if (user.getName() != null) {
                 existingUser.setName(user.getName());
             }
-            if (user.getEmail() != null) {
-                existingUser.setEmail(user.getEmail());
+
+            if (user.getGender() != null) {
+                existingUser.setGender(user.getGender());
             }
-            if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+
+            if (user.getHometown() != null) {
+                existingUser.setHometown(user.getHometown());
+            }
+
+            if (user.getBirthdate() != null) {
+                existingUser.setBirthdate(user.getBirthdate());
+            }
+
+            if (user.getPhone() != null) {
+                existingUser.setPhone(user.getPhone());
+            }
+
+            if (user.getIdentifyCard() != null) {
+                existingUser.setIdentifyCard(user.getIdentifyCard());
+            }
+
+            if (user.getImage() != null && !user.getImage().isEmpty()) {
+                existingUser.setImage(user.getImage());
+            }
+
+            if (user.getPassword() != null) {
                 existingUser.setPassword(user.getPassword());
             }
-            if (user.getRole() != null) {
-                existingUser.setRole(user.getRole());
-            }
+
+            // Nếu thực hiện cập nhật trạng thái active
             if (user.getActive() != null) {
                 existingUser.setActive(user.getActive());
             }
 
-            s.update(existingUser);
+            // Lưu đối tượng đã cập nhật vào cơ sở dữ liệu
+            this.userRepository.saveUser(existingUser);
             return true;
         } catch (HibernateException ex) {
             ex.printStackTrace();
@@ -234,4 +240,17 @@ public class UserRepositoryImp implements UserRepository {
             return false;
         }
     }
+
+    @Override
+    public boolean saveUser(User user) {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            session.saveOrUpdate(user);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }

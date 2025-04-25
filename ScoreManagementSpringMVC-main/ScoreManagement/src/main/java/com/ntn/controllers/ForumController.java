@@ -27,6 +27,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -43,11 +44,11 @@ public class ForumController {
 
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private StudentService studentService;
-    
-     @Autowired
+
+    @Autowired
     private ClassService classService;
 
     @GetMapping("/admin/forum")
@@ -71,18 +72,12 @@ public class ForumController {
 
     }
 
-    @GetMapping("/admin/addForum")
-    public String showAddForumPage(Model model) {
-        List<Subjectteacher> subjteachs = subjTeachService.getSubjectTeachers();
-        model.addAttribute("subjteachs", subjteachs);
-        model.addAttribute("forum", new Forum()); // Tạo một đối tượng Forum trống để binding dữ liệu
-        return "admin/addForum"; // Đưa ra view thêm bài đăng
-    }
-
-    @PostMapping("/admin/addForum")
+    @PostMapping("/admin/forum/add")
     public String addForum(@ModelAttribute("forum") Forum forum,
             @RequestParam("subjectTeacherId.id") Integer subjectTeacherId,
-            Model model, Authentication authentication) {
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+
         if (forum.getTitle() != null && forum.getDescription() != null && forum.getContent() != null) {
             try {
                 forum.setCreatedAt(new Date());
@@ -98,30 +93,81 @@ public class ForumController {
                 forum.setSubjectTeacherId(selectedSubjectTeacher);
 
                 if (forumService.addForum(forum)) {
-                    model.addAttribute("successMessage", "Bài đăng đã được thêm thành công.");
+                    redirectAttributes.addFlashAttribute("successMessage", "Bài đăng đã được thêm thành công.");
                 } else {
-                    model.addAttribute("errorMessage", "Đã xảy ra lỗi khi thêm bài đăng.");
+                    redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi thêm bài đăng.");
+                    return "redirect:/admin/forum?error=add-validation";
                 }
             } catch (Exception e) {
-                model.addAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+                redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+                return "redirect:/admin/forum?error=add-validation";
             }
         } else {
-            model.addAttribute("errorMessage", "Vui lòng điền đầy đủ thông tin.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng điền đầy đủ thông tin.");
+            return "redirect:/admin/forum?error=add-validation";
         }
         return "redirect:/admin/forum";
     }
 
-    @PostMapping("/admin/deleteForum")
-    public String deleteForum(@RequestParam("forumId") int forumId, Model model) {
-        if (forumService.deleteForum(forumId)) {
-            model.addAttribute("successMessage", "Bài đăng đã được xóa thành công.");
-        } else {
-            model.addAttribute("errorMessage", "Đã xảy ra lỗi khi xóa bài đăng.");
-        }
+    @PostMapping("/admin/forum/update")
+    public String updateForum(@ModelAttribute("forum") Forum forum,
+            @RequestParam("subjectTeacherId.id") Integer subjectTeacherId,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
 
+        if (forum.getTitle() != null && forum.getDescription() != null && forum.getContent() != null) {
+            try {
+                // Lấy bài đăng từ DB để giữ lại các thông tin không đổi (như userId, createdAt...)
+                Forum existingForum = forumService.getForumById(forum.getId());
+                if (existingForum == null) {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy bài đăng cần cập nhật.");
+                    return "redirect:/admin/forum";
+                }
+
+                // Cập nhật những thông tin được thay đổi
+                existingForum.setTitle(forum.getTitle());
+                existingForum.setDescription(forum.getDescription());
+                existingForum.setContent(forum.getContent());
+
+                // Cập nhật subjectTeacherId nếu có thay đổi
+                Subjectteacher selectedSubjectTeacher = new Subjectteacher();
+                selectedSubjectTeacher.setId(subjectTeacherId);
+                existingForum.setSubjectTeacherId(selectedSubjectTeacher);
+
+                // Lưu thay đổi
+                if (forumService.updateForum(existingForum)) {
+                    redirectAttributes.addFlashAttribute("successMessage", "Bài đăng đã được cập nhật thành công.");
+                } else {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi cập nhật bài đăng.");
+                    return "redirect:/admin/forum?error=update-validation";
+                }
+            } catch (Exception e) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+                return "redirect:/admin/forum?error=update-validation";
+            }
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng điền đầy đủ thông tin.");
+            return "redirect:/admin/forum?error=update-validation";
+        }
         return "redirect:/admin/forum";
     }
     
+    @GetMapping("/admin/forum/{id}")
+    public Forum getForumById(@PathVariable("id") int forumId) {
+        return forumService.getForumById(forumId);
+    }
+
+    @PostMapping("/admin/deleteForum")
+    public String deleteForum(@RequestParam("forumId") int forumId, RedirectAttributes redirectAttributes) {
+        if (forumService.deleteForum(forumId)) {
+            redirectAttributes.addFlashAttribute("successMessage", "Bài đăng đã được xóa thành công.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi xóa bài đăng.");
+        }
+
+        return "redirect:/admin/forum";
+    }
+
     @GetMapping("/admin/send-notification")
     public String sendNotificationForm(Model model) {
         // Thêm danh sách lớp để chọn (nếu muốn gửi thông báo cho một lớp cụ thể)

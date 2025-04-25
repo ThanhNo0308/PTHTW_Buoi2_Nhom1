@@ -26,18 +26,12 @@ import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- *
- * @author nguye
- */
 @Repository
 @Transactional
 public class ClassRepositoryImpl implements ClassRepository {
 
     @Autowired
     LocalSessionFactoryBean factory;
-    @Autowired
-    private Environment env;
 
     @Override
     public List<Class> getClasses() {
@@ -135,44 +129,6 @@ public class ClassRepositoryImpl implements ClassRepository {
     }
 
     @Override
-    public boolean updateScoreColumns(int classId, int additionalColumns,
-            String column3Name, String column4Name, String column5Name) {
-        Session session = this.factory.getObject().getCurrentSession();
-        try {
-            // Lấy thông tin lớp
-            Class classObj = session.get(Class.class, classId);
-            if (classObj == null) {
-                return false;
-            }
-
-            // Lưu cấu hình cột điểm vào bảng class_config hoặc một trường khác trong Class
-            // Đây là giả định, cần điều chỉnh theo cấu trúc thực tế của bạn
-            Map<String, Object> configs = new HashMap<>();
-            configs.put("additionalColumns", additionalColumns);
-
-            if (additionalColumns >= 1 && column3Name != null && !column3Name.isEmpty()) {
-                configs.put("column3Name", column3Name);
-            }
-
-            if (additionalColumns >= 2 && column4Name != null && !column4Name.isEmpty()) {
-                configs.put("column4Name", column4Name);
-            }
-
-            if (additionalColumns >= 3 && column5Name != null && !column5Name.isEmpty()) {
-                configs.put("column5Name", column5Name);
-            }
-
-            // Lưu cấu hình (giả định có trường configs kiểu JSON hoặc Text)
-            // classObj.setConfigs(convertConfigsToString(configs));
-            session.update(classObj);
-            return true;
-        } catch (HibernateException ex) {
-            ex.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
     public List<Class> getClassesByTeacher(int teacherId) {
         Session session = this.factory.getObject().getCurrentSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();
@@ -193,38 +149,5 @@ public class ClassRepositoryImpl implements ClassRepository {
         return ((Long) query.getSingleResult()).intValue();
     }
 
-    @Override
-    public boolean updateClassConfiguration(int classId, boolean enableAttendance,
-            boolean enableActivityScoring, String gradingPolicy) {
-        Session s = this.factory.getObject().getCurrentSession();
-        try {
-            Class classObj = s.get(Class.class, classId);
-            if (classObj == null) {
-                return false;
-            }
-
-            // Giả sử có các thuộc tính này trong entity Class
-            // Nếu không, bạn có thể tạo một bảng riêng để lưu cấu hình
-            // Lưu cấu hình dưới dạng JSON
-            Map<String, Object> config = new HashMap<>();
-            config.put("enableAttendance", enableAttendance);
-            config.put("enableActivityScoring", enableActivityScoring);
-            config.put("gradingPolicy", gradingPolicy);
-
-            String configJson = new ObjectMapper().writeValueAsString(config);
-
-            // Giả sử có trường classConfig kiểu String trong entity Class
-            // classObj.setClassConfig(configJson);
-            // Hoặc lưu các giá trị riêng biệt nếu có các trường tương ứng
-            // classObj.setEnableAttendance(enableAttendance);
-            // classObj.setEnableActivityScoring(enableActivityScoring);
-            // classObj.setGradingPolicy(gradingPolicy);
-            s.update(classObj);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
 
 }

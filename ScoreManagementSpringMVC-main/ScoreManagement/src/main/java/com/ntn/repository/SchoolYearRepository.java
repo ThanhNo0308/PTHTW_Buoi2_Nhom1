@@ -5,14 +5,6 @@ import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Typescore;
 import java.util.List;
 
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-/**
- *
- * @author vhuunghia
- */
 public interface SchoolYearRepository {
 
     List<Schoolyear> getListSchoolYear(String currentYear);
@@ -23,10 +15,6 @@ public interface SchoolYearRepository {
 
     List<Schoolyear> getAllSchoolYears();
 
-    Subjectteacher getSubJectTeacherById(int id);
-
-    Typescore getScoreTypeByName(String name);
-
     boolean addOrUpdateSchoolYear(Schoolyear schoolYear);
 
     boolean deleteSchoolYear(int schoolYearId);
@@ -36,6 +24,6 @@ public interface SchoolYearRepository {
     List<Schoolyear> getSchoolYearsBySemester(String semesterName);
 
     List<Schoolyear> getSchoolYearsByNameYearAndSemester(String nameYear, String semesterName);
-    
+
     boolean hasRelatedData(int schoolYearId);
 }

@@ -64,23 +64,16 @@ public class SchoolYearController {
     }
 
     @PreAuthorize("hasAuthority('Admin')")
-    @GetMapping("/admin/school-years/add")
-    public String schoolYearAddForm(Model model) {
-        model.addAttribute("schoolYear", new Schoolyear());
-        return "admin/school-year-add";
-    }
-
-    @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/admin/school-years/add")
     public String schoolYearAdd(
-            @Valid @ModelAttribute("schoolYear") Schoolyear schoolYear,
+            @ModelAttribute("schoolYear") Schoolyear schoolYear,
             BindingResult bindingResult,
-            Model model,
             RedirectAttributes redirectAttributes) {
 
         try {
             if (bindingResult.hasErrors()) {
-                return "admin/school-year-add";
+                redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng kiểm tra lại thông tin năm học");
+                return "redirect:/admin/school-years?error=add-validation";
             }
 
             // Trích xuất năm từ các đối tượng Date
@@ -103,40 +96,27 @@ public class SchoolYearController {
                 redirectAttributes.addFlashAttribute("successMessage", "Thêm năm học thành công");
                 return "redirect:/admin/school-years";
             } else {
-                model.addAttribute("errorMessage", "Không thể thêm năm học");
-                return "admin/school-year-add";
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể thêm năm học");
+                return "redirect:/admin/school-years?error=add-validation";
             }
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
-            return "admin/school-year-add";
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            return "redirect:/admin/school-years?error=add-validation";
         }
-    }
-
-    @PreAuthorize("hasAuthority('Admin')")
-    @GetMapping("/admin/school-years/update/{id}")
-    public String schoolYearUpdateForm(@PathVariable("id") int schoolYearId, Model model) {
-        Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
-
-        if (schoolYear == null) {
-            return "redirect:/admin/school-years?error=school-year-not-found";
-        }
-
-        model.addAttribute("schoolYear", schoolYear);
-        return "admin/school-year-update";
     }
 
     @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/admin/school-years/update")
     public String schoolYearUpdate(
-            @Valid @ModelAttribute("schoolYear") Schoolyear schoolYear,
+            @ModelAttribute("schoolYear") Schoolyear schoolYear,
             BindingResult bindingResult,
-            Model model,
             RedirectAttributes redirectAttributes) {
 
         try {
             if (bindingResult.hasErrors()) {
-                return "admin/school-year-update";
+                redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng kiểm tra lại thông tin năm học");
+                return "redirect:/admin/school-years?error=update-validation";
             }
 
             // Trích xuất năm từ các đối tượng Date
@@ -159,13 +139,13 @@ public class SchoolYearController {
                 redirectAttributes.addFlashAttribute("successMessage", "Cập nhật năm học thành công");
                 return "redirect:/admin/school-years";
             } else {
-                model.addAttribute("errorMessage", "Không thể cập nhật năm học");
-                return "admin/school-year-update";
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật năm học");
+                return "redirect:/admin/school-years?error=update-validation";
             }
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
-            return "admin/school-year-update";
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            return "redirect:/admin/school-years?error=update-validation";
         }
     }
 

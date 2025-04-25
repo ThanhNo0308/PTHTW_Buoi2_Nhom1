@@ -7,10 +7,6 @@ package com.ntn.repository;
 import com.ntn.pojo.Department;
 import java.util.List;
 
-/**
- *
- * @author nguye
- */
 public interface DepartmentRepository {
     List<Department> getDepartments();
     boolean addOrUpdateDepartment(Department department);

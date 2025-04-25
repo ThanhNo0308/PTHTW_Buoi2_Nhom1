@@ -1,7 +1,6 @@
 package com.ntn.controllers;
 
 import com.ntn.pojo.Class;
-import com.ntn.pojo.ListScoreDTO;
 import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Score;
 import com.ntn.pojo.Student;
@@ -9,18 +8,16 @@ import com.ntn.pojo.Subject;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.Typescore;
-import com.ntn.pojo.User;
-import com.ntn.repository.TeacherRepository;
 import com.ntn.service.ClassService;
 import com.ntn.service.SchoolYearService;
 import com.ntn.service.ScoreService;
 import com.ntn.service.StudentService;
 import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TeacherService;
+import com.ntn.service.TypeScoreService;
 import com.ntn.service.UserService;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
 import java.util.List;
 import java.util.Map;
@@ -64,6 +61,9 @@ public class TeacherClassController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private TypeScoreService typeScoreService;
 
     @GetMapping("/classes")
     public String getTeacherClasses(Model model, Authentication authentication) {
@@ -132,7 +132,7 @@ public class TeacherClassController {
         List<Student> students = studentService.getStudentByClassId(classId);
 
         // Lấy danh sách loại điểm từ bảng classscoretypes (cho lớp cụ thể này)
-        List<String> scoreTypes = scoreService.getScoreTypesByClass(classId, subjectTeacherId, schoolYearId);
+        List<String> scoreTypes = typeScoreService.getScoreTypesByClass(classId, subjectTeacherId, schoolYearId);
 
         // Đảm bảo luôn có loại điểm giữa kỳ và cuối kỳ
         if (!scoreTypes.contains("Giữa kỳ")) {
@@ -246,10 +246,10 @@ public class TeacherClassController {
                             score.setSubjectTeacherID(subjectTeacherService.getSubjectTeacherById(subjectTeacherId));
                             score.setSchoolYearId(schoolYearService.getSchoolYearById(schoolYearId));
 
-                            Typescore type = scoreService.getScoreTypeByName(scoreType);
+                            Typescore type = typeScoreService.getScoreTypeByName(scoreType);
                             if (type == null) {
                                 type = new Typescore(scoreType);
-                                scoreService.addScoreType(type);
+                                typeScoreService.addScoreType(type);
                             }
                             score.setScoreType(type);
                         }
@@ -261,11 +261,11 @@ public class TeacherClassController {
                         score.setSubjectTeacherID(subjectTeacherService.getSubjectTeacherById(subjectTeacherId));
                         score.setSchoolYearId(schoolYearService.getSchoolYearById(schoolYearId));
 
-                        Typescore type = scoreService.getScoreTypeByName(scoreType);
+                        Typescore type = typeScoreService.getScoreTypeByName(scoreType);
                         if (type == null) {
                             type = new Typescore();
                             type.setScoreType(scoreType);
-                            scoreService.addScoreType(type);
+                            typeScoreService.addScoreType(type);
                         }
                         score.setScoreType(type);
                     }
@@ -288,10 +288,10 @@ public class TeacherClassController {
                             }
 
                             if (score.getScoreType() == null) {
-                                Typescore type = scoreService.getScoreTypeByName(scoreType);
+                                Typescore type = typeScoreService.getScoreTypeByName(scoreType);
                                 if (type == null) {
                                     type = new Typescore(scoreType);
-                                    scoreService.addScoreType(type);
+                                    typeScoreService.addScoreType(type);
                                 }
                                 score.setScoreType(type);
                             }

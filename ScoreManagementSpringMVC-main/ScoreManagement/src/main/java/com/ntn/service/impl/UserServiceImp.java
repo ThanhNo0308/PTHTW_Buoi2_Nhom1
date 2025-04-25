@@ -10,6 +10,7 @@ import com.ntn.controllers.ApiUserController;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
+import com.ntn.repository.StudentRepository;
 import com.ntn.repository.UserRepository;
 import com.ntn.service.UserService;
 import java.io.IOException;
@@ -43,6 +44,8 @@ public class UserServiceImp implements UserService {
 
     @Autowired
     private UserRepository userRepo;
+    @Autowired
+    private StudentRepository studentRepository;
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
     @Autowired
@@ -100,7 +103,7 @@ public class UserServiceImp implements UserService {
         // Tạo EntityManager
 
         // Lấy danh sách kết quả
-        List<Student> students = this.userRepo.getStudentbyEmail(email);
+        List<Student> students = this.studentRepository.getStudentbyEmail(email);
 
         if (!students.isEmpty()) {
             // Tìm thấy Student với email tương ứng

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{base}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
     <head>
         <title>Trang sinh viên</title>
         <th:block th:replace="base :: styles"></th:block>
@@ -60,7 +60,7 @@
                                     </tr>
                                     <tr>
                                         <th>Họ và tên:</th>
-                                        <td th:text="${student.studentName}">-</td>
+                                        <td th:text="${student.lastName}">-</td>
                                     </tr>
                                     <tr>
                                         <th>Email:</th>

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head>
+        <meta charset="UTF-8">
+        <title>Thống kê điểm theo môn học</title>
+    <th:block th:replace="base :: styles"></th:block>
+    <!-- Thêm thư viện Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i> Thống kê</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <a href="#" th:href="@{/admin/statistics/class}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-users me-2"></i> Theo lớp
+                            </a>
+                            <a href="#" th:href="@{/admin/statistics/subject}" class="list-group-item list-group-item-action active">
+                                <i class="fas fa-book me-2"></i> Theo môn học
+                            </a>
+                            <a href="#" th:href="@{/admin/statistics/department}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-building me-2"></i> Theo khoa
+                            </a>
+
+                            <a href="#" th:href="@{/admin/statistics/major}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-graduation-cap me-2"></i> Theo ngành
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-chart-bar me-2"></i> Thống kê điểm theo môn học</h2>
+                </div>
+
+                <!-- Filter panel -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-filter me-2"></i> Bộ lọc thống kê</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="statsFilterForm" th:action="@{/admin/statistics/subject}" method="get">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="subjectId" class="form-label">Môn học</label>
+                                    <select id="subjectId" name="subjectId" class="form-select">
+                                        <option value="">-- Tất cả môn học --</option>
+                                        <option th:each="subject : ${subjects}" 
+                                                th:value="${subject.id}"
+                                                th:text="${subject.subjectName}"
+                                                th:selected="${selectedSubjectId == subject.id}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="teacherId" class="form-label">Giảng viên</label>
+                                    <select id="teacherId" name="teacherId" class="form-select">
+                                        <option value="">-- Tất cả giảng viên --</option>
+                                        <option th:each="teacher : ${teachers}" 
+                                                th:value="${teacher.id}"
+                                                th:text="${teacher.teacherName}"
+                                                th:selected="${selectedTeacherId == teacher.id}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="schoolYearId" class="form-label">Học kỳ</label>
+                                    <select id="schoolYearId" name="schoolYearId" class="form-select">
+                                        <option value="">-- Tất cả học kỳ --</option>
+                                        <option th:each="schoolYear : ${schoolYears}" 
+                                                th:value="${schoolYear.id}"
+                                                th:text="${schoolYear.nameYear + ' - ' + schoolYear.semesterName}"
+                                                th:selected="${selectedSchoolYearId == schoolYear.id}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-12 text-center">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-1"></i> Xem thống kê
+                                    </button>
+                                    <button type="button" class="btn btn-secondary ms-2" onclick="resetFilters()">
+                                        <i class="fas fa-redo me-1"></i> Đặt lại
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- No data message -->
+                <div class="card shadow-sm" th:if="${#lists.isEmpty(scoreStats)}">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-chart-area fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">Không có dữ liệu thống kê</h4>
+                        <p class="mb-0">Vui lòng chọn các tiêu chí lọc phù hợp để xem thống kê</p>
+                    </div>
+                </div>
+
+                <div th:if="${!#lists.isEmpty(scoreStats)}">
+                    <!-- Quick Stats Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card shadow-sm bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0" th:text="${scoreStats.studentCount}">0</h3>
+                                    <p class="mb-0">Tổng số sinh viên</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0" th:text="${#numbers.formatDecimal(scoreStats.averageScore, 1, 2)}">0.0</h3>
+                                    <p class="mb-0">Điểm trung bình</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0" th:text="${scoreStats.passCount}">0</h3>
+                                    <p class="mb-0">Số SV đạt</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm bg-danger text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0" th:text="${scoreStats.failCount}">0</h3>
+                                    <p class="mb-0">Số SV không đạt</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Section -->
+                    <div class="row mb-4">
+                        <!-- Grade Distribution Chart -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i> Phân bố điểm</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="gradeDistributionChart"></canvas>
+                                </div>
+                                <div class="card-footer bg-white">
+                                    <small class="text-muted">Biểu đồ hiển thị phân phối điểm số của sinh viên theo thang điểm</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pass/Fail Rate Chart -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i> Tỉ lệ đạt/không đạt</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="passFailChart"></canvas>
+                                </div>
+                                <div class="card-footer bg-white">
+                                    <small class="text-muted">Biểu đồ hiển thị tỉ lệ sinh viên đạt và không đạt môn học (điểm trung bình ≥ 5.0 là đạt)</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <!-- Score Comparison by Type -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i> So sánh điểm theo loại</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="scoreComparisonChart"></canvas>
+                                </div>
+                                <div class="card-footer bg-white">
+                                    <small class="text-muted">Biểu đồ hiển thị điểm trung bình của các loại điểm (giữa kỳ, cuối kỳ, ...)</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Students -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="fas fa-trophy me-2"></i> Top 5 sinh viên có điểm cao nhất</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Sinh viên</th>
+                                                <th>MSSV</th>
+                                                <th class="text-end">Điểm TB</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="student, i : ${topStudents}">
+                                                <td th:text="${i.count}"></td>
+                                                <td th:text="${student.studentName}"></td>
+                                                <td th:text="${student.studentCode}"></td>
+                                                <td class="text-end" th:text="${#numbers.formatDecimal(student.averageScore, 1, 2)}"></td>
+                                            </tr>
+                                            <tr th:if="${#lists.isEmpty(topStudents)}">
+                                                <td colspan="4" class="text-center">Không có dữ liệu</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subject Score Trends -->
+                    <div class="row" th:if="${selectedSubjectId != null}">
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i> Xu hướng điểm số qua các kỳ học</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="scoreTrendChart"></canvas>
+                                </div>
+                                <div class="card-footer bg-white">
+                                    <small class="text-muted">Biểu đồ hiển thị xu hướng điểm trung bình của môn học qua các kỳ học</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Score Table -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0"><i class="fas fa-table me-2"></i> Chi tiết điểm sinh viên</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" id="subjectScoreTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>STT</th>
+                                                    <th>Mã môn học</th>
+                                                    <th>Tên môn học</th>
+                                                    <th>Điểm trung bình</th>
+                                                    <th>Số sinh viên</th>
+                                                    <th>Chi tiết loại điểm</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="subject, stat : ${avgScoreBySubject}">
+                                                    <td th:text="${stat.count}"></td>
+                                                    <td th:text="${subject.subjectId}"></td>
+                                                    <td th:text="${subject.subjectName}"></td>
+                                                    <td th:text="${#numbers.formatDecimal(subject.averageScore, 1, 2)}"></td>
+                                                    <td th:text="${subject.studentCount}"></td>
+                                                    <td>
+                                                        <!-- Thêm kiểm tra subject != null -->
+                                                        <table class="table table-sm mb-0" th:if="${subject != null && subject.scoreTypeDetails != null && !subject.scoreTypeDetails.empty}">
+                                                            <tr th:each="detail : ${subject.scoreTypeDetails}">
+                                                                <td th:text="${detail.scoreType}" style="width: 60%; border-top: none;"></td>
+                                                                <td th:text="${#numbers.formatDecimal(detail.avgValue, 1, 2)}" style="width: 40%; border-top: none;"></td>
+                                                            </tr>
+                                                        </table>
+                                                        <span th:if="${subject == null || subject.scoreTypeDetails == null || subject.scoreTypeDetails.empty}">
+                                                            Không có dữ liệu
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                <tr th:if="${avgScoreBySubject == null || avgScoreBySubject.empty}">
+                                                    <td colspan="6" class="text-center">Không có dữ liệu</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
+
+    <script th:inline="javascript">
+        // Lấy dữ liệu từ Thymeleaf
+        const scoreStats = /*[[${scoreStats}]]*/ {};
+        const scoreDistribution = /*[[${scoreDistribution}]]*/ {};
+        const scoreByType = /*[[${scoreByType}]]*/ {};
+        const scoreTrends = /*[[${scoreTrends}]]*/ [];
+        const topStudents = /*[[${topStudents}]]*/ [];
+
+        // Đảm bảo có đối tượng rỗng nếu dữ liệu null
+        const safeScoreStats = scoreStats || {};
+        const safeScoreDistribution = scoreDistribution || {};
+        const safeScoreByType = scoreByType || {};
+        const safeScoreTrends = scoreTrends || [];
+        const safeTopStudents = topStudents || [];
+
+        console.log("Score Distribution Data:", safeScoreDistribution);
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // Kiểm tra xem có dữ liệu để vẽ biểu đồ không
+            if (!safeScoreStats || Object.keys(safeScoreStats).length === 0) {
+                console.log("Không có dữ liệu thống kê để hiển thị biểu đồ");
+            }
+
+            // Biểu đồ phân bố điểm
+            if (safeScoreDistribution) {
+                const gradeDistributionCtx = document.getElementById('gradeDistributionChart');
+                if (gradeDistributionCtx) {
+                    new Chart(gradeDistributionCtx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(safeScoreDistribution),
+                            datasets: [{
+                                    label: 'Số sinh viên',
+                                    data: Object.values(safeScoreDistribution),
+                                    backgroundColor: [
+                                        'rgba(255, 99, 132, 0.7)',
+                                        'rgba(255, 159, 64, 0.7)',
+                                        'rgba(255, 205, 86, 0.7)',
+                                        'rgba(75, 192, 192, 0.7)',
+                                        'rgba(54, 162, 235, 0.7)'
+                                    ],
+                                    borderColor: [
+                                        'rgb(255, 99, 132)',
+                                        'rgb(255, 159, 64)',
+                                        'rgb(255, 205, 86)',
+                                        'rgb(75, 192, 192)',
+                                        'rgb(54, 162, 235)'
+                                    ],
+                                    borderWidth: 1
+                                }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Số sinh viên'
+                                    },
+                                    ticks: {
+                                        stepSize: 1
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Thang điểm'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Phân bố điểm số sinh viên'
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (context) {
+                                            return `Số sinh viên: ${context.parsed.y}`;
+                                        }
+                                    }
+                                },
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    console.error("Canvas element gradeDistributionChart not found!");
+                }
+            }
+
+            // Biểu đồ tỉ lệ đạt/không đạt
+            const passFailCtx = document.getElementById('passFailChart');
+            if (passFailCtx) {
+                new Chart(passFailCtx.getContext('2d'), {
+                    type: 'pie',
+                    data: {
+                        labels: ['Đạt', 'Không đạt'],
+                        datasets: [{
+                                data: [
+                                    safeScoreStats.passCount || 0,
+                                    safeScoreStats.failCount || 0
+                                ],
+                                backgroundColor: [
+                                    'rgba(40, 167, 69, 0.7)',
+                                    'rgba(220, 53, 69, 0.7)'
+                                ],
+                                borderColor: [
+                                    'rgb(40, 167, 69)',
+                                    'rgb(220, 53, 69)'
+                                ],
+                                borderWidth: 1
+                            }]
+                    },
+                    options: {
+                        responsive: true,
+                        aspectRatio: 2,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Tỉ lệ sinh viên đạt/không đạt'
+                            }
+                        }
+                    }
+                });
+            } else {
+                console.log("Không tìm thấy canvas #passFailChart");
+            }
+
+            // Biểu đồ so sánh điểm theo loại
+            if (safeScoreByType && Object.keys(safeScoreByType).length > 0) {
+                const scoreComparisonCtx = document.getElementById('scoreComparisonChart');
+                if (scoreComparisonCtx) {
+                    const scoreTypeLabels = Object.keys(safeScoreByType);
+                    const scoreTypeValues = scoreTypeLabels.map(type => safeScoreByType[type] || 0);
+
+                    new Chart(scoreComparisonCtx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: scoreTypeLabels,
+                            datasets: [{
+                                    label: 'Điểm trung bình',
+                                    data: scoreTypeValues,
+                                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                                    borderColor: 'rgb(54, 162, 235)',
+                                    borderWidth: 1
+                                }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 10,
+                                    title: {
+                                        display: true,
+                                        text: 'Điểm trung bình'
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Loại điểm'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'So sánh điểm trung bình theo loại'
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    console.log("Không tìm thấy canvas #scoreComparisonChart");
+                }
+            } else {
+                console.log("Không có dữ liệu điểm theo loại");
+            }
+
+            // Biểu đồ xu hướng điểm theo kỳ
+            if (safeScoreTrends && safeScoreTrends.length > 0) {
+                const scoreTrendCtx = document.getElementById('scoreTrendChart');
+                if (scoreTrendCtx) {
+                    const semesters = safeScoreTrends.map(item => item.semester);
+                    const avgScores = safeScoreTrends.map(item => item.averageScore);
+
+                    new Chart(scoreTrendCtx.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: semesters,
+                            datasets: [{
+                                    label: 'Điểm trung bình',
+                                    data: avgScores,
+                                    fill: false,
+                                    borderColor: 'rgb(75, 192, 192)',
+                                    tension: 0.1
+                                }]
+                        },
+                        options: {
+                            responsive: true,
+                            aspectRatio: 2,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 10,
+                                    title: {
+                                        display: true,
+                                        text: 'Điểm trung bình'
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Học kỳ'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Xu hướng điểm trung bình qua các kỳ học'
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        });
+
+        // Các hàm xử lý form
+        function resetFilters() {
+            document.getElementById('subjectId').value = '';
+            document.getElementById('teacherId').value = '';
+            document.getElementById('schoolYearId').value = '';
+            document.getElementById('statsFilterForm').submit();
+        }
+    </script>
+</body>
+</html>

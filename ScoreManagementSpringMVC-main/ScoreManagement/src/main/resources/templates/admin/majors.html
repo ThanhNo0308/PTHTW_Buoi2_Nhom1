@@ -17,9 +17,9 @@
             </h2>
 
             <div sec:authorize="hasAuthority('Admin')">
-                <a th:href="@{/admin/major-add}" class="btn btn-success">
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addMajorModal">
                     <i class="fas fa-plus-circle"></i> Thêm ngành mới
-                </a>
+                </button>
             </div>
         </div>
 
@@ -104,9 +104,13 @@
                                             <i class="fas fa-users"></i> Danh sách lớp
                                         </a>
                                         <div sec:authorize="hasAuthority('Admin')">
-                                            <a th:href="@{'/admin/major-update/' + ${major.id}}" class="btn btn-sm btn-primary">
+                                            <button class="btn btn-sm btn-primary" onclick="openEditModal(this)"
+                                                    th:data-id="${major.id}"
+                                                    th:data-name="${major.majorName}"
+                                                    th:data-department="${major.departmentId != null ? major.departmentId.id : ''}"
+                                                    th:data-trainingtype="${major.trainingTypeId != null ? major.trainingTypeId.id : ''}">
                                                 <i class="fas fa-edit"></i> Sửa
-                                            </a>
+                                            </button>
                                             <a th:href="@{'/admin/major-delete/' + ${major.id}}" class="btn btn-sm btn-danger"
                                                onclick="return confirm('Bạn có chắc chắn muốn xóa ngành học này?');">
                                                 <i class="fas fa-trash"></i> Xóa
@@ -122,18 +126,129 @@
         </div>
     </div>
 
-    <div th:replace="base :: footer"></div>
+    <!-- Modal Thêm Ngành học -->
+    <div class="modal fade" id="addMajorModal" tabindex="-1" aria-labelledby="addMajorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addMajorModalLabel"><i class="fas fa-plus-circle"></i> Thêm ngành học mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/major-add}" method="post" id="addMajorForm">
+                        <div class="mb-3">
+                            <label for="addMajorName" class="form-label">Tên ngành <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="addMajorName" name="majorName" required>
+                        </div>
 
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="addDepartmentId" class="form-label">Khoa <span class="text-danger">*</span></label>
+                                <select class="form-select" id="addDepartmentId" name="departmentId.id" required>
+                                    <option value="">-- Chọn khoa --</option>
+                                    <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.departmentName}"></option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="addTrainingTypeId" class="form-label">Hệ đào tạo <span class="text-danger">*</span></label>
+                                <select class="form-select" id="addTrainingTypeId" name="trainingTypeId.id" required>
+                                    <option value="">-- Chọn hệ đào tạo --</option>
+                                    <option th:each="type : ${trainingTypes}" th:value="${type.id}" th:text="${type.trainingTypeName}"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" form="addMajorForm" class="btn btn-primary">Lưu ngành học</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cập nhật Ngành học -->
+    <div class="modal fade" id="editMajorModal" tabindex="-1" aria-labelledby="editMajorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="editMajorModalLabel"><i class="fas fa-edit"></i> Cập nhật thông tin ngành học</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/major-update}" method="post" id="editMajorForm">
+                        <input type="hidden" id="editMajorId" name="id">
+                        <div class="mb-3">
+                            <label for="editMajorName" class="form-label">Tên ngành <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editMajorName" name="majorName" required>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editDepartmentId" class="form-label">Khoa <span class="text-danger">*</span></label>
+                                <select class="form-select" id="editDepartmentId" name="departmentId.id" required>
+                                    <option value="">-- Chọn khoa --</option>
+                                    <option th:each="dept : ${departments}" 
+                                            th:value="${dept.id}" 
+                                            th:text="${dept.departmentName}">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editTrainingTypeId" class="form-label">Hệ đào tạo <span class="text-danger">*</span></label>
+                                <select class="form-select" id="editTrainingTypeId" name="trainingTypeId.id" required>
+                                    <option value="">-- Chọn hệ đào tạo --</option>
+                                    <option th:each="type : ${trainingTypes}" 
+                                            th:value="${type.id}" 
+                                            th:text="${type.trainingTypeName}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" form="editMajorForm" class="btn btn-warning">Cập nhật</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
     <script>
-        $(document).ready(function () {
-            $('#departmentFilter').change(function () {
-                let deptId = $(this).val();
-                if (deptId) {
-                    window.location.href = '/major?departmentId=' + deptId;
-                } else {
-                    window.location.href = '/major';
-                }
-            });
+        // Mở modal cập nhật và điền dữ liệu
+        function openEditModal(button) {
+            const id = button.getAttribute('data-id');
+            const name = button.getAttribute('data-name');
+            const departmentId = button.getAttribute('data-department');
+            const trainingTypeId = button.getAttribute('data-trainingtype');
+
+            // Điền dữ liệu vào modal
+            document.getElementById('editMajorId').value = id;
+            document.getElementById('editMajorName').value = name;
+            document.getElementById('editDepartmentId').value = departmentId || '';
+            document.getElementById('editTrainingTypeId').value = trainingTypeId || '';
+
+            // Mở modal
+            const editModal = new bootstrap.Modal(document.getElementById('editMajorModal'));
+            editModal.show();
+        }
+
+        // Hiển thị modal thêm khi có lỗi validation
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('error') && urlParams.get('error') === 'add-validation') {
+                const addModal = new bootstrap.Modal(document.getElementById('addMajorModal'));
+                addModal.show();
+            }
+            if (urlParams.has('error') && urlParams.get('error') === 'update-validation') {
+                const editModal = new bootstrap.Modal(document.getElementById('editMajorModal'));
+                editModal.show();
+            }
         });
     </script>
 </body>

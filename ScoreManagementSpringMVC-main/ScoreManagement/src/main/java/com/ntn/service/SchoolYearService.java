@@ -9,22 +9,29 @@ import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Typescore;
 import java.util.List;
 
-/**
- *
- * @author vhuunghia
- */
 public interface SchoolYearService {
+
     List<Schoolyear> getListSchoolYear(String currentYear);
+
     int getCurrentSchoolYearId();
+
     List<Schoolyear> getAllSchoolYears();
-     Subjectteacher getSubJectTeacherById(int id);
-     Typescore getScoreTypeByName(String name);
-     
+
+   
+
+    
+
     boolean addOrUpdateSchoolYear(Schoolyear schoolYear);
+
     boolean deleteSchoolYear(int schoolYearId);
+
     Schoolyear getSchoolYearById(int schoolYearId);
+
     List<Schoolyear> getSchoolYearsByNameYear(String nameYear);
+
     List<Schoolyear> getSchoolYearsBySemester(String semesterName);
+
     List<Schoolyear> getSchoolYearsByNameYearAndSemester(String nameYear, String semesterName);
+
     boolean hasRelatedData(int schoolYearId);
 }

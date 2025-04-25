@@ -3,61 +3,149 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Đăng Ký</title>
+        <title>Đăng Ký Giảng Viên</title>
         <th:block th:replace="base :: styles"></th:block>
     </head>
     <body>
         <div th:replace="base :: header"></div>
-        <section>
-            <div class="container mt-5">
-                <h1>Đăng Ký Giảng Viên</h1>
-
-                <form th:action="@{/admin/register}" method="post">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Mật khẩu</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="confirmPassword" class="form-label">Xác nhận mật khẩu</label>
-                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
-                    </div>
-
+        
+        <div class="register-container container">
+            <div class="register-card card">
+                <div class="register-header">
+                    <h2 class="register-title">
+                        <i class="fas fa-chalkboard-teacher"></i> Đăng ký tài khoản giảng viên
+                    </h2>
+                    <p class="text-white-50 mb-0">Nhập thông tin để tạo tài khoản cho giảng viên</p>
+                </div>
+                
+                <div class="register-form">
                     <!-- Hiển thị lỗi nếu có -->
-                    <div class="alert alert-danger" th:if="${param.error}">
-                        Email không hợp lệ hoặc đã tồn tại hoặc mật khẩu không khớp.
+                    <div class="alert alert-danger mb-4" th:if="${param.error}">
+                        <i class="fas fa-exclamation-circle me-2"></i> Email không hợp lệ, đã tồn tại hoặc mật khẩu không khớp.
                     </div>
+                    
+                    <form th:action="@{/admin/register}" method="post">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-4">
+                                    <label for="email" class="form-label">Email giảng viên <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                        <input type="email" class="form-control" id="email" name="email" 
+                                               pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" 
+                                               placeholder="Nhập email giảng viên (@dh.edu.vn)" required>
+                                    </div>
+                                    <small class="form-text text-muted">Email phải tồn tại trong danh sách giảng viên của trường</small>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label for="password" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                        <input type="password" class="form-control" id="password" name="password" 
+                                               minlength="6" required>
+                                        <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label for="confirmPassword" class="form-label">Xác nhận mật khẩu <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                        <input type="password" class="form-control" id="confirmPassword" 
+                                               name="confirmPassword" minlength="6" required>
+                                        <button class="btn btn-outline-secondary toggle-password" type="button" data-target="confirmPassword">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div id="passwordMismatch" class="invalid-feedback" style="display: none;">
+                                        Mật khẩu xác nhận không khớp!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <button type="submit" class="btn btn-primary">Đăng ký</button>
-                </form>
-            </div>
+                        <div class="password-tips">
+                            <h6><i class="fas fa-shield-alt me-2"></i>Yêu cầu mật khẩu:</h6>
+                            <ul>
+                                <li>Tối thiểu 6 ký tự</li>
+                                <li>Nên kết hợp chữ cái và số</li>
+                                <li>Không nên sử dụng thông tin cá nhân dễ đoán</li>
+                            </ul>
+                        </div>
 
-            <!-- Toast thông báo thành công -->
-            <div id="success-toast" class="toast position-fixed bottom-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="toast-header">
-                    <strong class="me-auto">Thành công</strong>
-                    <small class="text-muted">Bây giờ</small>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        <div class="mt-4 d-grid">
+                            <button type="submit" class="btn btn-primary btn-register">
+                                <i class="fas fa-user-plus me-2"></i> Đăng ký tài khoản
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div class="toast-body">
-                    Đăng ký thành công.
-                </div>
             </div>
+        </div>
 
-            <!-- Script hiển thị toast nếu có param success -->
-            <script th:if="${param.success}">
-                document.addEventListener('DOMContentLoaded', function () {
-                    var successToast = new bootstrap.Toast(document.getElementById('success-toast'));
-                    successToast.show();
-                });
-            </script>
+        <!-- Toast thông báo thành công -->
+        <div id="success-toast" class="toast position-fixed bottom-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-success text-white">
+                <strong class="me-auto"><i class="fas fa-check-circle me-2"></i> Thành công</strong>
+                <small class="text-white">Vừa xong</small>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                <i class="fas fa-check me-2"></i> Đăng ký tài khoản giảng viên thành công!
+            </div>
+        </div>
 
-        </section>
         <div th:replace="base :: footer"></div>
+        <div th:replace="base :: scripts"></div>
+
+        <script>
+            // Hiển thị toast thành công nếu có param success
+            document.addEventListener('DOMContentLoaded', function () {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('success')) {
+                    const successToast = new bootstrap.Toast(document.getElementById('success-toast'));
+                    successToast.show();
+                }
+                
+                // Xử lý kiểm tra mật khẩu trùng khớp
+                const password = document.getElementById("password");
+                const confirmPassword = document.getElementById("confirmPassword");
+                const passwordMismatch = document.getElementById("passwordMismatch");
+
+                function validatePassword() {
+                    if (password.value != confirmPassword.value) {
+                        confirmPassword.setCustomValidity("Mật khẩu không khớp");
+                        passwordMismatch.style.display = "block";
+                    } else {
+                        confirmPassword.setCustomValidity('');
+                        passwordMismatch.style.display = "none";
+                    }
+                }
+
+                password.addEventListener('change', validatePassword);
+                confirmPassword.addEventListener('keyup', validatePassword);
+                
+                // Xử lý hiển thị/ẩn mật khẩu
+                document.querySelectorAll('.toggle-password').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const targetId = this.getAttribute('data-target');
+                        const input = document.getElementById(targetId);
+                        
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            this.querySelector('i').classList.remove('fa-eye');
+                            this.querySelector('i').classList.add('fa-eye-slash');
+                        } else {
+                            input.type = 'password';
+                            this.querySelector('i').classList.remove('fa-eye-slash');
+                            this.querySelector('i').classList.add('fa-eye');
+                        }
+                    });
+                });
+            });
+        </script>
     </body>
 </html>

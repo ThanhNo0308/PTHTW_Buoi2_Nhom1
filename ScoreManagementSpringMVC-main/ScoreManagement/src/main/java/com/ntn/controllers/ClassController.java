@@ -61,17 +61,8 @@ public class ClassController {
 
         model.addAttribute("classes", classes);
         model.addAttribute("majors", majorService.getMajors());
-        return "/admin/classes";
-    }
-
-    @PreAuthorize("hasAuthority('Admin')")
-    @GetMapping("/admin/class-add")
-    public String classAddForm(Model model) {
-        model.addAttribute("class", new Class());
-        List<Major> majors = majorService.getMajors();
-        model.addAttribute("majors", majors);
         model.addAttribute("teachers", teacherService.getTeachers());
-        return "/admin/class-add";
+        return "/admin/classes";
     }
 
     @PreAuthorize("hasAuthority('Admin')")
@@ -88,9 +79,8 @@ public class ClassController {
             // Kiểm tra lỗi validation
             if (bindingResult.hasErrors()) {
                 System.out.println("VALIDATION ERRORS: " + bindingResult.getAllErrors());
-                model.addAttribute("majors", majorService.getMajors());
-                model.addAttribute("teachers", teacherService.getTeachers());
-                return "admin/class-add";
+                redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng kiểm tra lại thông tin lớp học");
+                return "redirect:/admin/classes?error=validation";
             }
 
             // Xử lý Major và Teacher thủ công
@@ -111,48 +101,27 @@ public class ClassController {
                 redirectAttributes.addFlashAttribute("successMessage", "Thêm lớp học thành công");
                 return "redirect:/admin/classes";
             } else {
-                model.addAttribute("errorMessage", "Không thể thêm lớp học");
-                model.addAttribute("majors", majorService.getMajors());
-                model.addAttribute("teachers", teacherService.getTeachers());
-                return "admin/class-add";
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể thêm lớp học");
+                return "redirect:/admin/classes?error=validation";
             }
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
-            model.addAttribute("majors", majorService.getMajors());
-            model.addAttribute("teachers", teacherService.getTeachers());
-            return "admin/class-add";
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            return "redirect:/admin/classes?error=validation";
         }
-    }
-
-    @PreAuthorize("hasAuthority('Admin')")
-    @GetMapping("/admin/class-update/{id}")
-    public String classUpdateForm(@PathVariable("id") int classId, Model model) {
-        Class classObj = classService.getClassById(classId);
-
-        if (classObj == null) {
-            return "redirect:/admin/classes?error=class-not-found";
-        }
-
-        List<Major> majors = majorService.getMajors();
-        model.addAttribute("majors", majors);
-        model.addAttribute("class", classObj);
-        model.addAttribute("teachers", teacherService.getTeachers());
-        return "/admin/class-update";
     }
 
     @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/admin/class-update")
     public String classUpdate(
-            @Valid @ModelAttribute("class") Class classObj,
+            @ModelAttribute("class") Class classObj,
             BindingResult bindingResult,
             Model model,
             RedirectAttributes redirectAttributes) {
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("majors", majorService.getMajors());
-            model.addAttribute("teachers", teacherService.getTeachers());
-            return "/admin/class-update";
+            redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng kiểm tra lại thông tin lớp học");
+            return "redirect:/admin/classes";
         }
 
         boolean success = classService.addOrUpdateClass(classObj);
@@ -161,10 +130,8 @@ public class ClassController {
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật lớp học thành công");
             return "redirect:/admin/classes";
         } else {
-            model.addAttribute("errorMessage", "Không thể cập nhật lớp học");
-            model.addAttribute("majors", majorService.getMajors());
-            model.addAttribute("teachers", teacherService.getTeachers());
-            return "/admin/class-update";
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật lớp học");
+            return "redirect:/admin/classes";
         }
     }
 

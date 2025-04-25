@@ -44,17 +44,9 @@ public class SubjectServiceImpl implements SubjectService {
         return this.subjRepo.getSubjectsByKeyword(keyword);
     }
 
-    @Override
-    public List<Subjectteacher> getSubjectTeacherByTeacherID(int TeacherID) {
-        return this.subjRepo.getSubjectTeacherByTeacherID(TeacherID);
-    }
+   
 
-    @Override
-    public List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher,
-            int schoolYearID) {
-
-        return this.subjRepo.getStudentsubjectteacherBySubjectTeacherID(listsubjectteacher, schoolYearID);
-    }
+    
 
     @Override
     public List<Integer> getSubjectTeacherId(List<Studentsubjectteacher> studentSubjectTeacher) {
@@ -68,20 +60,7 @@ public class SubjectServiceImpl implements SubjectService {
         return this.subjRepo.getSubjectIdByListSubjectTeacherId(listSubjectTeacherId);
     }
 
-    @Override
-    public List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID, int selectedSchoolYearId) {
-        return this.subjRepo.getListStudentsubjectteacher(subjectteacherID, selectedSchoolYearId);
-    }
-
-    @Override
-    public List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID, int schoolyearID) {
-        return this.subjRepo.getListStudentsubjectteacherByStudentID(studentID, schoolyearID);
-    }
-
-    @Override
-    public List<Subjectteacher> getSubjectTeacherByListSubjectTeacherId(List<Studentsubjectteacher> listStudentSubjectTeacher) {
-        return this.subjRepo.getSubjectTeacherByListSubjectTeacherId(listStudentSubjectTeacher);
-    }
+    
 
     @Override
     public boolean addOrUpdateSubject(Subject subject) {

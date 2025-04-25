@@ -101,30 +101,8 @@ public class SchoolYearRepositoryImp implements SchoolYearRepository {
         return session.createQuery(query).getResultList();
     }
 
-    @Override
-    public Subjectteacher getSubJectTeacherById(int id) {
-        Session session = this.factory.getObject().getCurrentSession();
-        return session.get(Subjectteacher.class, id);
-    }
-
-    @Override
-    public Typescore getScoreTypeByName(String name) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Typescore> query = builder.createQuery(Typescore.class);
-        Root<Typescore> root = query.from(Typescore.class);
-
-        query.where(builder.equal(root.get("scoreType"), name));
-
-        try {
-            return session.createQuery(query).getSingleResult();
-        } catch (NoResultException e) {
-            // Nếu không tìm thấy, tạo loại điểm mới
-            Typescore newType = new Typescore(name);
-            session.save(newType);
-            return newType;
-        }
-    }
+   
+    
 
     @Override
     public boolean addOrUpdateSchoolYear(Schoolyear schoolYear) {

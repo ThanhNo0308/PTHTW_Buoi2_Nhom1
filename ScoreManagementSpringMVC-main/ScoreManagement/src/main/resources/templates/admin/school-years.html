@@ -16,9 +16,9 @@
             </h2>
 
             <div sec:authorize="hasAuthority('Admin')">
-                <a th:href="@{/admin/school-years/add}" class="btn btn-success">
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSchoolYearModal">
                     <i class="fas fa-plus-circle"></i> Thêm năm học mới
-                </a>
+                </button>
             </div>
         </div>
 
@@ -108,16 +108,21 @@
                                     <!-- Nếu không phải năm học hiện tại, hiển thị trạng thái dựa trên năm -->
                                     <span th:unless="${currentSchoolYear != null && year.id == currentSchoolYear.id}" 
                                           th:with="currentYear=${T(java.time.Year).now().getValue()}, 
-                                          yearStartValue=${#strings.substring(year.yearStart, 0, 4)}"
+                                          yearStartValue=${#strings.substring(year.nameYear, 0, 4)}"
                                           th:class="${T(java.lang.Integer).parseInt(yearStartValue) >= currentYear} ? 'badge bg-info' : 'badge bg-secondary'"
                                           th:text="${T(java.lang.Integer).parseInt(yearStartValue) >= currentYear} ? 'Sắp tới' : 'Đã kết thúc'">
                                     </span>
                                 </td>
                                 <td>
                                     <div class="btn-group" sec:authorize="hasAuthority('Admin')">
-                                        <a th:href="@{'/admin/school-years/update/' + ${year.id}}" class="btn btn-sm btn-primary">
+                                        <button class="btn btn-sm btn-primary" onclick="openEditModal(this)"
+                                                th:data-id="${year.id}"
+                                                th:data-nameyear="${year.nameYear}"
+                                                th:data-semester="${year.semesterName}"
+                                                th:data-start="${#dates.format(year.yearStart, 'yyyy-MM-dd')}"
+                                                th:data-end="${#dates.format(year.yearEnd, 'yyyy-MM-dd')}">
                                             <i class="fas fa-edit"></i> Sửa
-                                        </a>
+                                        </button>
                                         <a th:href="@{'/admin/school-years/delete/' + ${year.id}}" class="btn btn-sm btn-danger"
                                            onclick="return confirm('Bạn có chắc chắn muốn xóa năm học này?');">
                                             <i class="fas fa-trash"></i> Xóa
@@ -132,6 +137,134 @@
         </div>
     </div>
 
+    <!-- Modal Thêm Năm học -->
+    <div class="modal fade" id="addSchoolYearModal" tabindex="-1" aria-labelledby="addSchoolYearModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addSchoolYearModalLabel"><i class="fas fa-plus-circle"></i> Thêm năm học mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/school-years/add}" method="post" id="addSchoolYearForm">
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="addSemesterName" class="form-label">Học kỳ <span class="text-danger">*</span></label>
+                                <select class="form-select" id="addSemesterName" name="semesterName" required>
+                                    <option value="">-- Chọn học kỳ --</option>
+                                    <option value="Học kỳ 1">Học kỳ 1</option>
+                                    <option value="Học kỳ 2">Học kỳ 2</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="addYearStart" class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="addYearStart" name="yearStart" required>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="addYearEnd" class="form-label">Ngày kết thúc <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="addYearEnd" name="yearEnd" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" form="addSchoolYearForm" class="btn btn-primary">Lưu năm học</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cập nhật Năm học -->
+    <div class="modal fade" id="editSchoolYearModal" tabindex="-1" aria-labelledby="editSchoolYearModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="editSchoolYearModalLabel"><i class="fas fa-edit"></i> Cập nhật thông tin năm học</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/school-years/update}" method="post" id="editSchoolYearForm">
+                        <input type="hidden" id="editSchoolYearId" name="id">
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="editNameYear" class="form-label">Năm học</label>
+                                <input type="text" class="form-control" id="editNameYear" name="nameYear" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="editSemesterName" class="form-label">Học kỳ <span class="text-danger">*</span></label>
+                                <select class="form-select" id="editSemesterName" name="semesterName" required>
+                                    <option value="">-- Chọn học kỳ --</option>
+                                    <option value="Học kỳ 1">Học kỳ 1</option>
+                                    <option value="Học kỳ 2">Học kỳ 2</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editYearStart" class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="editYearStart" name="yearStart" required>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="editYearEnd" class="form-label">Ngày kết thúc <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="editYearEnd" name="yearEnd" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" form="editSchoolYearForm" class="btn btn-warning">Cập nhật</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
+    
+    <script>
+        // Mở modal cập nhật và điền dữ liệu
+        function openEditModal(button) {
+            const id = button.getAttribute('data-id');
+            const nameYear = button.getAttribute('data-nameyear');
+            const semester = button.getAttribute('data-semester');
+            const yearStart = button.getAttribute('data-start');
+            const yearEnd = button.getAttribute('data-end');
+
+            // Điền dữ liệu vào modal
+            document.getElementById('editSchoolYearId').value = id;
+            document.getElementById('editNameYear').value = nameYear;
+            document.getElementById('editSemesterName').value = semester;
+            document.getElementById('editYearStart').value = yearStart;
+            document.getElementById('editYearEnd').value = yearEnd;
+
+            // Mở modal
+            const editModal = new bootstrap.Modal(document.getElementById('editSchoolYearModal'));
+            editModal.show();
+        }
+
+        // Hiển thị modal thêm khi có lỗi validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('error') && urlParams.get('error') === 'add-validation') {
+                const addModal = new bootstrap.Modal(document.getElementById('addSchoolYearModal'));
+                addModal.show();
+            }
+            if (urlParams.has('error') && urlParams.get('error') === 'update-validation') {
+                const editModal = new bootstrap.Modal(document.getElementById('editSchoolYearModal'));
+                editModal.show();
+            }
+        });
+    </script>
 </body>
 </html>

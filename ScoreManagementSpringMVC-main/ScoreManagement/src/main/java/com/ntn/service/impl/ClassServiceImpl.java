@@ -11,10 +11,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-/**
- *
- * @author nguye
- */
 @Service
 public class ClassServiceImpl implements ClassService {
 
@@ -52,13 +48,6 @@ public class ClassServiceImpl implements ClassService {
     }
 
     @Override
-    public boolean updateScoreColumns(int classId, int additionalColumns,
-            String column3Name, String column4Name, String column5Name) {
-        return this.classRepo.updateScoreColumns(classId, additionalColumns,
-                column3Name, column4Name, column5Name);
-    }
-
-    @Override
     public List<Class> getClassesByTeacher(int teacherId) {
         return this.classRepo.getClassesByTeacher(teacherId);
     }
@@ -66,13 +55,6 @@ public class ClassServiceImpl implements ClassService {
     @Override
     public int countClasses() {
         return this.classRepo.countClasses();
-    }
-
-    @Override
-    public boolean updateClassConfiguration(int classId, boolean enableAttendance,
-            boolean enableActivityScoring, String gradingPolicy) {
-        return this.classRepo.updateClassConfiguration(classId, enableAttendance,
-                enableActivityScoring, gradingPolicy);
     }
 
 }

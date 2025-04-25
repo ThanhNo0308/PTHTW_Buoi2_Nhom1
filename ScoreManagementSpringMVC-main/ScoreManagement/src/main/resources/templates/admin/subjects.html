@@ -16,9 +16,9 @@
             </h2>
 
             <div sec:authorize="hasAuthority('Admin')">
-                <a th:href="@{/admin/subject-add}" class="btn btn-success">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
                     <i class="fas fa-plus-circle"></i> Thêm môn học mới
-                </a>
+                </button>
             </div>
         </div>
 
@@ -79,6 +79,7 @@
                                 <th>Tên môn học</th>
                                 <th>Số tín chỉ</th>
                                 <th>Số lượng bài học</th>
+                                <th>Khoa phụ trách</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
@@ -88,11 +89,17 @@
                                 <td th:text="${subject.subjectName}"></td>
                                 <td th:text="${subject.credits}"></td>
                                 <td th:text="${subject.numberOfLessons}"></td>
+                                <td th:text="${subject.departmentID != null ? subject.departmentID.departmentName : 'N/A'}"></td>
                                 <td>
                                     <div class="btn-group" sec:authorize="hasAuthority('Admin')">
-                                        <a th:href="@{'/admin/subject-update/' + ${subject.id}}" class="btn btn-sm btn-primary">
+                                        <button class="btn btn-sm btn-primary" onclick="openEditModal(this)"
+                                            th:data-id="${subject.id}"
+                                            th:data-name="${subject.subjectName}"
+                                            th:data-credits="${subject.credits}"
+                                            th:data-lessons="${subject.numberOfLessons}"
+                                            th:data-department="${subject.departmentID != null ? subject.departmentID.id : ''}">
                                             <i class="fas fa-edit"></i> Sửa
-                                        </a>
+                                        </button>
                                         <a th:href="@{'/admin/subject-delete/' + ${subject.id}}" class="btn btn-sm btn-danger"
                                            onclick="return confirm('Bạn có chắc chắn muốn xóa môn học này?');">
                                             <i class="fas fa-trash"></i> Xóa
@@ -107,7 +114,142 @@
         </div>
     </div>
 
+    <!-- Modal Thêm Môn học -->
+    <div class="modal fade" id="addSubjectModal" tabindex="-1" aria-labelledby="addSubjectModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addSubjectModalLabel"><i class="fas fa-plus-circle"></i> Thêm môn học mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/admin/subject-add}" method="post" id="addSubjectForm">
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="addSubjectName" class="form-label">Tên môn học <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addSubjectName" name="subjectName" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="addCredits" class="form-label">Số tín chỉ <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="addCredits" name="credits" min="1" max="10" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="addNumberOfLessons" class="form-label">Số lượng bài học <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="addNumberOfLessons" name="numberOfLessons" min="1" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="addDepartmentId" class="form-label">Khoa <span class="text-danger">*</span></label>
+                                <select class="form-select" id="addDepartmentId" name="departmentID.id" required>
+                                    <option value="">-- Chọn khoa --</option>
+                                    <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.departmentName}"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu môn học</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cập nhật Môn học -->
+    <div class="modal fade" id="editSubjectModal" tabindex="-1" aria-labelledby="editSubjectModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="editSubjectModalLabel"><i class="fas fa-edit"></i> Cập nhật thông tin môn học</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/admin/subject-update}" method="post" id="editSubjectForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="editSubjectId" name="id">
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="editSubjectName" class="form-label">Tên môn học <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editSubjectName" name="subjectName" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editCredits" class="form-label">Số tín chỉ <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="editCredits" name="credits" min="1" max="10" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editNumberOfLessons" class="form-label">Số lượng bài học <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="editNumberOfLessons" name="numberOfLessons" min="1" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="editDepartmentId" class="form-label">Khoa <span class="text-danger">*</span></label>
+                                <select class="form-select" id="editDepartmentId" name="departmentID.id" required>
+                                    <option value="">-- Chọn khoa --</option>
+                                    <option th:each="dept : ${departments}" 
+                                            th:value="${dept.id}" 
+                                            th:text="${dept.departmentName}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div th:replace="base :: footer"></div>
     <div th:replace="base :: scripts"></div>
+    
+    <script>
+        // Mở modal cập nhật và điền dữ liệu
+        function openEditModal(button) {
+            const id = button.getAttribute('data-id');
+            const name = button.getAttribute('data-name');
+            const credits = button.getAttribute('data-credits');
+            const lessons = button.getAttribute('data-lessons');
+            const departmentId = button.getAttribute('data-department');
+
+            // Điền dữ liệu vào modal
+            document.getElementById('editSubjectId').value = id;
+            document.getElementById('editSubjectName').value = name;
+            document.getElementById('editCredits').value = credits;
+            document.getElementById('editNumberOfLessons').value = lessons;
+            document.getElementById('editDepartmentId').value = departmentId || '';
+
+            // Mở modal
+            const editModal = new bootstrap.Modal(document.getElementById('editSubjectModal'));
+            editModal.show();
+        }
+
+        // Hiển thị modal thêm khi có lỗi validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('error') && urlParams.get('error') === 'add-validation') {
+                const addModal = new bootstrap.Modal(document.getElementById('addSubjectModal'));
+                addModal.show();
+            }
+            if (urlParams.has('error') && urlParams.get('error') === 'update-validation') {
+                const editModal = new bootstrap.Modal(document.getElementById('editSubjectModal'));
+                editModal.show();
+            }
+        });
+    </script>
 </body>
 </html>

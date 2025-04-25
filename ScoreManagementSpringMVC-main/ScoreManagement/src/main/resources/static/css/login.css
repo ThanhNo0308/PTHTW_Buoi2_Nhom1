@@ -1,155 +1,127 @@
-.login_item{
 
+body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
 }
-#bt_login{
+
+.login-container {
+    padding: 60px 0;
+}
+
+.login-card {
     border: none;
-    font-size: 0.8vw;
-    background: none;
-    color: rgb(0, 27, 146);
+    box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07);
+    border-radius: 12px;
+    overflow: hidden;
 }
+
 .account-block {
-    padding: 0;
-    background-image: url(https://bootdey.com/img/Content/bg1.jpg);
-    background-repeat: no-repeat;
+    background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
+        url('https://images.unsplash.com/photo-1606761568499-6d2451b23c66?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1074&q=80');
     background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     height: 100%;
     position: relative;
+    min-height: 500px;
 }
+
 .account-block .overlay {
-    -webkit-box-flex: 1;
-    -ms-flex: 1;
-    flex: 1;
     position: absolute;
     top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: rgba(0, 0, 0, 0.4);
-}
-.account-block .account-testimonial {
-    text-align: center;
-    color: #fff;
-    position: absolute;
-    margin: 0 auto;
-    padding: 0 1.75rem;
-    bottom: 3rem;
-    left: 0;
-    right: 0;
-}
-
-.text-theme {
-    color: #5369f8 !important;
-}
-
-.btn-theme {
-    background-color: #5369f8;
-    border-color: #5369f8;
-    color: #fff;
-}
-
-
-/*  */
-.background_login_form{
-
-    background-color: rgba(11, 198, 255, 0.114);
-    position: fixed;
     left: 0;
     right: 0;
     bottom: 0;
-    top: 0;
-
-    display: none;
-    /* z-index: 4000; */
-
-    /* animation */
-    opacity: 0;
-
-    animation-duration: 0.5s ;
-    animation-timing-function: cubic-bezier();
-    animation-iteration-count: 1;
-    animation-fill-mode: forwards;
-
+    background: rgba(0, 0, 0, 0.4);
 }
-.login_form_contain {
-    border-radius: 40px;
-    width: 100%;
-    max-width: 1000px;
-    margin: 0 auto;
-    position: fixed;
-    top: 5%;
-    left: 10%;
-    right: 10%;
-    /* z-index: 5000 ; */
-    background-image: linear-gradient(rgb(100, 222, 238),
-    rgb(11, 181, 223),rgb(40, 176, 197),rgb(6, 119, 185),rgb(1, 81, 147),rgb(4, 31, 42));
-    transform: scale(0.7);
-    display: none;
 
+.login-form-area {
+    padding: 40px 45px;
+}
 
-    /* animation */
+.login-title {
+    position: relative;
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 30px;
+}
 
-    animation-duration: 0.5s ;
-    animation-timing-function: cubic-bezier();
-    animation-iteration-count: 1;
-    animation-fill-mode: forwards;
+.login-title:after {
+    content: '';
+    width: 70px;
+    height: 4px;
+    background: #007bff;
+    position: absolute;
+    bottom: -12px;
+    left: 0;
 }
-.login_form{
-    /* background-color: blue; */
+
+.form-floating .form-control {
+    border-radius: 8px;
+    height: 55px;
+    border: 1px solid #dbe0e5;
 }
-.account-block{
-    background-image: url(https://img.uhdpaper.com/wallpaper/mountain-forest-scenery-877@0@f-preview.jpg?dl);
+
+.form-floating label {
+    color: #6c757d;
 }
-@keyframes fadeIN {
-    0%{
+
+.form-floating .form-control:focus {
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    border-color: #007bff;
+}
+
+.btn-login {
+    height: 55px;
+    font-weight: 600;
+    font-size: 16px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-login:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #004494 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 7px 14px rgba(0, 123, 255, 0.2);
+}
+
+.box_alert_fail_login {
+    border-radius: 8px;
+    padding: 16px;
+    font-weight: 500;
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from {
         opacity: 0;
+        transform: translateY(-10px);
     }
-    25%{
-        opacity: 0.25;
-    }
-    50%{
-        opacity: 0.5;
-
-    }
-    75%{
-        opacity: 0.75;
-    }
-    100%{
+    to {
         opacity: 1;
-    }
-}
-@keyframes fadeOut {
-    0%{
-        opacity: 1;
-    }
-    25%{
-        opacity: 0.75;
-    }
-    50%{
-        opacity: 0.5;
-    }
-    75%{
-        opacity: 0.25;
-    }
-    100%{
-        opacity: 0;
+        transform: translateY(0);
     }
 }
 
-#login_bt{
-    border-style: none;
-   
-    float: right;
-    height: 100%;
-    margin-right: 10px;
-    border-right-style: solid;
-    border-bottom-right-radius: 20px;
+.school-logo {
+    max-height: 60px;
+    margin-bottom: 20px;
 }
 
-.login_ui {
-    position: relative; /* Thay đổi từ fixed thành relative */
-    width: 100%;
-    min-height: calc(100vh - 200px); /* Điều chỉnh chiều cao phù hợp */
-    align-items: center;
-    /*z-index: 1;*/
-    margin: 2rem 0;
+.role-selector {
+    margin-bottom: 25px;
+}
+
+.role-selector .form-select {
+    border-radius: 8px;
+    height: 55px;
+    border: 1px solid #dbe0e5;
+}
+
+.role-selector .form-select:focus {
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    border-color: #007bff;
 }

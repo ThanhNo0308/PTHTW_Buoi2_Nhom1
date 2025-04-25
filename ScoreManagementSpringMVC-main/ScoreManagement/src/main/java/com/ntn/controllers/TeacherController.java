@@ -103,13 +103,6 @@ public class TeacherController {
         return "admin/teachers";
     }
 
-    @GetMapping("/admin/teacher-add")
-    public String showAddTeacherForm(Model model) {
-        model.addAttribute("teacher", new Teacher());
-        model.addAttribute("departments", departmentService.getDepartments());
-        return "admin/teacher-add";
-    }
-
     @PostMapping("/admin/teacher-add")
     public String addTeacher(
             @ModelAttribute("teacher") Teacher teacher,
@@ -121,9 +114,8 @@ public class TeacherController {
             // Kiểm tra các trường bắt buộc
             if (teacher.getTeacherName() == null || teacher.getTeacherName().isEmpty()
                     || teacher.getEmail() == null || teacher.getEmail().isEmpty()) {
-                model.addAttribute("errorMessage", "Vui lòng điền đầy đủ thông tin bắt buộc");
-                model.addAttribute("departments", departmentService.getDepartments());
-                return "admin/teacher-add";
+                redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng điền đầy đủ thông tin bắt buộc");
+                return "redirect:/admin/teachers?error=validation";
             }
 
             // Thiết lập departmentId thủ công
@@ -139,15 +131,13 @@ public class TeacherController {
                 redirectAttributes.addFlashAttribute("successMessage", "Thêm giảng viên thành công");
                 return "redirect:/admin/teachers";
             } else {
-                model.addAttribute("errorMessage", "Không thể thêm giảng viên");
-                model.addAttribute("departments", departmentService.getDepartments());
-                return "admin/teacher-add";
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể thêm giảng viên");
+                return "redirect:/admin/teachers?error=validation";
             }
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
-            model.addAttribute("departments", departmentService.getDepartments());
-            return "admin/teacher-add";
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            return "redirect:/admin/teachers?error=validation";
         }
     }
 
@@ -193,32 +183,18 @@ public class TeacherController {
         return "redirect:/admin/teachers";
     }
 
-    @GetMapping("/admin/teacher-update/{id}")
-    public String teacherUpdateForm(@PathVariable("id") int teacherId, Model model) {
-        Teacher teacher = teacherService.getTeacherById(teacherId);
-
-        if (teacher == null) {
-            return "redirect:/admin/teachers?error=teacher-not-found";
-        }
-
-        // Thêm danh sách departments vào model cho dropdown
-        model.addAttribute("departments", departmentService.getDepartments());
-        model.addAttribute("teacher", teacher);
-        return "/admin/teacher-update";
-    }
-
     @PostMapping("/admin/teacher-update")
     public String teacherUpdate(
-            @Valid @ModelAttribute("teacher") Teacher teacher,
+            @ModelAttribute Teacher teacher,
             BindingResult bindingResult,
             Model model,
             RedirectAttributes redirectAttributes) {
 
         try {
             if (bindingResult.hasErrors()) {
-                // Thêm lại danh sách departments vào model nếu có lỗi
-                model.addAttribute("departments", departmentService.getDepartments());
-                return "/admin/teacher-update";
+                // Gửi lỗi qua redirect
+                redirectAttributes.addFlashAttribute("errorMessage", "Dữ liệu không hợp lệ");
+                return "redirect:/admin/teachers";
             }
 
             boolean success = teacherService.addOrUpdateTeacher(teacher);
@@ -227,21 +203,16 @@ public class TeacherController {
                 redirectAttributes.addFlashAttribute("successMessage", "Cập nhật giảng viên thành công");
                 return "redirect:/admin/teachers";
             } else {
-                model.addAttribute("errorMessage", "Không thể cập nhật giảng viên");
-                model.addAttribute("departments", departmentService.getDepartments());
-                return "/admin/teacher-update";
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật giảng viên");
+                return "redirect:/admin/teachers";
             }
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
-            model.addAttribute("departments", departmentService.getDepartments());
-            return "/admin/teacher-update";
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            return "redirect:/admin/teachers";
         }
     }
 
-    /**
-     * Nhập điểm từ file CSV
-     */
     @PostMapping("/classes/{id}/scores/import")
     public String importScores(@PathVariable("id") int classId,
             @RequestParam("file") MultipartFile file,

@@ -4,6 +4,7 @@
  */
 package com.ntn.service.impl;
 
+import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.repository.SubjectTeacherRepository;
 import com.ntn.service.SubjectTeacherService;
@@ -16,14 +17,16 @@ import org.springframework.stereotype.Service;
  * @author nguye
  */
 @Service
-public class SubjectTeacherServiceImpl implements SubjectTeacherService{
+public class SubjectTeacherServiceImpl implements SubjectTeacherService {
+
     @Autowired
     private SubjectTeacherRepository subjectTeacherRepo;
+
     @Override
     public List<Subjectteacher> getSubjectTeachers() {
         return this.subjectTeacherRepo.getSubjectTeachers();
     }
-    
+
     @Override
     public List<Subjectteacher> getAllSubjectTeachers() {
         return this.subjectTeacherRepo.getAllSubjectTeachers();
@@ -43,20 +46,35 @@ public class SubjectTeacherServiceImpl implements SubjectTeacherService{
     public boolean deleteSubjectTeacher(int id) {
         return this.subjectTeacherRepo.deleteSubjectTeacher(id);
     }
-    
+
     @Override
     public List<Subjectteacher> getSubjectTeachersByTeacherId(int teacherId) {
         return this.subjectTeacherRepo.getSubjectTeachersByTeacherId(teacherId);
     }
-    
+
     @Override
     public List<Subjectteacher> getSubjectTeachersBySubjectId(Integer subjectId) {
         return this.subjectTeacherRepo.getSubjectTeachersBySubjectId(subjectId);
     }
-    
+
     @Override
     public List<Subjectteacher> getSubjectTeachersByDepartmentId(int departmentId) {
         return this.subjectTeacherRepo.getSubjectTeachersByDepartmentId(departmentId);
+    }
+
+    @Override
+    public Subjectteacher getSubJectTeacherById(int id) {
+        return this.subjectTeacherRepo.getSubJectTeacherById(id);
+    }
+    
+     @Override
+    public List<Subjectteacher> getSubjectTeacherByTeacherID(int TeacherID) {
+        return this.subjectTeacherRepo.getSubjectTeacherByTeacherID(TeacherID);
+    }
+    
+    @Override
+    public List<Subjectteacher> getSubjectTeacherByListSubjectTeacherId(List<Studentsubjectteacher> listStudentSubjectTeacher) {
+        return this.subjectTeacherRepo.getSubjectTeacherByListSubjectTeacherId(listStudentSubjectTeacher);
     }
 
 }

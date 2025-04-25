@@ -9,7 +9,9 @@ import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subject;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Teacher;
+import com.ntn.service.StudentSubjectTeacherService;
 import com.ntn.service.SubjectService;
+import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TeacherService;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -37,6 +39,9 @@ public class ApiClassController {
     private TeacherService teacherService;
     @Autowired
     private SubjectService subjectService;
+    @Autowired
+    private SubjectTeacherService subjectTeacherService;
+    @Autowired StudentSubjectTeacherService studentSubjectTeacherService;
 
     @PostMapping("/listsubject")
     @CrossOrigin()
@@ -52,9 +57,9 @@ public class ApiClassController {
         int idTeacher = this.teacherService.getIdTeacherByEmail(userUserName);
 
         // lấy được listsubject mà teacher phụ trách
-        List<Subjectteacher> subjectteacher = this.subjectService.getSubjectTeacherByTeacherID(idTeacher);
+        List<Subjectteacher> subjectteacher = this.subjectTeacherService.getSubjectTeacherByTeacherID(idTeacher);
         // lấy được ListStudentsubjectteacher (giáo viên phụ trách môn học nào trong học kì nào)
-        List<Studentsubjectteacher> ListStudentsubjectteacher = this.subjectService.getStudentsubjectteacherBySubjectTeacherID(subjectteacher, selectedSchoolYearId);
+        List<Studentsubjectteacher> ListStudentsubjectteacher = this.studentSubjectTeacherService.getStudentsubjectteacherBySubjectTeacherID(subjectteacher, selectedSchoolYearId);
         // Lấy được những uniqueSubjectTeacherId
         List<Integer> uniqueSubjectTeacherIdList = this.subjectService.getSubjectTeacherId(ListStudentsubjectteacher);
 
@@ -81,7 +86,7 @@ public class ApiClassController {
         
         int subjectteacherID = Integer.parseInt(requestData.get("subjectTeacherId"));
        // Lấy được list học sinh học môn đó ở học kì đó do giáo viên nào phụ trách
-        List<Studentsubjectteacher> listStudentsubjectteacher = this.subjectService.getListStudentsubjectteacher(subjectteacherID, selectedSchoolYearId);
+        List<Studentsubjectteacher> listStudentsubjectteacher = this.studentSubjectTeacherService.getListStudentsubjectteacher(subjectteacherID, selectedSchoolYearId);
         
         
         return new ResponseEntity<>(listStudentsubjectteacher, HttpStatus.OK);
@@ -102,8 +107,8 @@ public class ApiClassController {
 //        int subjectteacherID = Integer.parseInt(requestData.get("subjectTeacherId"));
 //       // Lấy được list học sinh học môn đó ở học kì đó do giáo viên nào phụ trách
 //        List<Studentsubjectteacher> listStudentsubjectteacher = this.subjectService.getListStudentsubjectteacher(subjectteacherID, selectedSchoolYearId);
-        List<Studentsubjectteacher> listStudentsubjectteacher = this.subjectService.getListStudentsubjectteacherByStudentID(studentID, selectedSchoolYearId);
-        List<Subjectteacher> ListSubjectTeacher = this.subjectService.getSubjectTeacherByListSubjectTeacherId(listStudentsubjectteacher);
+        List<Studentsubjectteacher> listStudentsubjectteacher = this.studentSubjectTeacherService.getListStudentsubjectteacherByStudentID(studentID, selectedSchoolYearId);
+        List<Subjectteacher> ListSubjectTeacher = this.subjectTeacherService.getSubjectTeacherByListSubjectTeacherId(listStudentsubjectteacher);
         return new ResponseEntity<>(ListSubjectTeacher, HttpStatus.OK);
     }
     

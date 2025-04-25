@@ -57,26 +57,17 @@ public class SubjectController {
     }
 
     @PreAuthorize("hasAuthority('Admin')")
-    @GetMapping("/admin/subject-add")
-    public String subjectAddForm(Model model) {
-        model.addAttribute("subject", new Subject());
-        model.addAttribute("departments", departmentService.getDepartments());
-        return "admin/subject-add";
-    }
-
-    @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/admin/subject-add")
     public String subjectAdd(
-            @Valid @ModelAttribute("subject") Subject subject,
+            @ModelAttribute("subject") Subject subject,
             BindingResult bindingResult,
             @RequestParam(value = "departmentID.id", required = false) Integer departmentId,
-            Model model,
             RedirectAttributes redirectAttributes) {
 
         try {
             if (bindingResult.hasErrors()) {
-                model.addAttribute("departments", departmentService.getDepartments());
-                return "admin/subject-add";
+                redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng kiểm tra lại thông tin môn học");
+                return "redirect:/admin/subjects?error=add-validation";
             }
 
             // Xử lý Department thủ công
@@ -91,45 +82,28 @@ public class SubjectController {
                 redirectAttributes.addFlashAttribute("successMessage", "Thêm môn học thành công");
                 return "redirect:/admin/subjects";
             } else {
-                model.addAttribute("errorMessage", "Không thể thêm môn học");
-                model.addAttribute("departments", departmentService.getDepartments());
-                return "admin/subject-add";
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể thêm môn học");
+                return "redirect:/admin/subjects?error=add-validation";
             }
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
-            model.addAttribute("departments", departmentService.getDepartments());
-            return "admin/subject-add";
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            return "redirect:/admin/subjects?error=add-validation";
         }
-    }
-
-    @PreAuthorize("hasAuthority('Admin')")
-    @GetMapping("/admin/subject-update/{id}")
-    public String subjectUpdateForm(@PathVariable("id") int subjectId, Model model) {
-        Subject subject = subjectService.getSubjectById(subjectId);
-
-        if (subject == null) {
-            return "redirect:/admin/subjects?error=subject-not-found";
-        }
-
-        model.addAttribute("subject", subject);
-        model.addAttribute("departments", departmentService.getDepartments());
-        return "admin/subject-update";
     }
 
     @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/admin/subject-update")
     public String subjectUpdate(
-            @Valid @ModelAttribute("subject") Subject subject,
+            @ModelAttribute("subject") Subject subject,
             BindingResult bindingResult,
             @RequestParam(value = "departmentID.id", required = false) Integer departmentId,
-            Model model,
             RedirectAttributes redirectAttributes) {
 
         try {
             if (bindingResult.hasErrors()) {
-                model.addAttribute("departments", departmentService.getDepartments());
-                return "admin/subject-update";
+                redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng kiểm tra lại thông tin môn học");
+                return "redirect:/admin/subjects?error=update-validation";
             }
 
             // Xử lý Department thủ công
@@ -144,15 +118,13 @@ public class SubjectController {
                 redirectAttributes.addFlashAttribute("successMessage", "Cập nhật môn học thành công");
                 return "redirect:/admin/subjects";
             } else {
-                model.addAttribute("errorMessage", "Không thể cập nhật môn học");
-                model.addAttribute("departments", departmentService.getDepartments());
-                return "admin/subject-update";
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật môn học");
+                return "redirect:/admin/subjects?error=update-validation";
             }
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
-            model.addAttribute("departments", departmentService.getDepartments());
-            return "admin/subject-update";
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            return "redirect:/admin/subjects?error=update-validation";
         }
     }
 

@@ -12,9 +12,9 @@
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="fas fa-chalkboard-teacher"></i> Quản lý Giảng viên</h2>
-            <a href="#" th:href="@{/admin/teacher-add}" class="btn btn-primary">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTeacherModal">
                 <i class="fas fa-plus"></i> Thêm Giảng viên
-            </a>
+            </button>
         </div>
         <!-- Form tìm kiếm giảng viên -->
         <div class="card mb-4">
@@ -84,9 +84,17 @@
                                 <td th:text="${teacherUserMap.containsKey(teacher.id) ? teacherUserMap.get(teacher.id) : 'Chưa có tài khoản'}"></td>
                                 <td>
                                     <div class="btn-group">
-                                        <a th:href="@{'/admin/teacher-update/' + ${teacher.id}}" class="btn btn-sm btn-primary">
+                                        <button class="btn btn-sm btn-primary" onclick="openEditModal(this)"
+                                                th:data-id="${teacher.id}"
+                                                th:data-name="${teacher.teacherName}"
+                                                th:data-email="${teacher.email}"
+                                                th:data-phone="${teacher.phoneNumber}"
+                                                th:data-address="${teacher.address}"
+                                                th:data-gender="${teacher.gender}"
+                                                th:data-birthdate="${#dates.format(teacher.birthdate, 'yyyy-MM-dd')}"
+                                                th:data-department="${teacher.departmentId != null ? teacher.departmentId.id : ''}">
                                             <i class="fas fa-edit"></i> Sửa
-                                        </a>
+                                        </button>
                                         <a th:href="@{'/admin/teacher-delete/' + ${teacher.id}}" class="btn btn-sm btn-danger"
                                            onclick="return confirm('Bạn có chắc chắn muốn xóa giảng viên này?');">
                                             <i class="fas fa-trash"></i> Xóa
@@ -101,7 +109,190 @@
         </div>
     </div>
 
+    <!-- Modal Thêm Giảng viên -->
+    <div class="modal fade" id="addTeacherModal" tabindex="-1" aria-labelledby="addTeacherModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addTeacherModalLabel"><i class="fas fa-user-plus"></i> Thêm Giảng viên mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/admin/teacher-add}" method="post">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="addTeacherName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addTeacherName" name="teacherName" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="addEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="addEmail" name="email" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="addPhoneNumber" class="form-label">Số điện thoại</label>
+                                <input type="text" class="form-control" id="addPhoneNumber" name="phoneNumber">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="addAddress" class="form-label">Địa chỉ</label>
+                                <input type="text" class="form-control" id="addAddress" name="address">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Giới tính <span class="text-danger">*</span></label>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="gender" id="addGenderMale" value="1" checked>
+                                    <label class="form-check-label" for="addGenderMale">Nam</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="gender" id="addGenderFemale" value="0">
+                                    <label class="form-check-label" for="addGenderFemale">Nữ</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="addBirthdate" class="form-label">Ngày sinh <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="addBirthdate" name="birthdate" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="addDepartmentId" class="form-label">Khoa <span class="text-danger">*</span></label>
+                                <select class="form-select" id="addDepartmentId" name="departmentIdValue" required>
+                                    <option value="">-- Chọn khoa --</option>
+                                    <option th:each="dept : ${departments}" 
+                                            th:value="${dept.id}" 
+                                            th:text="${dept.departmentName}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu giảng viên</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Sửa Giảng viên -->
+    <div class="modal fade" id="editTeacherModal" tabindex="-1" aria-labelledby="editTeacherModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="editTeacherModalLabel"><i class="fas fa-user-edit"></i> Cập nhật thông tin giảng viên</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/admin/teacher-update}" method="post">
+                    <div class="modal-body">
+                        <input type="hidden" id="editTeacherId" name="id">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editTeacherName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editTeacherName" name="teacherName" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="editEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="editEmail" name="email" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="editPhoneNumber" class="form-label">Số điện thoại</label>
+                                <input type="text" class="form-control" id="editPhoneNumber" name="phoneNumber">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="editAddress" class="form-label">Địa chỉ</label>
+                                <input type="text" class="form-control" id="editAddress" name="address">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Giới tính <span class="text-danger">*</span></label>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="gender" id="editGenderMale" value="1">
+                                    <label class="form-check-label" for="editGenderMale">Nam</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="gender" id="editGenderFemale" value="0">
+                                    <label class="form-check-label" for="editGenderFemale">Nữ</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="editBirthdate" class="form-label">Ngày sinh</label>
+                                <input type="date" class="form-control" id="editBirthdate" name="birthdate">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="editDepartmentId" class="form-label">Khoa <span class="text-danger">*</span></label>
+                                <select class="form-select" id="editDepartmentId" name="departmentId.id" required>
+                                    <option value="">-- Chọn khoa --</option>
+                                    <option th:each="dept : ${departments}" 
+                                            th:value="${dept.id}" 
+                                            th:text="${dept.departmentName}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div th:replace="base :: footer"></div>
     <div th:replace="base :: scripts"></div>
+
+    <script>
+        // Mở modal cập nhật và điền dữ liệu
+        function openEditModal(button) {
+            const id = button.getAttribute('data-id');
+            const name = button.getAttribute('data-name');
+            const email = button.getAttribute('data-email');
+            const phone = button.getAttribute('data-phone');
+            const address = button.getAttribute('data-address');
+            const gender = button.getAttribute('data-gender');
+            const birthdate = button.getAttribute('data-birthdate');
+            const departmentId = button.getAttribute('data-department');
+
+            // Điền dữ liệu vào modal
+            document.getElementById('editTeacherId').value = id;
+            document.getElementById('editTeacherName').value = name;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editPhoneNumber').value = phone || '';
+            document.getElementById('editAddress').value = address || '';
+            
+            // Thiết lập giới tính
+            if (gender === '1') {
+                document.getElementById('editGenderMale').checked = true;
+            } else {
+                document.getElementById('editGenderFemale').checked = true;
+            }
+            
+            document.getElementById('editBirthdate').value = birthdate || '';
+            document.getElementById('editDepartmentId').value = departmentId;
+
+            // Mở modal
+            const editModal = new bootstrap.Modal(document.getElementById('editTeacherModal'));
+            editModal.show();
+        }
+
+        // Hiển thị modal thêm khi có lỗi validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('error') && urlParams.get('error') === 'validation') {
+                const addModal = new bootstrap.Modal(document.getElementById('addTeacherModal'));
+                addModal.show();
+            }
+        });
+    </script>
 </body>
 </html>

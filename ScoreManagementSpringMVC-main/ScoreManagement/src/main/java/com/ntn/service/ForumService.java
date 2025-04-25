@@ -7,10 +7,7 @@ package com.ntn.service;
 import com.ntn.pojo.Forum;
 import java.util.List;
 
-/**
- *
- * @author nguye
- */
+
 public interface ForumService {
 
     List<Forum> getForums();
@@ -19,5 +16,9 @@ public interface ForumService {
 
     boolean addForum(Forum forum);
     
+    boolean updateForum(Forum forum);
+    
      boolean deleteForum(int forumId);
+     
+     Forum getForumById(int id);
 }

@@ -47,9 +47,9 @@
                         </form>
                     </div>
                     <div class="col-md-4 text-end">
-                        <a th:href="@{/admin/student-add/{classId}(classId=${class.id})}" class="btn btn-success">
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addStudentModal">
                             <i class="fas fa-plus-circle"></i> Thêm sinh viên
-                        </a>
+                        </button>
                     </div>
                 </div>
                 
@@ -90,9 +90,20 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a th:href="@{/admin/student-update/{id}(id=${student.id})}" class="btn btn-primary">
+                                        <button type="button" class="btn btn-primary" onclick="openEditModal(this)"
+                                                th:data-id="${student.id}"
+                                                th:data-code="${student.studentCode}"
+                                                th:data-firstname="${student.firstName}"
+                                                th:data-lastname="${student.lastName}"
+                                                th:data-gender="${student.gender}"
+                                                th:data-birthdate="${#dates.format(student.birthdate, 'yyyy-MM-dd')}"
+                                                th:data-email="${student.email}"
+                                                th:data-phone="${student.phone != null ? student.phone : ''}"
+                                                th:data-idcard="${student.identifyCard != null ? student.identifyCard : ''}"
+                                                th:data-hometown="${student.hometown != null ? student.hometown : ''}"
+                                                th:data-status="${student.status}">
                                             <i class="fas fa-edit"></i>
-                                        </a>
+                                        </button>
                                         <a th:href="@{/admin/student-delete/{id}(id=${student.id})}" 
                                            class="btn btn-danger"
                                            onclick="return confirm('Bạn có chắc chắn muốn xóa sinh viên này?');">
@@ -108,6 +119,246 @@
         </div>
     </div>
     
+    <!-- Modal Thêm Sinh viên -->
+    <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addStudentModalLabel">
+                        <i class="fas fa-user-plus"></i> Thêm sinh viên mới
+                        <span th:if="${class != null}" th:text="'- Lớp ' + ${class.className}"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/student-add}" method="post" id="addStudentForm">
+                        <input type="hidden" name="classId.id" th:value="${class.id}" />
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="addStudentCode" class="form-label">Mã sinh viên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addStudentCode" name="studentCode" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="addLastName" class="form-label">Họ <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addLastName" name="lastName" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="addFirstName" class="form-label">Tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addFirstName" name="firstName" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Giới tính <span class="text-danger">*</span></label>
+                                <div class="mt-2">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="gender" id="addGenderMale" value="1" checked>
+                                        <label class="form-check-label" for="addGenderMale">Nam</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="gender" id="addGenderFemale" value="0">
+                                        <label class="form-check-label" for="addGenderFemale">Nữ</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="addBirthdate" class="form-label">Ngày sinh <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="addBirthdate" name="birthdate" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="addEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="addEmail" name="email" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="addPhone" class="form-label">Số điện thoại</label>
+                                <input type="text" class="form-control" id="addPhone" name="phone">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="addIdentifyCard" class="form-label">CMND/CCCD</label>
+                                <input type="text" class="form-control" id="addIdentifyCard" name="identifyCard">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="addHometown" class="form-label">Quê quán</label>
+                                <input type="text" class="form-control" id="addHometown" name="hometown">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="addStatus" class="form-label">Trạng thái <span class="text-danger">*</span></label>
+                                <select class="form-select" id="addStatus" name="status" required>
+                                    <option value="Active" selected>Đang học</option>
+                                    <option value="Inactive">Nghỉ học</option>
+                                    <option value="Graduated">Đã tốt nghiệp</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" form="addStudentForm" class="btn btn-primary">Lưu sinh viên</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Cập nhật Sinh viên -->
+    <div class="modal fade" id="editStudentModal" tabindex="-1" aria-labelledby="editStudentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="editStudentModalLabel"><i class="fas fa-user-edit"></i> Cập nhật thông tin sinh viên</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/student-update}" method="post" id="editStudentForm">
+                        <input type="hidden" id="editStudentId" name="id">
+                        <input type="hidden" name="classId.id" th:value="${class.id}" />
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editStudentCode" class="form-label">Mã sinh viên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editStudentCode" name="studentCode" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="editLastName" class="form-label">Họ <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editLastName" name="lastName" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="editFirstName" class="form-label">Tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editFirstName" name="firstName" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Giới tính <span class="text-danger">*</span></label>
+                                <div class="mt-2">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="gender" id="editGenderMale" value="1">
+                                        <label class="form-check-label" for="editGenderMale">Nam</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="gender" id="editGenderFemale" value="0">
+                                        <label class="form-check-label" for="editGenderFemale">Nữ</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editBirthdate" class="form-label">Ngày sinh <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="editBirthdate" name="birthdate" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="editEmail" name="email" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editPhone" class="form-label">Số điện thoại</label>
+                                <input type="text" class="form-control" id="editPhone" name="phone">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editIdentifyCard" class="form-label">CMND/CCCD</label>
+                                <input type="text" class="form-control" id="editIdentifyCard" name="identifyCard">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editHometown" class="form-label">Quê quán</label>
+                                <input type="text" class="form-control" id="editHometown" name="hometown">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editStatus" class="form-label">Trạng thái <span class="text-danger">*</span></label>
+                                <select class="form-select" id="editStatus" name="status" required>
+                                    <option value="Active">Đang học</option>
+                                    <option value="Inactive">Nghỉ học</option>
+                                    <option value="Graduated">Đã tốt nghiệp</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" form="editStudentForm" class="btn btn-warning">Cập nhật</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
+    
+    <script>
+        // Mở modal cập nhật và điền dữ liệu
+        function openEditModal(button) {
+            const id = button.getAttribute('data-id');
+            const code = button.getAttribute('data-code');
+            const firstName = button.getAttribute('data-firstname');
+            const lastName = button.getAttribute('data-lastname');
+            const gender = button.getAttribute('data-gender');
+            const birthdate = button.getAttribute('data-birthdate');
+            const email = button.getAttribute('data-email');
+            const phone = button.getAttribute('data-phone');
+            const idCard = button.getAttribute('data-idcard');
+            const hometown = button.getAttribute('data-hometown');
+            const status = button.getAttribute('data-status');
+
+            // Điền dữ liệu vào modal
+            document.getElementById('editStudentId').value = id;
+            document.getElementById('editStudentCode').value = code;
+            document.getElementById('editFirstName').value = firstName;
+            document.getElementById('editLastName').value = lastName;
+            document.getElementById('editBirthdate').value = birthdate;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editPhone').value = phone || '';
+            document.getElementById('editIdentifyCard').value = idCard || '';
+            document.getElementById('editHometown').value = hometown || '';
+            document.getElementById('editStatus').value = status || 'Active';
+            
+            // Thiết lập giới tính
+            if (gender === '1') {
+                document.getElementById('editGenderMale').checked = true;
+            } else {
+                document.getElementById('editGenderFemale').checked = true;
+            }
+            
+            // Mở modal
+            const editModal = new bootstrap.Modal(document.getElementById('editStudentModal'));
+            editModal.show();
+        }
+
+        // Hiển thị modal thêm khi có lỗi validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Mở modal thêm sinh viên nếu có lỗi
+            if (urlParams.has('error') && urlParams.get('error') === 'add-validation') {
+                const addModal = new bootstrap.Modal(document.getElementById('addStudentModal'));
+                addModal.show();
+            }
+            
+            // Mở modal cập nhật sinh viên nếu có lỗi
+            if (urlParams.has('error') && urlParams.get('error') === 'update-validation') {
+                const editModal = new bootstrap.Modal(document.getElementById('editStudentModal'));
+                editModal.show();
+            }
+        });
+    </script>
 </body>
 </html>

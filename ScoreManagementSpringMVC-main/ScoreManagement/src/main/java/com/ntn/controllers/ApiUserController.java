@@ -1,112 +1,387 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.ntn.controllers;
 
-/**
- *
- * @author vhuunghia
- */
-//import com.ntn.components.JwtService;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import com.ntn.pojo.Student;
+import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
+import com.ntn.service.StudentService;
+import com.ntn.service.TeacherService;
 import com.ntn.service.UserService;
+
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import jakarta.servlet.http.HttpServletRequest;
-import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-/**
- *
- * @author huu-thanhduong
- */
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "*") // Cho phép tất cả các domain gọi API
 public class ApiUserController {
 
-//    @Autowired
-//    private JwtService jwtService;
     @Autowired
     private UserService userService;
-
-//    @PostMapping("/login")
-//    @CrossOrigin
-//    public ResponseEntity<String> login(@RequestBody Map<String, String> requestBody) {
-//        String username = requestBody.get("username");
-//        String password = requestBody.get("password");
-//        int roleID = Integer.parseInt(requestBody.get("roleID"));
-//        User authenticatedUser = userService.getUserByUn(username);
-//        if (this.userService.authUser(username, password) && roleID == authenticatedUser.getRoleID().getId()) {
-//            String token = this.jwtService.generateTokenLogin(username, authenticatedUser.getRoleID().getRoleName());
-//            return new ResponseEntity<>(token, HttpStatus.OK);
-//        } else {
-//            return new ResponseEntity<>("Tên người dùng, mật khẩu hoặc vai trò không đúng", HttpStatus.UNAUTHORIZED);
-//        }
-//    }
     
+    @Autowired
+    private StudentService studentService;
+    
+    @Autowired
+    private TeacherService teacherService;
+    
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private Cloudinary cloudinary;
+
+    /**
+     * Đăng nhập và trả về JWT token
+     */
     @PostMapping("/login")
-    @CrossOrigin
-    public ResponseEntity<String> login(@RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<?> login(@RequestBody Map<String, String> requestBody) {
         String username = requestBody.get("username");
         String password = requestBody.get("password");
-        int roleID = Integer.parseInt(requestBody.get("roleID"));
+        String role = requestBody.get("role");
+        
+        boolean isAuthenticated = false;
+        Map<String, Object> response = new HashMap<>();
+        
+        switch (role) {
+            case "Admin":
+                isAuthenticated = userService.authAdminUser(username, password);
+                break;
+            case "Teacher":
+                isAuthenticated = userService.authTeacherUser(username, password);
+                break;
+            case "Student":
+                isAuthenticated = userService.authStudentUser(username, password);
+                break;
+            default:
+                response.put("status", "error");
+                response.put("message", "Vai trò không hợp lệ");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+        
+        if (isAuthenticated) {
+            User user = userService.getUserByUn(username);
+            response.put("status", "success");
+            response.put("message", "Đăng nhập thành công");
+            response.put("user", user);
+            response.put("role", user.getRole());
+            
+            // Bạn có thể thêm JWT token ở đây
+            // String token = jwtService.generateToken(username);
+            // response.put("token", token);
+            
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.put("status", "error");
+            response.put("message", "Tên đăng nhập hoặc mật khẩu không đúng");
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
 
-        // Xác thực người dùng
-        User authenticatedUser = userService.getUserByUn(username);
-        if (authenticatedUser != null && userService.authUser(username, password)) {
-            try {
-                int userRole = Integer.parseInt(authenticatedUser.getRole().name());
-                if (roleID == userRole) {
-                    return new ResponseEntity<>("Đăng nhập thành công", HttpStatus.OK);
+    /**
+     * Đăng ký sinh viên mới
+     */
+    @PostMapping("/register/student")
+    public ResponseEntity<?> registerStudent(@RequestBody Map<String, String> params) {
+        String email = params.get("email");
+        String password = params.get("password");
+        String confirmPassword = params.get("confirmPassword");
+        Map<String, Object> response = new HashMap<>();
+        
+        // Kiểm tra email có nằm trong danh sách sinh viên không
+        if (!userService.isEmailExists(email)) {
+            response.put("status", "error");
+            response.put("message", "Email không tồn tại trong hệ thống");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        // Kiểm tra định dạng email
+        if (!email.endsWith("@dh.edu.vn")) {
+            response.put("status", "error");
+            response.put("message", "Email phải có định dạng @dh.edu.vn");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        // Kiểm tra xác nhận mật khẩu
+        if (password == null || !password.equals(confirmPassword) || password.length() < 6) {
+            response.put("status", "error");
+            response.put("message", "Mật khẩu không khớp hoặc có ít hơn 6 ký tự");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        // Thêm username vào params
+        params.put("username", email.split("@")[0]);
+
+        // Đăng ký tài khoản sinh viên
+        User user = userService.addUser(params);
+        if (user != null) {
+            response.put("status", "success");
+            response.put("message", "Đăng ký thành công");
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } else {
+            response.put("status", "error");
+            response.put("message", "Đăng ký thất bại");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    /**
+     * Đăng ký giảng viên (chỉ cho Admin)
+     */
+    @PostMapping("/register/teacher")
+    public ResponseEntity<?> registerTeacher(@RequestBody Map<String, String> params) {
+        String email = params.get("email");
+        Map<String, Object> response = new HashMap<>();
+        
+        // Kiểm tra xem email có nằm trong bảng Teacher
+        if (!userService.isTeacherEmailExists(email)) {
+            response.put("status", "error");
+            response.put("message", "Email giảng viên không tồn tại trong hệ thống");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        // Kiểm tra xem email có đúng đuôi "@dh.edu.vn"
+        if (!email.endsWith("@dh.edu.vn")) {
+            response.put("status", "error");
+            response.put("message", "Email phải có định dạng @dh.edu.vn");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        // Thực hiện đăng ký người dùng giáo viên
+        User user = userService.addTeacherUser(params);
+        if (user != null) {
+            response.put("status", "success");
+            response.put("message", "Đăng ký giảng viên thành công");
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } else {
+            response.put("status", "error");
+            response.put("message", "Đăng ký giảng viên thất bại");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Lấy thông tin người dùng hiện tại
+     */
+    @GetMapping("/current-user")
+    public ResponseEntity<?> getCurrentUser(Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<>("Không có người dùng đăng nhập", HttpStatus.UNAUTHORIZED);
+        }
+        
+        User user = userService.getUserByUn(principal.getName());
+        if (user == null) {
+            return new ResponseEntity<>("Người dùng không tồn tại", HttpStatus.NOT_FOUND);
+        }
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("user", user);
+        
+        // Thêm thông tin chi tiết theo vai trò
+        if (user.getRole().equals("Student")) {
+            List<Student> students = studentService.getStudentbyEmail(user.getEmail());
+            Student student = students != null && !students.isEmpty() ? students.get(0) : null;
+            response.put("roleSpecificInfo", student);
+        } else if (user.getRole().equals("Teacher")) {
+            Teacher teacher = teacherService.getTeacherByEmail(user.getEmail());
+            response.put("roleSpecificInfo", teacher);
+        }
+        
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+    
+    /**
+     * Cập nhật thông tin người dùng
+     */
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@RequestBody Map<String, Object> profileData) {
+        Integer userId = (Integer) profileData.get("id");
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            User existingUser = userService.getUserById(userId);
+            if (existingUser == null) {
+                response.put("status", "error");
+                response.put("message", "Không tìm thấy người dùng");
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
+
+            // Cập nhật thông tin người dùng
+            if (profileData.get("name") != null) existingUser.setName((String) profileData.get("name"));
+            if (profileData.get("hometown") != null) existingUser.setHometown((String) profileData.get("hometown"));
+            if (profileData.get("phone") != null) existingUser.setPhone((String) profileData.get("phone"));
+            if (profileData.get("identifyCard") != null) existingUser.setIdentifyCard((String) profileData.get("identifyCard"));
+            
+            // Xử lý giới tính
+            if (profileData.get("gender") != null) {
+                String gender = (String) profileData.get("gender");
+                Short genderValue = null;
+                if ("Nam".equals(gender)) {
+                    genderValue = 1;
+                } else if ("Nữ".equals(gender)) {
+                    genderValue = 0;
+                } else {
+                    genderValue = -1;
                 }
-            } catch (NumberFormatException e) {
-                return new ResponseEntity<>("Role không hợp lệ", HttpStatus.BAD_REQUEST);
+                existingUser.setGender(genderValue);
             }
-        }
-            // Đăng nhập thất bại
-            return new ResponseEntity<>("Tên người dùng, mật khẩu hoặc vai trò không đúng", HttpStatus.UNAUTHORIZED);
-    }
 
-    @PostMapping(path = "/users/",
-            consumes = {MediaType.APPLICATION_JSON_VALUE},
-            produces = {MediaType.APPLICATION_JSON_VALUE})
-    @CrossOrigin()
-    public ResponseEntity<String> register(@RequestBody Map<String, String> requestData) {
-        String email = requestData.get("email");
-        byte[] imageBytes = Base64.decodeBase64(requestData.get("avatar"));
-        String base64Image = Base64.encodeBase64String(imageBytes);
-        requestData.put("avatar", base64Image);
-        if (userService.isEmailExists(email) && userService.getUserByUn(email) == null) {
-            User user = userService.addUser(requestData);
-            if (user != null) {
-                return new ResponseEntity<>("Đăng ký thành công", HttpStatus.OK);
+            boolean success = userService.updateUser(existingUser);
+            if (success) {
+                response.put("status", "success");
+                response.put("message", "Cập nhật thông tin cá nhân thành công");
+                response.put("user", existingUser);
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            } else {
+                response.put("status", "error");
+                response.put("message", "Cập nhật thông tin thất bại");
+                return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
             }
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>("Không có Email hoặc đã đăng ký", HttpStatus.BAD_REQUEST);
     }
+    
+    /**
+     * Cập nhật avatar người dùng
+     */
+    @PostMapping("/profile/upload-avatar")
+    public ResponseEntity<?> uploadAvatar(
+            @RequestParam("id") int userId,
+            @RequestParam("image") MultipartFile imageFile) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            User existingUser = userService.getUserById(userId);
+            if (existingUser == null) {
+                response.put("status", "error");
+                response.put("message", "Không tìm thấy người dùng");
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
 
-    @GetMapping(path = "/current-user", produces = MediaType.APPLICATION_JSON_VALUE)
-    @CrossOrigin
-    public ResponseEntity<User> details(Principal user) {
-        User u = this.userService.getUserByUn(user.getName());
-        return new ResponseEntity<>(u, HttpStatus.OK);
+            if (imageFile != null && !imageFile.isEmpty()) {
+                Map<String, Object> result = cloudinary.uploader().upload(
+                        imageFile.getBytes(),
+                        ObjectUtils.asMap("resource_type", "auto")
+                );
+                existingUser.setImage((String) result.get("secure_url"));
+                
+                boolean success = userService.updateUser(existingUser);
+                if (success) {
+                    response.put("status", "success");
+                    response.put("message", "Cập nhật avatar thành công");
+                    response.put("imageUrl", existingUser.getImage());
+                    return new ResponseEntity<>(response, HttpStatus.OK);
+                }
+            }
+            
+            response.put("status", "error");
+            response.put("message", "Cập nhật avatar thất bại");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    /**
+     * Đổi mật khẩu
+     */
+    @PostMapping("/profile/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> passwordData) {
+        int userId = Integer.parseInt(passwordData.get("id"));
+        String currentPassword = passwordData.get("currentPassword");
+        String newPassword = passwordData.get("newPassword");
+        String confirmPassword = passwordData.get("confirmPassword");
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            User existingUser = userService.getUserById(userId);
+            if (existingUser == null) {
+                response.put("status", "error");
+                response.put("message", "Không tìm thấy người dùng");
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
+
+            // Kiểm tra mật khẩu hiện tại
+            if (!passwordEncoder.matches(currentPassword, existingUser.getPassword())) {
+                response.put("status", "error");
+                response.put("message", "Mật khẩu hiện tại không chính xác");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+
+            // Kiểm tra mật khẩu mới và xác nhận
+            if (!newPassword.equals(confirmPassword)) {
+                response.put("status", "error");
+                response.put("message", "Mật khẩu xác nhận không khớp với mật khẩu mới");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+
+            // Kiểm tra độ phức tạp của mật khẩu
+            if (newPassword.length() < 6) {
+                response.put("status", "error");
+                response.put("message", "Mật khẩu phải có ít nhất 6 ký tự");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+
+            // Mã hóa và cập nhật mật khẩu mới
+            existingUser.setPassword(passwordEncoder.encode(newPassword));
+            boolean success = userService.updateUser(existingUser);
+
+            if (success) {
+                response.put("status", "success");
+                response.put("message", "Đổi mật khẩu thành công");
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            } else {
+                response.put("status", "error");
+                response.put("message", "Đổi mật khẩu thất bại");
+                return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    /**
+     * Kiểm tra email sinh viên tồn tại
+     */
+    @GetMapping("/check-student-email")
+    public ResponseEntity<?> checkStudentEmail(@RequestParam("email") String email) {
+        Map<String, Object> response = new HashMap<>();
+        boolean exists = userService.isEmailExists(email);
+        
+        response.put("exists", exists);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+    
+    /**
+     * Kiểm tra email giảng viên tồn tại
+     */
+    @GetMapping("/check-teacher-email")
+    public ResponseEntity<?> checkTeacherEmail(@RequestParam("email") String email) {
+        Map<String, Object> response = new HashMap<>();
+        boolean exists = userService.isTeacherEmailExists(email);
+        
+        response.put("exists", exists);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

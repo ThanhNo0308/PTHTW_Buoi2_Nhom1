@@ -17,9 +17,9 @@
             </h2>
 
             <div sec:authorize="hasAuthority('Admin')">
-                <a th:href="@{/admin/class-add}" class="btn btn-success">
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addClassModal">
                     <i class="fas fa-plus-circle"></i> Thêm lớp mới
-                </a>
+                </button>
             </div>
         </div>
 
@@ -88,7 +88,7 @@
                         <tbody>
                             <tr th:each="class : ${classes}">
                                 <td th:text="${class.className}"></td>
-                                <td th:text="${class.majorId.majorName}"></td>
+                                <td th:text="${class.majorId.majorName + ' (' + class.majorId.trainingTypeId.trainingTypeName + ')'}"></td>
                                 <td th:text="${class.teacherId != null ? class.teacherId.teacherName : 'Chưa phân công'}"></td>
                                 <td>
                                     <div class="btn-group">
@@ -96,9 +96,13 @@
                                             <i class="fas fa-users"></i> Sinh viên
                                         </a>
                                         <div sec:authorize="hasAuthority('Admin')">
-                                            <a th:href="@{'/admin/class-update/' + ${class.id}}" class="btn btn-sm btn-primary">
+                                            <button class="btn btn-sm btn-primary" onclick="openEditModal(this)"
+                                                    th:data-id="${class.id}"
+                                                    th:data-classname="${class.className}"
+                                                    th:data-majorid="${class.majorId != null ? class.majorId.id : ''}"
+                                                    th:data-teacherid="${class.teacherId != null ? class.teacherId.id : ''}">
                                                 <i class="fas fa-edit"></i> Sửa
-                                            </a>
+                                            </button>
                                             <a th:href="@{'/admin/class-delete/' + ${class.id}}" class="btn btn-sm btn-danger"
                                                onclick="return confirm('Bạn có chắc chắn muốn xóa lớp này không? Nếu lớp có sinh viên, bạn cần chuyển sinh viên sang lớp khác trước.');">
                                                 <i class="fas fa-trash"></i> Xóa
@@ -114,18 +118,128 @@
         </div>
     </div>
 
+    <!-- Modal Thêm Lớp học -->
+    <div class="modal fade" id="addClassModal" tabindex="-1" aria-labelledby="addClassModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addClassModalLabel"><i class="fas fa-plus-circle"></i> Thêm lớp học mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/admin/class-add}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="addClassName" class="form-label">Tên lớp <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="addClassName" name="className" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="addMajorId" class="form-label">Ngành <span class="text-danger">*</span></label>
+                            <select class="form-select" id="addMajorId" name="majorId.id" required>
+                                <option value="">-- Chọn ngành --</option>
+                                <option th:each="major : ${majors}" 
+                                        th:value="${major.id}" 
+                                        th:text="${major.majorName + ' - ' + major.trainingTypeId.trainingTypeName}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="addTeacherId" class="form-label">Giảng viên chủ nhiệm</label>
+                            <select class="form-select" id="addTeacherId" name="teacherId.id">
+                                <option value="">-- Chọn giảng viên --</option>
+                                <option th:each="teacher : ${teachers}" 
+                                        th:value="${teacher.id}" 
+                                        th:text="${teacher.teacherName}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu lớp học</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cập nhật Lớp học -->
+    <div class="modal fade" id="editClassModal" tabindex="-1" aria-labelledby="editClassModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="editClassModalLabel"><i class="fas fa-edit"></i> Cập nhật thông tin lớp học</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/admin/class-update}" method="post">
+                    <div class="modal-body">
+                        <input type="hidden" id="editClassId" name="id">
+                        <div class="mb-3">
+                            <label for="editClassName" class="form-label">Tên lớp <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editClassName" name="className" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editMajorId" class="form-label">Ngành học<span class="text-danger">*</span></label>
+                            <select class="form-select" id="editMajorId" name="majorId.id" required>
+                                <option value="">-- Chọn ngành học --</option>
+                                <option th:each="major : ${majors}" 
+                                        th:value="${major.id}" 
+                                        th:text="${major.majorName + ' - ' + (major.trainingTypeId != null ? major.trainingTypeId.trainingTypeName : '')}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editTeacherId" class="form-label">Giảng viên chủ nhiệm</label>
+                            <select class="form-select" id="editTeacherId" name="teacherId.id">
+                                <option value="">-- Chọn giáo viên chủ nhiệm --</option>
+                                <option th:each="teacher : ${teachers}" 
+                                        th:value="${teacher.id}" 
+                                        th:text="${teacher.teacherName}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
 
     <script>
-        $(document).ready(function () {
-            $('#majorFilter').change(function () {
-                let majorId = $(this).val();
-                if (majorId) {
-                    window.location.href = '/classes?majorId=' + majorId;
-                } else {
-                    window.location.href = '/classes';
-                }
-            });
+        // Mở modal cập nhật và điền dữ liệu
+        function openEditModal(button) {
+            const id = button.getAttribute('data-id');
+            const className = button.getAttribute('data-classname');
+            const majorId = button.getAttribute('data-majorid');
+            const teacherId = button.getAttribute('data-teacherid');
+
+            // Điền dữ liệu vào modal
+            document.getElementById('editClassId').value = id;
+            document.getElementById('editClassName').value = className;
+            document.getElementById('editMajorId').value = majorId || '';
+            document.getElementById('editTeacherId').value = teacherId || '';
+
+            // Mở modal
+            const editModal = new bootstrap.Modal(document.getElementById('editClassModal'));
+            editModal.show();
+        }
+
+        // Hiển thị modal thêm khi có lỗi validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('error') && urlParams.get('error') === 'validation') {
+                const addModal = new bootstrap.Modal(document.getElementById('addClassModal'));
+                addModal.show();
+            }
         });
     </script>
 </body>

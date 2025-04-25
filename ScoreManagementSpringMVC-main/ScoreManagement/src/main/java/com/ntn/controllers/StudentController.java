@@ -108,21 +108,8 @@ public class StudentController {
 
         model.addAttribute("class", classObj);
         model.addAttribute("students", students);
-        return "admin/class-students";
-    }
-
-    @PreAuthorize("hasAuthority('Admin')")
-    @GetMapping("/admin/student-add/{classId}")
-    public String studentAddForm(@PathVariable("classId") int classId, Model model) {
-        com.ntn.pojo.Class classObj = classService.getClassById(classId);
-
-        if (classObj == null) {
-            return "redirect:/admin/classes?error=class-not-found";
-        }
-
         model.addAttribute("student", new Student());
-        model.addAttribute("class", classObj);
-        return "admin/student-add";
+        return "admin/class-students";
     }
 
     @PreAuthorize("hasAuthority('Admin')")
@@ -136,9 +123,8 @@ public class StudentController {
 
         try {
             if (bindingResult.hasErrors()) {
-                com.ntn.pojo.Class classObj = classService.getClassById(classId);
-                model.addAttribute("class", classObj);
-                return "admin/student-add";
+                redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng kiểm tra lại thông tin sinh viên");
+                return "redirect:/admin/class-students/" + classId + "?error=add-validation";
             }
 
             // Xử lý Class trước khi lưu
@@ -163,32 +149,14 @@ public class StudentController {
                 redirectAttributes.addFlashAttribute("successMessage", "Thêm sinh viên thành công");
                 return "redirect:/admin/class-students/" + classId;
             } else {
-                com.ntn.pojo.Class classObj = classService.getClassById(classId);
-                model.addAttribute("class", classObj);
-                model.addAttribute("errorMessage", "Không thể thêm sinh viên");
-                return "admin/student-add";
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể thêm sinh viên");
+                return "redirect:/admin/class-students/" + classId + "?error=add-validation";
             }
         } catch (Exception e) {
             e.printStackTrace();
-            com.ntn.pojo.Class classObj = classService.getClassById(classId);
-            model.addAttribute("class", classObj);
-            model.addAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
-            return "admin/student-add";
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            return "redirect:/admin/class-students/" + classId + "?error=add-validation";
         }
-    }
-
-    @PreAuthorize("hasAuthority('Admin')")
-    @GetMapping("/admin/student-update/{id}")
-    public String studentUpdateForm(@PathVariable("id") int studentId, Model model) {
-        Student student = studentService.getStudentById(studentId);
-
-        if (student == null) {
-            return "redirect:/admin/classes?error=student-not-found";
-        }
-
-        model.addAttribute("student", student);
-        model.addAttribute("classes", classService.getClasses());
-        return "admin/student-update";
     }
 
     @PreAuthorize("hasAuthority('Admin')")
@@ -202,8 +170,8 @@ public class StudentController {
 
         try {
             if (bindingResult.hasErrors()) {
-                model.addAttribute("classes", classService.getClasses());
-                return "admin/student-update";
+                redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng kiểm tra lại thông tin sinh viên");
+                return "redirect:/admin/class-students/" + classId + "?error=update-validation";
             }
 
             // Xử lý Class thủ công
@@ -220,15 +188,13 @@ public class StudentController {
                 redirectAttributes.addFlashAttribute("successMessage", "Cập nhật sinh viên thành công");
                 return "redirect:/admin/class-students/" + classId;
             } else {
-                model.addAttribute("classes", classService.getClasses());
-                model.addAttribute("errorMessage", "Không thể cập nhật sinh viên");
-                return "admin/student-update";
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật sinh viên");
+                return "redirect:/admin/class-students/" + classId + "?error=update-validation";
             }
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("classes", classService.getClasses());
-            model.addAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
-            return "admin/student-update";
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            return "redirect:/admin/class-students/" + classId + "?error=update-validation";
         }
     }
 

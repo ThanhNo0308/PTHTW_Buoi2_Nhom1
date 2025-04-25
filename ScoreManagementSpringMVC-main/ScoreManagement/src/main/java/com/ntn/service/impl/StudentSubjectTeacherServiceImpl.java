@@ -5,6 +5,7 @@
 package com.ntn.service.impl;
 
 import com.ntn.pojo.Studentsubjectteacher;
+import com.ntn.pojo.Subjectteacher;
 import com.ntn.repository.StudentSubjectTeacherRepository;
 import com.ntn.service.StudentSubjectTeacherService;
 import java.util.List;
@@ -98,6 +99,23 @@ public class StudentSubjectTeacherServiceImpl implements StudentSubjectTeacherSe
     @Override
     public long countEnrollments() {
         return this.studentSubjectTeacherRepository.countEnrollments();
+    }
+    
+    @Override
+    public List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher,
+            int schoolYearID) {
+
+        return this.studentSubjectTeacherRepository.getStudentsubjectteacherBySubjectTeacherID(listsubjectteacher, schoolYearID);
+    }
+    
+     @Override
+    public List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID, int selectedSchoolYearId) {
+        return this.studentSubjectTeacherRepository.getListStudentsubjectteacher(subjectteacherID, selectedSchoolYearId);
+    }
+
+    @Override
+    public List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID, int schoolyearID) {
+        return this.studentSubjectTeacherRepository.getListStudentsubjectteacherByStudentID(studentID, schoolyearID);
     }
     
 }

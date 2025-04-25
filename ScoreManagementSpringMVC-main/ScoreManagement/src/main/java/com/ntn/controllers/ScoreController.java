@@ -4,12 +4,14 @@ import com.ntn.pojo.ListScoreDTO;
 import com.ntn.pojo.Score;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Typescore;
+import com.ntn.repository.TypeScoreRepository;
 import com.ntn.service.ClassService;
 import com.ntn.service.EmailService;
 import com.ntn.service.SchoolYearService;
 import com.ntn.service.ScoreService;
 import com.ntn.service.StudentService;
 import com.ntn.service.TeacherService;
+import com.ntn.service.TypeScoreService;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,6 +52,9 @@ public class ScoreController {
 
     @Autowired
     private EmailService emailService;
+    
+    @Autowired
+    private TypeScoreService typeScoreService;
 
     // Thêm vào ScoreController.java
     @PostMapping("/classes/{classId}/scores/configure-weights")
@@ -73,7 +78,7 @@ public class ScoreController {
             }
 
             // Chỉ cần cập nhật trọng số trong bảng classscoretypes
-            boolean success = scoreService.updateScoreTypeWeights(classId, subjectTeacherId, schoolYearId, weights);
+            boolean success = typeScoreService.updateScoreTypeWeights(classId, subjectTeacherId, schoolYearId, weights);
 
             response.put("success", success);
             if (success) {
@@ -101,7 +106,7 @@ public class ScoreController {
             Integer subjectTeacherId = Integer.parseInt(payload.get("subjectTeacherId").toString());
             Integer schoolYearId = Integer.parseInt(payload.get("schoolYearId").toString());
 
-            boolean success = scoreService.removeScoreTypeFromClass(classId, subjectTeacherId, schoolYearId, scoreType);
+            boolean success = typeScoreService.removeScoreTypeFromClass(classId, subjectTeacherId, schoolYearId, scoreType);
 
             response.put("success", success);
             if (success) {
@@ -129,7 +134,7 @@ public class ScoreController {
 
         try {
             // Lấy danh sách loại điểm
-            List<String> scoreTypes = scoreService.getScoreTypesByClass(classId, subjectTeacherId, schoolYearId);
+            List<String> scoreTypes = typeScoreService.getScoreTypesByClass(classId, subjectTeacherId, schoolYearId);
 
             // Đảm bảo luôn có giữa kỳ và cuối kỳ
             if (!scoreTypes.contains("Giữa kỳ")) {
@@ -163,7 +168,7 @@ public class ScoreController {
     @ResponseBody
     public List<String> getScoreTypeList() {
         try {
-            return scoreService.getAllScoreTypes().stream()
+            return typeScoreService.getAllScoreTypes().stream()
                     .map(Typescore::getScoreType)
                     .collect(Collectors.toList());
         } catch (Exception e) {
@@ -302,7 +307,7 @@ public class ScoreController {
             @RequestParam("subjectTeacherId") int subjectTeacherId) {
 
         try {
-            boolean success = scoreService.addScoreType(typeName, subjectTeacherId);
+            boolean success = typeScoreService.addScoreType(typeName, subjectTeacherId);
 
             if (success) {
                 return new ResponseEntity<>("Thêm loại điểm thành công", HttpStatus.OK);
@@ -360,14 +365,14 @@ public class ScoreController {
             Integer schoolYearId = Integer.parseInt(payload.get("schoolYearId"));
 
             // 1. Lưu vào bảng typescore
-            Typescore typescore = scoreService.getScoreTypeByName(scoreType);
+            Typescore typescore = typeScoreService.getScoreTypeByName(scoreType);
             if (typescore == null) {
                 typescore = new Typescore(scoreType);
-                scoreService.addScoreType(typescore);
+                typeScoreService.addScoreType(typescore);
             }
 
             // 2. Lưu vào bảng classscoretypes với thông tin lớp học
-            boolean success = scoreService.addScoreTypeToClass(classId, subjectTeacherId, schoolYearId,
+            boolean success = typeScoreService.addScoreTypeToClass(classId, subjectTeacherId, schoolYearId,
                     scoreType, weight);
 
             response.put("success", success);

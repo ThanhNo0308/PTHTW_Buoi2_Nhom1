@@ -1,80 +1,90 @@
-<!-- templates/login.html -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
     <head>
-        <title>Đăng nhập</title>
+        <title>Đăng nhập | Hệ thống quản lý điểm số</title>
     <th:block th:replace="base :: styles"></th:block>
+
 </head>
 <body>
     <div th:replace="base :: header"></div>
 
-    <div class="login_ui container-fluid">
+    <div class="login-container container">
         <div class="row justify-content-center">
             <div class="col-xl-10">
-                <div class="card border-0">
+                <div class="login-card card">
                     <div class="card-body p-0">
-                        <div class="row no-gutters">
+                        <div class="row">
                             <!-- Login Form -->
                             <div class="col-lg-6">
-                                <div class="p-5">
-                                    <div class="mb-5">
-                                        <h3 class="h4 font-weight-bold text-theme">Login</h3>
+                                <div class="login-form-area">
+                                    <div class="text-center mb-4">
+                                        <img th:src="@{/images/logo.png}" alt="School Logo" class="school-logo">
+                                        <h3 class="login-title text-center">Đăng nhập hệ thống</h3>
                                     </div>
 
+                                    <!-- Hiển thị lỗi nếu có -->
+                                    <div th:if="${param.error}" class="box_alert_fail_login alert alert-danger mb-4">
+                                        <i class="fas fa-exclamation-circle me-2"></i> Tên đăng nhập hoặc mật khẩu không đúng!
+                                        <span class="closebtn" style="float:right;cursor:pointer;">&times;</span>
+                                    </div>
+                                    <div th:if="${param.invalid_session}" class="box_alert_fail_login alert alert-danger mb-4">
+                                        <i class="fas fa-exclamation-circle me-2"></i> Bạn đã chọn sai vai trò. Hãy kiểm tra lại.
+                                        <span class="closebtn" style="float:right;cursor:pointer;">&times;</span>
+                                    </div>
 
                                     <form method="post" th:action="@{/login}">
-                                        <div class="form-floating mt-3 mb-3">
-                                            <select class="form-select" id="role" name="role" required>
-                                                <option value="">Chọn vai trò</option>
-                                                <option value="Admin">Giáo vụ</option>
-                                                <option value="Teacher">Giáo viên</option>
-                                                <option value="Student">Sinh viên</option>
-                                            </select>
-                                            <label for="role">Vai trò</label>
+                                        <div class="role-selector">
+                                            <div class="form-floating">
+                                                <select class="form-select" id="role" name="role" required>
+                                                    <option value="">Chọn vai trò của bạn</option>
+                                                    <option value="Admin">Giáo vụ</option>
+                                                    <option value="Teacher">Giảng viên</option>
+                                                    <option value="Student">Sinh viên</option>
+                                                </select>
+                                                <label for="role"><i class="fas fa-user-tag me-2"></i>Vai trò</label>
+                                            </div>
                                         </div>
-                                        <div class="form-floating mb-3 mt-3">
+
+                                        <div class="form-floating mb-4">
                                             <input type="text" class="form-control" id="username" placeholder="Nhập username..." name="username" required>
-                                            <label for="username">Tên đăng nhập</label>
+                                            <label for="username"><i class="fas fa-user me-2"></i>Tên đăng nhập</label>
                                         </div>
 
-                                        <div class="form-floating mt-3 mb-3">
+                                        <div class="form-floating mb-4">
                                             <input type="password" class="form-control" id="pwd" placeholder="Nhập mật khẩu..." name="password" required>
-                                            <label for="pwd">Mật khẩu</label>
+                                            <label for="pwd"><i class="fas fa-lock me-2"></i>Mật khẩu</label>
                                         </div>
 
-                                        <div class="form-floating mt-3 mb-3">
-                                            <input type="submit" value="Đăng nhập" class="btn btn-danger" />
+                                        <div class="d-grid mb-4">
+                                            <button type="submit" class="btn btn-primary btn-login">
+                                                <i class="fas fa-sign-in-alt me-2"></i> Đăng nhập
+                                            </button>
                                         </div>
                                     </form>
 
-                                    <!-- Hiển thị lỗi nếu có -->
-                                    <div th:if="${param.error}" class="box_alert_fail_login alert alert-danger mt-3">
-                                        Tên đăng nhập hoặc mật khẩu không đúng!
-                                        <span class="closebtn" style="float:right;cursor:pointer;">&times;</span>
-                                    </div>
-                                    <div th:if="${param.invalid_session}" class="box_alert_fail_login alert alert-danger mt-3">
-                                        Bạn đã chọn sai vai trò. Hãy kiểm tra lại.
-                                        <span class="closebtn" style="float:right;cursor:pointer;">&times;</span>
+                                    <div class="text-center">
+                                        <p class="mb-0">Chưa có tài khoản? 
+                                            <a th:href="@{/registerStudent}" class="text-primary fw-bold">Đăng ký</a>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Right block -->
-                            <div class="col-lg-6 d-none d-lg-inline-block">
-                                <div class="account-block rounded-right">
-                                    <div class="overlay rounded-right"></div>
-                                    <!--                                    <div class="account-testimonial">
-                                                                            <h4 class="text-dark mb-4">Spring Security</h4>
-                                                                            <p class="lead text-dark">"Best investment I made for a long time. Can only recommend it for other users."</p>
-                                                                            <p>- Admin User</p>
-                                                                        </div>-->
+                            <div class="col-lg-6 d-none d-lg-block">
+                                <div class="account-block">
+                                    <div class="overlay"></div>
+                                    <div class="position-absolute bottom-0 start-0 p-4 text-white">
+                                        <h4>Hệ thống Quản lý Điểm số</h4>
+                                        <p class="mb-0">Trường Đại học MilkyWay</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div> <!-- end card-body -->
-                </div> <!-- end card -->
-            </div> <!-- end col -->
-        </div> <!-- Row -->
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div th:replace="base :: footer"></div>
@@ -91,12 +101,16 @@
             };
         }
 
+        // Tự động ẩn thông báo lỗi sau 5 giây
         setTimeout(() => {
-            const b = document.getElementByClassName("box_alert_fail_login");
-            if (b != null) {
-                b.style.display = 'none';
+            const alerts = document.getElementsByClassName("box_alert_fail_login");
+            for (let i = 0; i < alerts.length; i++) {
+                alerts[i].style.opacity = "0";
+                setTimeout(function () {
+                    alerts[i].style.display = "none";
+                }, 600);
             }
-        }, 3000);
+        }, 5000);
     </script>
 </body>
 </html>

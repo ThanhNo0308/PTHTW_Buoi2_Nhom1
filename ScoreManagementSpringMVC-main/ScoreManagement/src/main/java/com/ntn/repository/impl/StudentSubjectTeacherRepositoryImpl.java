@@ -19,6 +19,7 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -334,6 +335,67 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
         Session session = this.factory.getObject().getCurrentSession();
         Query query = session.createQuery("SELECT COUNT(*) FROM Studentsubjectteacher");
         return (long) query.getSingleResult();
+    }
+
+    @Override
+    public List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher,
+            int schoolYearID) {
+        Session s = this.factory.getObject().getCurrentSession();
+
+        // Lấy danh sách id của teacher từ listsubjectteacher
+        List<Integer> teacherIds = listsubjectteacher.stream()
+                .map(subjectTeacher -> subjectTeacher.getId())
+                .collect(Collectors.toList());
+
+        // Tạo danh sách tham số
+        List<Integer> parameterList = new ArrayList<>();
+
+        // Tạo chuỗi HQL cho phần IN
+        String parameterHql = " AND subjectTeacherId.id IN (";
+        for (int i = 0; i < teacherIds.size(); i++) {
+            parameterList.add(teacherIds.get(i));
+            parameterHql += ":teacherId" + i;
+            if (i < teacherIds.size() - 1) {
+                parameterHql += ", ";
+            }
+        }
+        parameterHql += ")";
+
+        // Tạo câu truy vấn HQL hoàn chỉnh
+        String queryString = "FROM Studentsubjectteacher WHERE schoolYearId.id = :schoolYearID" + parameterHql;
+
+        Query q = s.createQuery(queryString);
+        q.setParameter("schoolYearID", schoolYearID);
+
+        // Đặt giá trị cho từng tham số teacherId
+        for (int i = 0; i < teacherIds.size(); i++) {
+            q.setParameter("teacherId" + i, teacherIds.get(i));
+        }
+
+        List<Studentsubjectteacher> resultList = q.getResultList();
+        return resultList;
+    }
+
+    @Override
+    public List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID, int selectedSchoolYearId) {
+        Session s = this.factory.getObject().getCurrentSession();
+        Query q = s.createQuery("FROM Studentsubjectteacher WHERE subjectTeacherId.id = :subjectteacherID and schoolYearId.id = :selectedSchoolYearId ");
+
+        q.setParameter("subjectteacherID", subjectteacherID);
+        q.setParameter("selectedSchoolYearId", selectedSchoolYearId);
+        List<Studentsubjectteacher> listStudentsubjectteacher = q.getResultList();
+        return listStudentsubjectteacher;
+    }
+
+    @Override
+    public List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID, int schoolyearID) {
+        Session s = this.factory.getObject().getCurrentSession();
+        Query q = s.createQuery("FROM Studentsubjectteacher WHERE studentId.id = :studentID and schoolYearId.id = :schoolyearID ");
+
+        q.setParameter("studentID", studentID);
+        q.setParameter("schoolyearID", schoolyearID);
+        List<Studentsubjectteacher> listStudentsubjectteacher = q.getResultList();
+        return listStudentsubjectteacher;
     }
 
 }

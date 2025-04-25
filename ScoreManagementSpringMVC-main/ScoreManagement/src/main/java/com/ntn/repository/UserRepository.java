@@ -9,10 +9,6 @@ import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
 import java.util.List;
 
-/**
- *
- * @author vhuunghia
- */
 public interface UserRepository {
 
     User getUserByUsername(String username);
@@ -22,12 +18,11 @@ public interface UserRepository {
     boolean authUser(String username, String password);
 
     User addUser(User user);
+    boolean saveUser(User user);
 
     User addTeacherUser(User user);
 
     boolean findEmail(String email);
-
-    List<Student> getStudentbyEmail(String email);
 
     List<Teacher> getTeacherByEmail(String email);
 

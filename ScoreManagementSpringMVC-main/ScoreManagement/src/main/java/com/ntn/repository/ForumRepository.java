@@ -7,13 +7,17 @@ package com.ntn.repository;
 import com.ntn.pojo.Forum;
 import java.util.List;
 
-/**
- *
- * @author nguye
- */
 public interface ForumRepository {
+
     List<Forum> getForums();
+
     List<Forum> getForumBySubjectTeacher(int subjectTeacherId);
+
     boolean addForum(Forum forum);
+
     boolean deleteForum(int forumId);
+
+    boolean updateForum(Forum forum);
+
+    Forum getForumById(int id);
 }

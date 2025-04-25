@@ -14,10 +14,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-/**
- *
- * @author vhuunghia
- */
 @Service
 public class SchoolYearServiceImp implements SchoolYearService {
 
@@ -39,15 +35,9 @@ public class SchoolYearServiceImp implements SchoolYearService {
         return this.schoolYearRepo.getAllSchoolYears();
     }
 
-    @Override
-    public Subjectteacher getSubJectTeacherById(int id) {
-        return this.schoolYearRepo.getSubJectTeacherById(id);
-    }
+   
 
-    @Override
-    public Typescore getScoreTypeByName(String name) {
-        return this.schoolYearRepo.getScoreTypeByName(name);
-    }
+   
 
     @Override
     public boolean addOrUpdateSchoolYear(Schoolyear schoolYear) {

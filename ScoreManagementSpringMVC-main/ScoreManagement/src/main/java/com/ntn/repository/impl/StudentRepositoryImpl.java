@@ -319,4 +319,17 @@ public class StudentRepositoryImpl implements StudentRepository {
 
         return session.createQuery(query).getResultList();
     }
+
+    @Override
+    public List<Student> getStudentbyEmail(String email) {
+        Session s = this.factory.getObject().getCurrentSession();
+        Query q = s.createQuery("FROM Student WHERE email=:email");
+        q.setParameter("email", email);
+
+        // Lấy danh sách kết quả
+        List<Student> students = q.getResultList();
+
+        // Kiểm tra xem danh sách có phần tử nào không
+        return students;
+    }
 }

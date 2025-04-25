@@ -5,6 +5,7 @@
 package com.ntn.service;
 
 import com.ntn.pojo.Studentsubjectteacher;
+import com.ntn.pojo.Subjectteacher;
 import java.util.List;
 
 /**
@@ -44,4 +45,11 @@ public interface StudentSubjectTeacherService {
     int batchEnrollStudents(int classId, int subjectTeacherId, int schoolYearId);
 
     long countEnrollments();
+
+    List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher, int schoolYearID);
+
+    List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID, int selectedSchoolYearId);
+
+    List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID, int schoolyearID);
+
 }

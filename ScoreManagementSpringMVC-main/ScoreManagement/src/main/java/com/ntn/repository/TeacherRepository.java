@@ -7,10 +7,6 @@ package com.ntn.repository;
 import com.ntn.pojo.Teacher;
 import java.util.List;
 
-/**
- *
- * @author vhuunghia
- */
 public interface TeacherRepository {
 
     int getidTeacherByEmail(String email);
@@ -26,12 +22,18 @@ public interface TeacherRepository {
     List<Class> getClassesByTeacherId(int teacherId);
 
     int getSubjectTeacherIdByTeacherAndClass(int teacherId, int classId);
-    
+
     List<Teacher> getTeachers();
+
     int countTeachers();
+
     Teacher getTeacherById(int teacherId);
+
     Teacher getTeacherByEmail(String email);
+
     List<Teacher> getTeachersByDepartmentId(Integer departmentId);
+
     List<Teacher> getTeachersByKeyword(String keyword);
+
     List<Teacher> getTeachersByDepartmentIdAndKeyword(Integer departmentId, String keyword);
 }
