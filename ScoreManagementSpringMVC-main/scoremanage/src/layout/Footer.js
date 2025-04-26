@@ -1,130 +1,196 @@
 import React from 'react';
+import "../assets/css/base.css";
+import "../assets/css/styles.css";
+import logo from '../assets/images/logo.png';
+import { Container, Row, Col } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFacebookF, faTwitter, faGoogle, faInstagram, faLinkedin, faGithub } from '@fortawesome/free-brands-svg-icons';
+import { 
+  faFacebookF, faTwitter, faYoutube, faInstagram, faLinkedinIn 
+} from '@fortawesome/free-brands-svg-icons';
+import { 
+  faMapMarkerAlt, faPhoneAlt, faEnvelope, faClock, faAngleRight 
+} from '@fortawesome/free-solid-svg-icons';
 
 const Footer = () => {
   return (
-    <footer className="text-center text-lg-start bg-light text-muted">
-      {/* Section: Social media */}
-      <section className="d-flex justify-content-center justify-content-lg-between p-4 border-bottom">
-        {/* Left */}
-        <div className="me-5 d-none d-lg-block">
-          <span>Get connected with us on social networks:</span>
-        </div>
-        {/* Left */}
+    <footer className="footer-section">
+      <div className="footer-top bg-dark text-white py-5">
+        <Container>
+          <Row>
+            {/* Thông tin trường học */}
+            <Col lg={4} className="mb-4">
+              <div className="footer-info">
+                <div className="d-flex align-items-center mb-3">
+                  <img 
+                    src={logo}
+                    alt="Logo" 
+                    width="70" 
+                    height="54" 
+                    className="me-3" 
+                  />
+                  <div>
+                    <h5 className="mb-0 text-white">Trường Đại học</h5>
+                    <h4 className="mb-0 text-warning">MilkyWay</h4>
+                  </div>
+                </div>
+                <p className="mb-3 text-light">
+                  Đào tạo nhân tài, phát triển tri thức, nghiên cứu khoa học 
+                  và chuyển giao công nghệ để phụng sự cộng đồng.
+                </p>
+                <div className="social-links">
+                  <a href="#" className="social-icon">
+                    <FontAwesomeIcon icon={faFacebookF} />
+                  </a>
+                  <a href="#" className="social-icon">
+                    <FontAwesomeIcon icon={faTwitter} />
+                  </a>
+                  <a href="#" className="social-icon">
+                    <FontAwesomeIcon icon={faYoutube} />
+                  </a>
+                  <a href="#" className="social-icon">
+                    <FontAwesomeIcon icon={faInstagram} />
+                  </a>
+                  <a href="#" className="social-icon">
+                    <FontAwesomeIcon icon={faLinkedinIn} />
+                  </a>
+                </div>
+              </div>
+            </Col>
 
-        {/* Right */}
-        <div>
-          <a href="/" className="me-4 text-reset">
-            <FontAwesomeIcon icon={faFacebookF} />
-          </a>
-          <a href="/" className="me-4 text-reset">
-            <FontAwesomeIcon icon={faTwitter} />
-          </a>
-          <a href="/" className="me-4 text-reset">
-            <FontAwesomeIcon icon={faGoogle} />
-          </a>
-          <a href="/" className="me-4 text-reset">
-            <FontAwesomeIcon icon={faInstagram} />
-          </a>
-          <a href="/" className="me-4 text-reset">
-            <FontAwesomeIcon icon={faLinkedin} />
-          </a>
-          <a href="/" className="me-4 text-reset">
-            <FontAwesomeIcon icon={faGithub} />
-          </a>
-        </div>
-        {/* Right */}
-      </section>
-      {/* Section: Social media */}
+            {/* Liên kết nhanh */}
+            <Col lg={2} md={6} className="mb-4">
+              <h5 className="text-uppercase text-white mb-4">Liên kết nhanh</h5>
+              <ul className="footer-links">
+                <li>
+                  <a href="#">
+                    <FontAwesomeIcon icon={faAngleRight} className="me-2" />
+                    Trang chủ
+                  </a>
+                </li>
+                <li>
+                  <a href="#">
+                    <FontAwesomeIcon icon={faAngleRight} className="me-2" />
+                    Giới thiệu
+                  </a>
+                </li>
+                <li>
+                  <a href="#">
+                    <FontAwesomeIcon icon={faAngleRight} className="me-2" />
+                    Khoa & Ngành
+                  </a>
+                </li>
+                <li>
+                  <a href="#">
+                    <FontAwesomeIcon icon={faAngleRight} className="me-2" />
+                    Tuyển sinh
+                  </a>
+                </li>
+                <li>
+                  <a href="#">
+                    <FontAwesomeIcon icon={faAngleRight} className="me-2" />
+                    Nghiên cứu
+                  </a>
+                </li>
+                <li>
+                  <a href="#">
+                    <FontAwesomeIcon icon={faAngleRight} className="me-2" />
+                    Hợp tác quốc tế
+                  </a>
+                </li>
+              </ul>
+            </Col>
 
-      {/* Section: Links */}
-      <section>
-        <div className="container text-center text-md-start mt-5">
-          {/* Grid row */}
-          <div className="row mt-3">
-            {/* Grid column */}
-            <div className="col-md-3 col-lg-4 col-xl-3 mx-auto mb-4">
-              {/* Content */}
-              <h6 className="text-uppercase fw-bold mb-4">
-                <i className="fas fa-gem me-3"></i>Company name
-              </h6>
-              <p>
-                Here you can use rows and columns to organize your footer content. Lorem ipsum
-                dolor sit amet, consectetur adipisicing elit.
-              </p>
-            </div>
-            {/* Grid column */}
+            {/* Dịch vụ sinh viên */}
+            <Col lg={3} md={6} className="mb-4">
+              <h5 className="text-uppercase text-white mb-4">Dịch vụ sinh viên</h5>
+              <ul className="footer-links">
+                <li>
+                  <a href="#">
+                    <FontAwesomeIcon icon={faAngleRight} className="me-2" />
+                    Thời khóa biểu
+                  </a>
+                </li>
+                <li>
+                  <a href="#">
+                    <FontAwesomeIcon icon={faAngleRight} className="me-2" />
+                    Lịch thi
+                  </a>
+                </li>
+                <li>
+                  <a href="#">
+                    <FontAwesomeIcon icon={faAngleRight} className="me-2" />
+                    Học bổng
+                  </a>
+                </li>
+                <li>
+                  <a href="#">
+                    <FontAwesomeIcon icon={faAngleRight} className="me-2" />
+                    Hoạt động sinh viên
+                  </a>
+                </li>
+                <li>
+                  <a href="#">
+                    <FontAwesomeIcon icon={faAngleRight} className="me-2" />
+                    Cơ hội việc làm
+                  </a>
+                </li>
+                <li>
+                  <a href="#">
+                    <FontAwesomeIcon icon={faAngleRight} className="me-2" />
+                    Thư viện số
+                  </a>
+                </li>
+              </ul>
+            </Col>
 
-            {/* Grid column */}
-            <div className="col-md-2 col-lg-2 col-xl-2 mx-auto mb-4">
-              {/* Links */}
-              <h6 className="text-uppercase fw-bold mb-4">
-                Products
-              </h6>
-              <p>
-                <a href="#!" className="text-reset">Angular</a>
-              </p>
-              <p>
-                <a href="#!" className="text-reset">React</a>
-              </p>
-              <p>
-                <a href="#!" className="text-reset">Vue</a>
-              </p>
-              <p>
-                <a href="#!" className="text-reset">Laravel</a>
-              </p>
-            </div>
-            {/* Grid column */}
-
-            {/* Grid column */}
-            <div className="col-md-3 col-lg-2 col-xl-2 mx-auto mb-4">
-              {/* Links */}
-              <h6 className="text-uppercase fw-bold mb-4">
-                Useful links
-              </h6>
-              <p>
-                <a href="#!" className="text-reset">Pricing</a>
-              </p>
-              <p>
-                <a href="#!" className="text-reset">Settings</a>
-              </p>
-              <p>
-                <a href="#!" className="text-reset">Orders</a>
-              </p>
-              <p>
-                <a href="#!" className="text-reset">Help</a>
-              </p>
-            </div>
-            {/* Grid column */}
-
-            {/* Grid column */}
-            <div className="col-md-4 col-lg-3 col-xl-3 mx-auto mb-md-0 mb-4">
-              {/* Links */}
-              <h6 className="text-uppercase fw-bold mb-4">Contact</h6>
-              <p><i className="fas fa-home me-3"></i> New York, NY 10012, US</p>
-              <p>
-                <i className="fas fa-envelope me-3"></i>
-                info@example.com
-              </p>
-              <p><i className="fas fa-phone me-3"></i> + 01 234 567 88</p>
-              <p><i className="fas fa-print me-3"></i> + 01 234 567 89</p>
-            </div>
-            {/* Grid column */}
-          </div>
-          {/* Grid row */}
-        </div>
-      </section>
-      {/* Section: Links */}
-
-      {/* Copyright */}
-      <div className="text-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.05)' }}>
-        © 2021 Copyright:
-        <a className="text-reset fw-bold" href="https://mdbootstrap.com/">MDBootstrap.com</a>
+            {/* Thông tin liên hệ */}
+            <Col lg={3} className="mb-4">
+              <h5 className="text-uppercase text-white mb-4">Liên hệ</h5>
+              <div className="contact-info">
+                <p>
+                  <FontAwesomeIcon icon={faMapMarkerAlt} className="me-2" />
+                  Nhà Bè, TP. Hồ Chí Minh
+                </p>
+                <p>
+                  <FontAwesomeIcon icon={faPhoneAlt} className="me-2" />
+                  (028) 1234 5678
+                </p>
+                <p>
+                  <FontAwesomeIcon icon={faEnvelope} className="me-2" />
+                  milkyway@dh.edu.vn
+                </p>
+                <p>
+                  <FontAwesomeIcon icon={faClock} className="me-2" />
+                  Thứ 2 - Thứ 7: 7:30 - 17:15
+                </p>
+              </div>
+            </Col>
+          </Row>
+        </Container>
       </div>
-      {/* Copyright */}
+
+      {/* Footer Bottom */}
+      <div className="footer-bottom py-3 bg-darker text-center">
+        <Container>
+          <Row>
+            <Col md={6} className="text-md-start">
+              <p className="mb-0 text-light">© 2025 Trường Đại học MilkyWay. Tất cả các quyền được bảo lưu.</p>
+            </Col>
+            <Col md={6} className="text-md-end">
+              <div className="footer-links-bottom">
+                <a href="#">Chính sách bảo mật</a>
+                <span className="mx-2">|</span>
+                <a href="#">Điều khoản sử dụng</a>
+                <span className="mx-2">|</span>
+                <a href="#">Sơ đồ trang</a>
+              </div>
+            </Col>
+          </Row>
+        </Container>
+      </div>
     </footer>
   );
-}
+};
 
 export default Footer;

@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import Table from 'react-bootstrap/Table';
 import Button from 'react-bootstrap/Button';
 import FormControl from 'react-bootstrap/FormControl';
-import '../css/StickyPanel.css'
+import "../assets/css/StickyPanel.css";
 import { Link } from 'react-router-dom';
 import Apis, { endpoints } from '../configs/Apis';
 import cookie from "react-cookies";

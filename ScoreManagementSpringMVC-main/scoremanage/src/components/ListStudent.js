@@ -2,7 +2,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import Table from 'react-bootstrap/Table';
 import FormControl from 'react-bootstrap/FormControl';
-import '../css/StickyPanel.css'
+import "../assets/css/StickyPanel.css";
 import { Link } from 'react-router-dom';
 import { useSchoolYear } from '../reducers/SchoolYearContext';
 import { MyUserContext } from '../App';

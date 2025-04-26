@@ -76,7 +76,7 @@
 // export default Chat;
 import { useState, useEffect, useRef } from "react";
 import { database, ref, push, onValue } from "../firebase";
-import "../css/FireBase.css";
+import "../assets/css/FireBase.css";
 
 function Chat({ name }) {
   const [inpMessage, setIptMessage] = useState("");

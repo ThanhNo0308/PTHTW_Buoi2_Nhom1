@@ -8,6 +8,7 @@ import com.ntn.pojo.User;
 import com.ntn.service.StudentService;
 import com.ntn.service.TeacherService;
 import com.ntn.service.UserService;
+import com.ntn.utils.JwtUtils;
 
 import java.security.Principal;
 import java.util.HashMap;
@@ -23,21 +24,21 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*") // Cho phép tất cả các domain gọi API
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class ApiUserController {
 
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private StudentService studentService;
-    
+
     @Autowired
     private TeacherService teacherService;
-    
+
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
-    
+
     @Autowired
     private Cloudinary cloudinary;
 
@@ -49,10 +50,10 @@ public class ApiUserController {
         String username = requestBody.get("username");
         String password = requestBody.get("password");
         String role = requestBody.get("role");
-        
+
         boolean isAuthenticated = false;
         Map<String, Object> response = new HashMap<>();
-        
+
         switch (role) {
             case "Admin":
                 isAuthenticated = userService.authAdminUser(username, password);
@@ -68,18 +69,36 @@ public class ApiUserController {
                 response.put("message", "Vai trò không hợp lệ");
                 return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
-        
+
         if (isAuthenticated) {
             User user = userService.getUserByUn(username);
             response.put("status", "success");
             response.put("message", "Đăng nhập thành công");
-            response.put("user", user);
+
+            // Loại bỏ thông tin nhạy cảm trước khi gửi đi
+            Map<String, Object> userMap = new HashMap<>();
+            userMap.put("id", user.getId());
+            userMap.put("username", user.getUsername());
+            userMap.put("email", user.getEmail());
+            userMap.put("name", user.getName());
+            userMap.put("image", user.getImage());
+            userMap.put("role", user.getRole());
+
+            // Tạo JWT token
+            String token = null;
+            try {
+                token = JwtUtils.generateToken(username);
+                userMap.put("token", token);
+            } catch (Exception e) {
+                response.put("status", "error");
+                response.put("message", "Lỗi tạo token: " + e.getMessage());
+                return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            response.put("user", userMap);
             response.put("role", user.getRole());
-            
-            // Bạn có thể thêm JWT token ở đây
-            // String token = jwtService.generateToken(username);
-            // response.put("token", token);
-            
+            response.put("token", token);
+
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
             response.put("status", "error");
@@ -97,7 +116,7 @@ public class ApiUserController {
         String password = params.get("password");
         String confirmPassword = params.get("confirmPassword");
         Map<String, Object> response = new HashMap<>();
-        
+
         // Kiểm tra email có nằm trong danh sách sinh viên không
         if (!userService.isEmailExists(email)) {
             response.put("status", "error");
@@ -134,7 +153,7 @@ public class ApiUserController {
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    
+
     /**
      * Đăng ký giảng viên (chỉ cho Admin)
      */
@@ -142,7 +161,7 @@ public class ApiUserController {
     public ResponseEntity<?> registerTeacher(@RequestBody Map<String, String> params) {
         String email = params.get("email");
         Map<String, Object> response = new HashMap<>();
-        
+
         // Kiểm tra xem email có nằm trong bảng Teacher
         if (!userService.isTeacherEmailExists(email)) {
             response.put("status", "error");
@@ -178,15 +197,15 @@ public class ApiUserController {
         if (principal == null) {
             return new ResponseEntity<>("Không có người dùng đăng nhập", HttpStatus.UNAUTHORIZED);
         }
-        
+
         User user = userService.getUserByUn(principal.getName());
         if (user == null) {
             return new ResponseEntity<>("Người dùng không tồn tại", HttpStatus.NOT_FOUND);
         }
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("user", user);
-        
+
         // Thêm thông tin chi tiết theo vai trò
         if (user.getRole().equals("Student")) {
             List<Student> students = studentService.getStudentbyEmail(user.getEmail());
@@ -196,10 +215,10 @@ public class ApiUserController {
             Teacher teacher = teacherService.getTeacherByEmail(user.getEmail());
             response.put("roleSpecificInfo", teacher);
         }
-        
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-    
+
     /**
      * Cập nhật thông tin người dùng
      */
@@ -207,7 +226,7 @@ public class ApiUserController {
     public ResponseEntity<?> updateProfile(@RequestBody Map<String, Object> profileData) {
         Integer userId = (Integer) profileData.get("id");
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
             User existingUser = userService.getUserById(userId);
             if (existingUser == null) {
@@ -217,11 +236,19 @@ public class ApiUserController {
             }
 
             // Cập nhật thông tin người dùng
-            if (profileData.get("name") != null) existingUser.setName((String) profileData.get("name"));
-            if (profileData.get("hometown") != null) existingUser.setHometown((String) profileData.get("hometown"));
-            if (profileData.get("phone") != null) existingUser.setPhone((String) profileData.get("phone"));
-            if (profileData.get("identifyCard") != null) existingUser.setIdentifyCard((String) profileData.get("identifyCard"));
-            
+            if (profileData.get("name") != null) {
+                existingUser.setName((String) profileData.get("name"));
+            }
+            if (profileData.get("hometown") != null) {
+                existingUser.setHometown((String) profileData.get("hometown"));
+            }
+            if (profileData.get("phone") != null) {
+                existingUser.setPhone((String) profileData.get("phone"));
+            }
+            if (profileData.get("identifyCard") != null) {
+                existingUser.setIdentifyCard((String) profileData.get("identifyCard"));
+            }
+
             // Xử lý giới tính
             if (profileData.get("gender") != null) {
                 String gender = (String) profileData.get("gender");
@@ -247,14 +274,14 @@ public class ApiUserController {
                 response.put("message", "Cập nhật thông tin thất bại");
                 return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
             }
-            
+
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Lỗi: " + e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    
+
     /**
      * Cập nhật avatar người dùng
      */
@@ -262,9 +289,9 @@ public class ApiUserController {
     public ResponseEntity<?> uploadAvatar(
             @RequestParam("id") int userId,
             @RequestParam("image") MultipartFile imageFile) {
-        
+
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
             User existingUser = userService.getUserById(userId);
             if (existingUser == null) {
@@ -279,7 +306,7 @@ public class ApiUserController {
                         ObjectUtils.asMap("resource_type", "auto")
                 );
                 existingUser.setImage((String) result.get("secure_url"));
-                
+
                 boolean success = userService.updateUser(existingUser);
                 if (success) {
                     response.put("status", "success");
@@ -288,18 +315,18 @@ public class ApiUserController {
                     return new ResponseEntity<>(response, HttpStatus.OK);
                 }
             }
-            
+
             response.put("status", "error");
             response.put("message", "Cập nhật avatar thất bại");
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-            
+
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Lỗi: " + e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    
+
     /**
      * Đổi mật khẩu
      */
@@ -309,9 +336,9 @@ public class ApiUserController {
         String currentPassword = passwordData.get("currentPassword");
         String newPassword = passwordData.get("newPassword");
         String confirmPassword = passwordData.get("confirmPassword");
-        
+
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
             User existingUser = userService.getUserById(userId);
             if (existingUser == null) {
@@ -360,7 +387,7 @@ public class ApiUserController {
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    
+
     /**
      * Kiểm tra email sinh viên tồn tại
      */
@@ -368,11 +395,11 @@ public class ApiUserController {
     public ResponseEntity<?> checkStudentEmail(@RequestParam("email") String email) {
         Map<String, Object> response = new HashMap<>();
         boolean exists = userService.isEmailExists(email);
-        
+
         response.put("exists", exists);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-    
+
     /**
      * Kiểm tra email giảng viên tồn tại
      */
@@ -380,7 +407,7 @@ public class ApiUserController {
     public ResponseEntity<?> checkTeacherEmail(@RequestParam("email") String email) {
         Map<String, Object> response = new HashMap<>();
         boolean exists = userService.isTeacherEmailExists(email);
-        
+
         response.put("exists", exists);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

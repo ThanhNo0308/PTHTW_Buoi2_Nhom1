@@ -8,6 +8,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import "./App.css"
 import Register from "./components/Register";
+import RegisterStudent from "./components/RegisterStudent";
+import Profile from "./components/Profile";
 import HandleClass from "./components/HandleClass";
 import ListScore from "./components/ListScore";
 import ListStudent from "./components/ListStudent";
@@ -21,6 +23,8 @@ import ExportScore from "./components/ExportScore";
 import ListOldClass from "./components/ListOldClass";
 import ListScoreOfStudent from "./components/ListScoreOfStudent";
 import FireBase from "./components/FireBase";
+import StudentDashboard from "./components/StudentDashboard";
+import TeacherDashboard from "./components/TeacherDashboard";
 export const MyUserContext = createContext();
 
 
@@ -35,7 +39,10 @@ const App = () => {
               <Header className="header" />
               <Routes className="routes">
                 <Route path="/" element={<Home />} />
+                <Route path="/registerstudent" element={<div style={{ margin: '50px 200px 50px 200px' }}><RegisterStudent /></div>} />
                 <Route path="/login" element={<div style={{ margin: '100px' }}><Login /></div>} />
+                <Route path="/profile" element={<div style={{ margin: '100px' }}><Profile /></div>} />
+                
                 <Route path="/register" element={<div style={{ margin: '50px 200px 50px 200px' }}><Register /></div>} />
                 <Route path="/listclass" element={<div style={{ margin: '50px 150px' }}><HandleClass /></div>} />
                 <Route path="/listscore" element={<div style={{ margin: '50px 150px' }}><ListScore /></div>} />
@@ -45,6 +52,8 @@ const App = () => {
                 <Route path="/listoldclass" element={<div style={{ margin: '50px 150px' }}><ListOldClass /></div>} />
                 <Route path="/listscoreofstudent" element={<div style={{ margin: '50px 150px' }}><ListScoreOfStudent /></div>} />
                 <Route path="/chatfirebase" element={<div style={{ margin: '50px 150px' }}><FireBase /></div>} />
+                <Route path="/student/dashboard" element={<div style={{ margin: '50px 150px' }}><StudentDashboard /></div>} />
+                <Route path="/teacher/dashboard" element={<div style={{ margin: '50px 150px' }}><TeacherDashboard /></div>} />
               </Routes>
               <Footer className="footer" />
             </BrowserRouter>

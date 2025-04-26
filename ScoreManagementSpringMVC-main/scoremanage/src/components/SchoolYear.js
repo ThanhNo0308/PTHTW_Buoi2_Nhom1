@@ -1,6 +1,6 @@
 import { ListGroup, ListGroupItem } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import '../css/StickyPanel.css'
+import "../assets/css/StickyPanel.css";
 import Apis, { endpoints } from "../configs/Apis";
 import { useEffect, useState } from "react";
 // const SchoolYear = () => {

@@ -17,10 +17,6 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 
-/**
- *
- * @author Kiet
- */
 @Configuration
 @PropertySource("classpath:database.properties")
 public class HibernateConfig {

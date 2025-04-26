@@ -19,10 +19,16 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
+import java.util.List;
+import org.springframework.http.HttpMethod;
 
 @Configuration
-//@Order(2)
+@Order(2)
 @EnableWebSecurity
 @EnableTransactionManagement
 @ComponentScan(basePackages = {
@@ -64,6 +70,7 @@ public class SpringSecurityConfig {
     }
 
     @Bean
+    @Order(2)
     public CustomLoginSuccessHandler loginSuccessHandler() {
         return new CustomLoginSuccessHandler();
     }
@@ -71,9 +78,10 @@ public class SpringSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                // Cho phép truy cập các tài nguyên tĩnh
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**").permitAll()
                 // Trang chủ cho phép truy cập không cần đăng nhập
                 .requestMatchers("/", "/login", "/registerStudent").permitAll()
@@ -125,7 +133,41 @@ public class SpringSecurityConfig {
     }
 
     @Bean
-    public SimpleDateFormat simpleDateFormat() {
-        return new SimpleDateFormat("yyyy-MM-dd");
+    @Order(0)
+    public StandardServletMultipartResolver multipartResolver() {
+        return new StandardServletMultipartResolver();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*")); // Cho phép tất cả các header
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        return source;
+    }
+
+    @Bean
+    @Order(1) // Đặt độ ưu tiên cao hơn filterChain thông thường
+    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/api/**") // Chỉ áp dụng cho các request tới /api/**
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/login", "/api/register/student").permitAll()
+                .anyRequest().authenticated()
+                );
+
+        return http.build();
     }
 }

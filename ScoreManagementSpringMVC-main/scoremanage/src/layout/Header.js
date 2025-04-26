@@ -1,120 +1,181 @@
-import Button from 'react-bootstrap/Button';
-import Container from 'react-bootstrap/Container';
-import Form from 'react-bootstrap/Form';
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
-import NavDropdown from 'react-bootstrap/NavDropdown';
-import ExampleCarouselImage from "../components/ExampleCarouselImage";
-import Carousel from 'react-bootstrap/Carousel';
+import React, { useContext } from 'react';
+import "../assets/css/base.css";
+import "../assets/css/styles.css";
+import logo from '../assets/images/logo.png';
+import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { useContext } from 'react';
 import { MyUserContext } from '../App';
-import { useSchoolYear } from '../reducers/SchoolYearContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faHome, faChalkboardTeacher, faUserGraduate, faCogs, faChartBar, 
+  faSignInAlt, faUserPlus, faUserCircle, faSignOutAlt, faUser,
+  faSchool, faGraduationCap, faBuilding, faBook, faCalendarAlt, 
+  faTasks, faChartLine, faChartPie, faChartArea, faSearch, faFileImport, faClipboardList
+} from '@fortawesome/free-solid-svg-icons';
+
+
 const Header = () => {
+  const [user, dispatch] = useContext(MyUserContext);
+  
+  const logout = () => {
+    dispatch({
+      type: "logout"
+    });
+  };
 
-    const [user, dispatch] = useContext(MyUserContext);
-    const { selectedSchoolYearId, setSelectedSchoolYearId } = useSchoolYear();
-    const logout = () => {
-        dispatch({
-            "type": "logout"
-        })
-        setSelectedSchoolYearId(null);
-        localStorage.removeItem('selectedSchoolYearId');
-    }
+  return (
+    <header>
+      <Navbar expand="lg" className="navbar-dark">
+        <Container>
+          <div className="header_nav_title d-flex align-items-center">
+            <Link to="/" className="navbar-brand d-flex align-items-center">
+              <img 
+                src={logo} 
+                alt="Logo" 
+                width="70" 
+                height="54" 
+                className="d-inline-block align-text-top me-2" 
+              />
+              <div className="brand-text">
+                <span className="fw-bold">Trường Đại học</span>
+                <span className="fw-bolder text-warning">MilkyWay</span>
+              </div>
+            </Link>
+          </div>
+          <Navbar.Toggle aria-controls="navbarNav" />
+          <Navbar.Collapse id="navbarNav" className="justify-content-between">
+            <Nav>
+              {!user && (
+                <Nav.Link as={Link} to="/">
+                  <FontAwesomeIcon icon={faHome} className="me-1" /> Trang chủ
+                </Nav.Link>
+              )}
+            </Nav>
+            
+            {/* Admin Navigation */}
+            {user && user.role === 'Admin' && (
+              <Nav className="mr-auto">
+                <Nav.Link as={Link} to="/admin/pageAdmin">
+                  <FontAwesomeIcon icon={faHome} className="me-1" /> Trang chủ
+                </Nav.Link>
+                <Nav.Link as={Link} to="/admin/teachers">
+                  <FontAwesomeIcon icon={faChalkboardTeacher} className="me-1" /> Giảng viên
+                </Nav.Link>
+                <Nav.Link as={Link} to="/admin/students">
+                  <FontAwesomeIcon icon={faUserGraduate} className="me-1" /> Sinh viên
+                </Nav.Link>
+                
+                <NavDropdown 
+                  title={<><FontAwesomeIcon icon={faCogs} className="me-1" /> Quản lý học tập</>} 
+                  id="navbarDropdown1"
+                >
+                  <NavDropdown.Item as={Link} to="/admin/classes">
+                    <FontAwesomeIcon icon={faSchool} className="me-2" /> Lớp học
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/admin/majors">
+                    <FontAwesomeIcon icon={faGraduationCap} className="me-2" /> Ngành học
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/admin/departments">
+                    <FontAwesomeIcon icon={faBuilding} className="me-2" /> Khoa
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/admin/subjects">
+                    <FontAwesomeIcon icon={faBook} className="me-2" /> Môn học
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/admin/school-years">
+                    <FontAwesomeIcon icon={faCalendarAlt} className="me-2" /> Năm học
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/admin/subjTeach">
+                    <FontAwesomeIcon icon={faTasks} className="me-2" /> Phân công giảng dạy
+                  </NavDropdown.Item>
+                </NavDropdown>
+                
+                <NavDropdown 
+                  title={<><FontAwesomeIcon icon={faChartBar} className="me-1" /> Thống kê</>} 
+                  id="statisticsDropdown"
+                >
+                  <NavDropdown.Item as={Link} to="/admin/statistics/class">
+                    <FontAwesomeIcon icon={faChartLine} className="me-2" /> Thống kê theo lớp
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/admin/statistics/subject">
+                    <FontAwesomeIcon icon={faChartPie} className="me-2" /> Thống kê theo môn học
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/admin/statistics/department">
+                    <FontAwesomeIcon icon={faChartBar} className="me-2" /> Thống kê theo khoa
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/admin/statistics/major">
+                    <FontAwesomeIcon icon={faChartArea} className="me-2" /> Thống kê theo ngành
+                  </NavDropdown.Item>
+                </NavDropdown>
+              </Nav>
+            )}
+            
+            {/* Teacher Navigation */}
+            {user && user.role === 'Teacher' && (
+              <Nav className="mr-auto">
+                <Nav.Link as={Link} to="/teacher/dashboard">
+                  <FontAwesomeIcon icon={faHome} className="me-1" /> Trang chủ
+                </Nav.Link>
+                <Nav.Link as={Link} to="/teacher/classes">
+                  <FontAwesomeIcon icon={faSchool} className="me-1" /> Lớp học
+                </Nav.Link>
+                <Nav.Link as={Link} to="/teacher/search-students">
+                  <FontAwesomeIcon icon={faSearch} className="me-1" /> Tìm kiếm sinh viên
+                </Nav.Link>
+                <Nav.Link as={Link} to="/teacher/scores/import">
+                  <FontAwesomeIcon icon={faFileImport} className="me-1" /> Nhập điểm
+                </Nav.Link>
+              </Nav>
+            )}
+            
+            {/* Student Navigation */}
+            {user && user.role === 'Student' && (
+              <Nav className="mr-auto">
+                <Nav.Link as={Link} to="/student/dashboard">
+                  <FontAwesomeIcon icon={faHome} className="me-1" /> Trang chủ
+                </Nav.Link>
+                <Nav.Link as={Link} to="/student-scores">
+                  <FontAwesomeIcon icon={faClipboardList} className="me-1" /> Điểm của tôi
+                </Nav.Link>
+              </Nav>
+            )}
+            
+            {/* Authentication Links */}
+            <Nav className="ms-auto">
+              {!user ? (
+                <>
+                  <Nav.Link as={Link} to="/login" className="btn btn-success me-2">
+                    <FontAwesomeIcon icon={faSignInAlt} className="me-1" /> Đăng nhập
+                  </Nav.Link>
+                  <Nav.Link as={Link} to="/registerStudent" className="btn btn-outline-light">
+                    <FontAwesomeIcon icon={faUserPlus} className="me-1" /> Đăng ký
+                  </Nav.Link>
+                </>
+              ) : (
+                <NavDropdown 
+                  title={
+                    <div className="d-flex align-items-center">
+                      <FontAwesomeIcon icon={faUserCircle} className="me-2" />
+                      <span>{user.name}</span>
+                    </div>
+                  } 
+                  id="userDropdown" 
+                  align="end"
+                >
+                  <NavDropdown.Item as={Link} to="/profile">
+                    <FontAwesomeIcon icon={faUser} className="me-2 fa-sm fa-fw" /> Thông tin cá nhân
+                  </NavDropdown.Item>
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item onClick={logout}>
+                    <FontAwesomeIcon icon={faSignOutAlt} className="me-2 fa-sm fa-fw" /> Đăng xuất
+                  </NavDropdown.Item>
+                </NavDropdown>
+              )}
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
+    </header>
+  );
+};
 
-    return (<>
-        <Carousel>
-            <Carousel.Item>
-                <ExampleCarouselImage text="First slide" />
-                <Carousel.Caption>
-                    <h3>Sân trường</h3>
-                </Carousel.Caption>
-            </Carousel.Item>
-            <Carousel.Item>
-                <ExampleCarouselImage text="Second slide" />
-                <Carousel.Caption>
-                    <h3>Sân đá banh</h3>
-                </Carousel.Caption>
-            </Carousel.Item>
-            <Carousel.Item>
-                <ExampleCarouselImage text="Third slide" />
-                <Carousel.Caption>
-                    <h3>Phong cảnh trường</h3>
-
-                </Carousel.Caption>
-            </Carousel.Item>
-        </Carousel>
-
-
-        <Navbar expand="lg" className="bg-body-tertiary">
-            <Container fluid>
-                <Navbar.Brand as={Link} to="/" style={{ fontSize: '1.2rem', fontWeight: 'bold' }} className="d-flex align-items-center">
-                    <img
-                        src="https://www.logoground.com/uploads/2017100232017-07-023321359U%20unique%20logo.jpg"
-                        alt="Logo"
-                        width="70"
-                        height="70"
-                        className="d-inline-block align-top"
-                    />
-                    <span className="ms-2">Trường Đại Học Nghĩa Kỳ</span>
-                </Navbar.Brand>
-                <Navbar.Toggle aria-controls="navbarScroll" />
-                <Navbar.Collapse id="navbarScroll">
-                    <Nav className="me-auto my-2 my-lg-0" style={{ maxHeight: '100px' }} navbarScroll>
-                        <Nav.Link href="#action1" style={{ fontSize: '1.2rem', fontWeight: 600 }}>
-                            Trang chủ
-                        </Nav.Link>
-                        {selectedSchoolYearId === null ? (
-                            // Hiển thị phần "Học kì" chỉ khi selectedSchoolYearId là null
-                            <Nav.Link as={Link} to="/schoolyear" style={{ fontSize: '1.2rem', fontWeight: 600 }}>
-                                Học kì
-                            </Nav.Link>
-                        ) : null}
-                        {/* <Nav.Link as={Link} to="/listclass" style={{ fontSize: '1.2rem', fontWeight: 600 }}>
-                            Lớp phụ trách
-                        </Nav.Link> */}
-
-                        {user !== null && (user.roleID.id === 2 || user.roleID.id === 1) ? (
-                            <Nav.Link as={Link} to="/listclass" style={{ fontSize: '1.2rem', fontWeight: 600 }}>
-                                Lớp phụ trách
-                            </Nav.Link>
-                        ) : null}
-                        {user !== null && (user.roleID.id === 3) ? (
-                            <Nav.Link as={Link} to="/listoldclass" style={{ fontSize: '1.2rem', fontWeight: 600 }}>
-                                Xem môn học
-                            </Nav.Link>
-                        ) : null}
-                        {user !== null && (user.roleID.id === 1 || user.roleID.id === 2 || user.roleID.id === 3 ) ? (
-                            <Nav.Link as={Link} to="/chatfirebase" style={{ fontSize: '1.2rem', fontWeight: 600 }}>
-                                Chat Online
-                            </Nav.Link>
-                        ) : null}
-                        {user === null ? <>
-                            <Nav.Link as={Link} to="/login" style={{ fontSize: '1.2rem', fontWeight: 600 }}>
-                                Đăng nhập/Đăng ký
-                            </Nav.Link>
-                        </> : <>
-                            <img src={user.image} alt={user.name} style={{ width: '50px', height: '50px', borderRadius: '50%' }} />
-                            <Nav.Link as={Link} to="/" style={{ fontSize: '1.2rem', fontWeight: 600, color: "#dd3f3f" }}>
-                                Chào {user.name}!
-                            </Nav.Link>
-                            <Button variant="secondary" onClick={logout} >Đăng xuất</Button>
-                        </>}
-
-                    </Nav>
-                    <Form className="d-flex">
-                        <Form.Control
-                            type="search"
-                            placeholder="Search"
-                            className="me-2"
-                            aria-label="Search"
-                        />
-                        <Button variant="outline-success">Search</Button>
-                    </Form>
-
-                </Navbar.Collapse>
-            </Container>
-        </Navbar>
-    </>)
-}
-export default Header; 
+export default Header;
