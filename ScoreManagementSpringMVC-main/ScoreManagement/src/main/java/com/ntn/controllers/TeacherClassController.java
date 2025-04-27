@@ -18,6 +18,7 @@ import com.ntn.service.TypeScoreService;
 import com.ntn.service.UserService;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import java.util.List;
 import java.util.Map;
@@ -61,16 +62,30 @@ public class TeacherClassController {
 
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private TypeScoreService typeScoreService;
 
     @GetMapping("/classes")
     public String getTeacherClasses(Model model, Authentication authentication) {
         String username = authentication.getName();
-        int teacherId = teacherService.getTeacherIdByUsername(username);
+        Teacher teacher = teacherService.getTeacherByUsername(username);
 
-        List<Class> classes = classService.getClassesByTeacher(teacherId);
+        if (teacher == null) {
+            return "redirect:/error?message=unauthorized";
+        }
+
+        // Lấy danh sách các lớp mà giảng viên được phân công dạy thay vì chỉ lớp chủ nhiệm
+        Set<Class> assignedClasses = new HashSet<>();
+        List<Subjectteacher> teacherAssignments = subjectTeacherService.getSubjectTeachersByTeacherId(teacher.getId());
+
+        for (Subjectteacher assignment : teacherAssignments) {
+            if (assignment.getClassId() != null) {
+                assignedClasses.add(assignment.getClassId());
+            }
+        }
+
+        List<Class> classes = new ArrayList<>(assignedClasses);
 
         Map<Integer, Integer> studentCounts = new HashMap<>();
 
@@ -81,7 +96,7 @@ public class TeacherClassController {
         }
 
         model.addAttribute("classes", classes);
-        model.addAttribute("studentCounts", studentCounts); // Thêm map vào model
+        model.addAttribute("studentCounts", studentCounts);
 
         return "teacher/classes";
     }
@@ -100,17 +115,36 @@ public class TeacherClassController {
             return "redirect:/teacher/classes?error=class-not-found";
         }
 
+        // Kiểm tra xem giáo viên có được phân công dạy lớp này không
+        List<Subjectteacher> teacherClassAssignments = subjectTeacherService.getSubjectTeachersByTeacherIdAndClassId(teacher.getId(), classId);
+
+        if (teacherClassAssignments.isEmpty()) {
+            return "redirect:/teacher/classes?error=not-assigned";
+        }
+
         // Tính số lượng sinh viên trong lớp
         int studentCount = studentService.countStudentsByClassId(classroom.getId());
 
         // Danh sách sinh viên trong lớp
         List<Student> students = studentService.getStudentByClassId(classroom.getId());
 
+        // Lấy năm học hiện tại
+        int currentSchoolYearId = schoolYearService.getCurrentSchoolYearId();
+
+        // Chỉ lấy các môn học mà giảng viên dạy trong lớp này và học kỳ hiện tại
+        List<Subjectteacher> assignedSubjects = subjectTeacherService.getSubjectTeachersByTeacherIdAndClassIdAndSchoolYearId(
+                teacher.getId(), classId, currentSchoolYearId);
+
+        // Nếu không có môn học trong học kỳ hiện tại, lấy tất cả phân công của giáo viên cho lớp này
+        if (assignedSubjects.isEmpty()) {
+            assignedSubjects = subjectTeacherService.getSubjectTeachersByTeacherIdAndClassId(teacher.getId(), classId);
+        }
+
         model.addAttribute("classroom", classroom);
         model.addAttribute("teacher", teacher);
         model.addAttribute("studentCount", studentCount);
         model.addAttribute("students", students);
-        model.addAttribute("subjects", subjectTeacherService.getSubjectTeachersByTeacherId(teacher.getId()));
+        model.addAttribute("subjects", assignedSubjects);
         model.addAttribute("schoolYears", schoolYearService.getAllSchoolYears());
 
         return "teacher/class-detail";
@@ -120,13 +154,29 @@ public class TeacherClassController {
     public String getScoresPage(@PathVariable("classId") int classId,
             @RequestParam("subjectTeacherId") int subjectTeacherId,
             @RequestParam("schoolYearId") int schoolYearId,
-            Model model) {
+            Model model, Authentication authentication) {
+        
+        String username = authentication.getName();
+        Teacher teacher = teacherService.getTeacherByUsername(username);
+        
+        if (teacher == null) {
+            return "redirect:/error?message=unauthorized";
+        }
 
         // Lấy thông tin lớp, giáo viên, môn học và năm học
         Class classroom = classService.getClassById(classId);
         Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
         Subject subject = subjectTeacher.getSubjectId();
         Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
+        
+        if (subjectTeacher == null || 
+            !subjectTeacher.getTeacherId().getId().equals(teacher.getId()) || 
+            subjectTeacher.getClassId() == null || 
+            !subjectTeacher.getClassId().getId().equals(classId) ||
+            subjectTeacher.getSchoolYearId() == null || 
+            !subjectTeacher.getSchoolYearId().getId().equals(schoolYearId)) {
+            return "redirect:/teacher/classes?error=not-assigned";
+        }
 
         // Lấy danh sách sinh viên trong lớp
         List<Student> students = studentService.getStudentByClassId(classId);

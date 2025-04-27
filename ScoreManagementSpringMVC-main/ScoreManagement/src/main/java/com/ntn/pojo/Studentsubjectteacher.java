@@ -37,9 +37,6 @@ public class Studentsubjectteacher implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Id")
     private Integer id;
-    @JoinColumn(name = "SchoolYearId", referencedColumnName = "Id")
-    @ManyToOne
-    private Schoolyear schoolYearId;
     @JoinColumn(name = "StudentId", referencedColumnName = "Id")
     @ManyToOne
     private Student studentId;
@@ -60,14 +57,6 @@ public class Studentsubjectteacher implements Serializable {
 
     public void setId(Integer id) {
         this.id = id;
-    }
-
-    public Schoolyear getSchoolYearId() {
-        return schoolYearId;
-    }
-
-    public void setSchoolYearId(Schoolyear schoolYearId) {
-        this.schoolYearId = schoolYearId;
     }
 
     public Student getStudentId() {

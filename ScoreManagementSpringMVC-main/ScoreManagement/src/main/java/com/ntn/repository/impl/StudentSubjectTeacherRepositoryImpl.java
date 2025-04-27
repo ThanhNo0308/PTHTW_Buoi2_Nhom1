@@ -162,19 +162,6 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
     }
 
     @Override
-    public List<Studentsubjectteacher> getBySchoolYearId(int schoolYearId) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Studentsubjectteacher> query = builder.createQuery(Studentsubjectteacher.class);
-        Root<Studentsubjectteacher> root = query.from(Studentsubjectteacher.class);
-
-        query.where(builder.equal(root.get("schoolYearId").get("id"), schoolYearId));
-        query.orderBy(builder.desc(root.get("id")));
-
-        return session.createQuery(query).getResultList();
-    }
-
-    @Override
     public List<Studentsubjectteacher> getByClassId(int classId) {
         Session session = this.factory.getObject().getCurrentSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();
@@ -189,9 +176,25 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
 
         return session.createQuery(query).getResultList();
     }
+    
+    @Override
+    public List<Studentsubjectteacher> getBySchoolYearId(int schoolYearId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Studentsubjectteacher> query = builder.createQuery(Studentsubjectteacher.class);
+        Root<Studentsubjectteacher> root = query.from(Studentsubjectteacher.class);
+        
+        // Join từ Studentsubjectteacher -> Subjectteacher -> SchoolYear
+        Join<Studentsubjectteacher, Subjectteacher> subjectTeacherJoin = root.join("subjectTeacherId");
+        
+        query.where(builder.equal(subjectTeacherJoin.get("schoolYearId").get("id"), schoolYearId));
+        query.orderBy(builder.desc(root.get("id")));
+
+        return session.createQuery(query).getResultList();
+    }
 
     @Override
-    public boolean checkDuplicate(Integer studentId, Integer subjectTeacherId, Integer schoolYearId) {
+    public boolean checkDuplicate(Integer studentId, Integer subjectTeacherId) {
         Session session = this.factory.getObject().getCurrentSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Long> query = builder.createQuery(Long.class);
@@ -205,10 +208,6 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
 
         if (subjectTeacherId != null) {
             predicates.add(builder.equal(root.get("subjectTeacherId").get("id"), subjectTeacherId));
-        }
-
-        if (schoolYearId != null) {
-            predicates.add(builder.equal(root.get("schoolYearId").get("id"), schoolYearId));
         }
 
         query.select(builder.count(root))
@@ -219,7 +218,7 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
     }
 
     @Override
-    public boolean checkDuplicateExcept(Integer studentId, Integer subjectTeacherId, Integer schoolYearId, Integer exceptId) {
+    public boolean checkDuplicateExcept(Integer studentId, Integer subjectTeacherId, Integer exceptId) {
         Session session = this.factory.getObject().getCurrentSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Long> query = builder.createQuery(Long.class);
@@ -233,10 +232,6 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
 
         if (subjectTeacherId != null) {
             predicates.add(builder.equal(root.get("subjectTeacherId").get("id"), subjectTeacherId));
-        }
-
-        if (schoolYearId != null) {
-            predicates.add(builder.equal(root.get("schoolYearId").get("id"), schoolYearId));
         }
 
         // Loại trừ chính nó
@@ -269,8 +264,7 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
     }
 
     @Override
-    @Transactional
-    public int batchEnrollStudents(int classId, int subjectTeacherId, int schoolYearId) {
+    public int batchEnrollStudents(int classId, int subjectTeacherId) {
         Session session = this.factory.getObject().getCurrentSession();
         Transaction tx = null;
         int enrolledCount = 0;
@@ -284,10 +278,7 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
             // Lấy đối tượng SubjectTeacher
             Subjectteacher subjectTeacher = session.get(Subjectteacher.class, subjectTeacherId);
 
-            // Lấy đối tượng SchoolYear
-            Schoolyear schoolYear = session.get(Schoolyear.class, schoolYearId);
-
-            if (students.isEmpty() || subjectTeacher == null || schoolYear == null) {
+            if (students.isEmpty() || subjectTeacher == null) {
                 return 0;
             }
 
@@ -297,12 +288,10 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
                 Query checkQuery = session.createQuery(
                         "SELECT COUNT(sst) FROM Studentsubjectteacher sst "
                         + "WHERE sst.studentId.id = :studentId "
-                        + "AND sst.subjectTeacherId.id = :subjectTeacherId "
-                        + "AND sst.schoolYearId.id = :schoolYearId");
+                        + "AND sst.subjectTeacherId.id = :subjectTeacherId");
 
                 checkQuery.setParameter("studentId", student.getId());
                 checkQuery.setParameter("subjectTeacherId", subjectTeacherId);
-                checkQuery.setParameter("schoolYearId", schoolYearId);
 
                 Long count = (Long) checkQuery.getSingleResult();
 
@@ -311,7 +300,6 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
                     Studentsubjectteacher enrollment = new Studentsubjectteacher();
                     enrollment.setStudentId(student);
                     enrollment.setSubjectTeacherId(subjectTeacher);
-                    enrollment.setSchoolYearId(schoolYear);
 
                     session.persist(enrollment);
                     enrolledCount++;
@@ -338,8 +326,7 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
     }
 
     @Override
-    public List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher,
-            int schoolYearID) {
+    public List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher) {
         Session s = this.factory.getObject().getCurrentSession();
 
         // Lấy danh sách id của teacher từ listsubjectteacher
@@ -351,7 +338,7 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
         List<Integer> parameterList = new ArrayList<>();
 
         // Tạo chuỗi HQL cho phần IN
-        String parameterHql = " AND subjectTeacherId.id IN (";
+        String parameterHql = " WHERE subjectTeacherId.id IN (";
         for (int i = 0; i < teacherIds.size(); i++) {
             parameterList.add(teacherIds.get(i));
             parameterHql += ":teacherId" + i;
@@ -362,10 +349,9 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
         parameterHql += ")";
 
         // Tạo câu truy vấn HQL hoàn chỉnh
-        String queryString = "FROM Studentsubjectteacher WHERE schoolYearId.id = :schoolYearID" + parameterHql;
+        String queryString = "FROM Studentsubjectteacher" + parameterHql;
 
         Query q = s.createQuery(queryString);
-        q.setParameter("schoolYearID", schoolYearID);
 
         // Đặt giá trị cho từng tham số teacherId
         for (int i = 0; i < teacherIds.size(); i++) {
@@ -377,23 +363,21 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
     }
 
     @Override
-    public List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID, int selectedSchoolYearId) {
+    public List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID) {
         Session s = this.factory.getObject().getCurrentSession();
-        Query q = s.createQuery("FROM Studentsubjectteacher WHERE subjectTeacherId.id = :subjectteacherID and schoolYearId.id = :selectedSchoolYearId ");
+        Query q = s.createQuery("FROM Studentsubjectteacher WHERE subjectTeacherId.id = :subjectteacherID");
 
         q.setParameter("subjectteacherID", subjectteacherID);
-        q.setParameter("selectedSchoolYearId", selectedSchoolYearId);
         List<Studentsubjectteacher> listStudentsubjectteacher = q.getResultList();
         return listStudentsubjectteacher;
     }
 
     @Override
-    public List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID, int schoolyearID) {
+    public List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID) {
         Session s = this.factory.getObject().getCurrentSession();
-        Query q = s.createQuery("FROM Studentsubjectteacher WHERE studentId.id = :studentID and schoolYearId.id = :schoolyearID ");
-
+        // Sửa câu query
+        Query q = s.createQuery("FROM Studentsubjectteacher WHERE studentId.id = :studentID");
         q.setParameter("studentID", studentID);
-        q.setParameter("schoolyearID", schoolyearID);
         List<Studentsubjectteacher> listStudentsubjectteacher = q.getResultList();
         return listStudentsubjectteacher;
     }

@@ -190,14 +190,13 @@
                                 <td th:text="${enrollment.studentId.classId != null ? enrollment.studentId.classId.className : ''}"></td>
                                 <td th:text="${enrollment.subjectTeacherId.subjectId.subjectName}"></td>
                                 <td th:text="${enrollment.subjectTeacherId.teacherId.teacherName}"></td>
-                                <td th:text="${enrollment.schoolYearId.nameYear + ' - ' + enrollment.schoolYearId.semesterName}"></td>
+                                <td th:text="${enrollment.subjectTeacherId.schoolYearId.nameYear + ' - ' + enrollment.subjectTeacherId.schoolYearId.semesterName}"></td>
                                 <td sec:authorize="hasAuthority('Admin')">
                                     <button class="btn btn-sm btn-warning me-1" 
                                             onclick="openEditModal(this)" 
                                             th:data-id="${enrollment.id}"
                                             th:data-student-id="${enrollment.studentId.id}"
-                                            th:data-subject-teacher-id="${enrollment.subjectTeacherId.id}"
-                                            th:data-school-year-id="${enrollment.schoolYearId.id}">
+                                            th:data-subject-teacher-id="${enrollment.subjectTeacherId.id}">
                                         <i class="fas fa-edit"></i> Sửa
                                     </button>
                                     <a th:href="@{'/admin/enrollment/delete/' + ${enrollment.id}}" class="btn btn-sm btn-danger"
@@ -238,26 +237,17 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="subjectTeacherId" class="form-label">Môn học - Giảng viên <span class="text-danger">*</span></label>
+                            <label for="subjectTeacherId" class="form-label">Môn học - Giảng viên - Học kỳ <span class="text-danger">*</span></label>
                             <select class="form-select" id="subjectTeacherId" name="subjectTeacherId.id" required>
-                                <option value="">-- Chọn môn học và giảng viên --</option>
+                                <option value="">-- Chọn môn học, giảng viên và học kỳ --</option>
                                 <option th:each="st : ${subjectTeachers}" 
                                         th:value="${st.id}" 
-                                        th:text="${st.subjectId.subjectName + ' - ' + st.teacherId.teacherName}">
+                                        th:text="${st.subjectId.subjectName + ' - ' + st.teacherId.teacherName + ' (' + st.schoolYearId.nameYear + ' - ' + st.schoolYearId.semesterName + ')'}">
                                 </option>
                             </select>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="schoolYearId" class="form-label">Học kỳ <span class="text-danger">*</span></label>
-                            <select class="form-select" id="schoolYearId" name="schoolYearId.id" required>
-                                <option value="">-- Chọn học kỳ --</option>
-                                <option th:each="sy : ${schoolYears}" 
-                                        th:value="${sy.id}" 
-                                        th:text="${sy.nameYear + ' - ' + sy.semesterName}">
-                                </option>
-                            </select>
-                        </div>
+
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -292,26 +282,17 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="editSubjectTeacherId" class="form-label">Môn học - Giảng viên <span class="text-danger">*</span></label>
+                            <label for="editSubjectTeacherId" class="form-label">Môn học - Giảng viên - Học kỳ <span class="text-danger">*</span></label>
                             <select class="form-select" id="editSubjectTeacherId" name="subjectTeacherId.id" required>
-                                <option value="">-- Chọn môn học và giảng viên --</option>
+                                <option value="">-- Chọn môn học, giảng viên và học kỳ --</option>
                                 <option th:each="st : ${subjectTeachers}" 
                                         th:value="${st.id}" 
-                                        th:text="${st.subjectId.subjectName + ' - ' + st.teacherId.teacherName}">
+                                        th:text="${st.subjectId.subjectName + ' - ' + st.teacherId.teacherName + ' (' + st.schoolYearId.nameYear + ' - ' + st.schoolYearId.semesterName + ')'}">
                                 </option>
                             </select>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="editSchoolYearId" class="form-label">Học kỳ <span class="text-danger">*</span></label>
-                            <select class="form-select" id="editSchoolYearId" name="schoolYearId.id" required>
-                                <option value="">-- Chọn học kỳ --</option>
-                                <option th:each="sy : ${schoolYears}" 
-                                        th:value="${sy.id}" 
-                                        th:text="${sy.nameYear + ' - ' + sy.semesterName}">
-                                </option>
-                            </select>
-                        </div>
+
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -331,13 +312,11 @@
             const id = button.getAttribute('data-id');
             const studentId = button.getAttribute('data-student-id');
             const subjectTeacherId = button.getAttribute('data-subject-teacher-id');
-            const schoolYearId = button.getAttribute('data-school-year-id');
 
             // Điền dữ liệu vào modal
             document.getElementById('editEnrollmentId').value = id;
             document.getElementById('editStudentId').value = studentId;
             document.getElementById('editSubjectTeacherId').value = subjectTeacherId;
-            document.getElementById('editSchoolYearId').value = schoolYearId;
 
             // Mở modal trực tiếp không cần AJAX
             const editModal = new bootstrap.Modal(document.getElementById('editEnrollmentModal'));

@@ -66,15 +66,40 @@ public class SubjectTeacherServiceImpl implements SubjectTeacherService {
     public Subjectteacher getSubJectTeacherById(int id) {
         return this.subjectTeacherRepo.getSubJectTeacherById(id);
     }
-    
-     @Override
+
+    @Override
     public List<Subjectteacher> getSubjectTeacherByTeacherID(int TeacherID) {
         return this.subjectTeacherRepo.getSubjectTeacherByTeacherID(TeacherID);
     }
-    
+
     @Override
     public List<Subjectteacher> getSubjectTeacherByListSubjectTeacherId(List<Studentsubjectteacher> listStudentSubjectTeacher) {
         return this.subjectTeacherRepo.getSubjectTeacherByListSubjectTeacherId(listStudentSubjectTeacher);
+    }
+
+    @Override
+    public List<Subjectteacher> getSubjectTeachersBySchoolYearId(int schoolYearId) {
+        return this.subjectTeacherRepo.getSubjectTeachersBySchoolYearId(schoolYearId);
+    }
+
+    @Override
+    public List<Subjectteacher> getSubjectTeachersByTeacherIdAndSchoolYearId(int teacherId, int schoolYearId) {
+        return this.subjectTeacherRepo.getSubjectTeachersByTeacherIdAndSchoolYearId(teacherId, schoolYearId);
+    }
+    
+    @Override
+    public List<Subjectteacher> getSubjectTeachersByClassId(int classId) {
+        return this.subjectTeacherRepo.getSubjectTeachersByClassId(classId);
+    }
+
+    @Override
+    public List<Subjectteacher> getSubjectTeachersByTeacherIdAndClassId(int teacherId, int classId) {
+        return this.subjectTeacherRepo.getSubjectTeachersByTeacherIdAndClassId(teacherId, classId);
+    }
+
+    @Override
+    public List<Subjectteacher> getSubjectTeachersByTeacherIdAndClassIdAndSchoolYearId(int teacherId, int classId, int schoolYearId) {
+        return this.subjectTeacherRepo.getSubjectTeachersByTeacherIdAndClassIdAndSchoolYearId(teacherId, classId, schoolYearId);
     }
 
 }

@@ -63,6 +63,9 @@ public class Class implements Serializable {
     @JoinColumn(name = "TeacherId", referencedColumnName = "Id")
     @ManyToOne
     private Teacher teacherId;
+    @OneToMany(mappedBy = "classId")
+    @JsonIgnore
+    private List<Subjectteacher> subjectteacherList;
 
     public Class() {
     }
@@ -146,6 +149,15 @@ public class Class implements Serializable {
 
     public void setClassName(String className) {
         this.className = className;
+    }
+    
+    @XmlTransient
+    public List<Subjectteacher> getSubjectteacherList() {
+        return subjectteacherList;
+    }
+
+    public void setSubjectteacherList(List<Subjectteacher> subjectteacherList) {
+        this.subjectteacherList = subjectteacherList;
     }
 
 }

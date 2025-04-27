@@ -116,6 +116,8 @@
                                 <th>ID</th>
                                 <th>Môn học</th>
                                 <th>Giảng viên</th>
+                                <th>Lớp học</th>
+                                <th>Năm học - Học kỳ</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
@@ -124,12 +126,16 @@
                                 <td th:text="${subjTeach.id}"></td>
                                 <td th:text="${subjTeach.subjectId.subjectName}"></td>
                                 <td th:text="${subjTeach.teacherId.teacherName}"></td>
+                                <td th:text="${subjTeach.classId != null ? subjTeach.classId.className : 'Chưa phân công lớp'}"></td>
+                                <td th:text="${subjTeach.schoolYearId != null ? subjTeach.schoolYearId.nameYear + ' - ' + subjTeach.schoolYearId.semesterName : 'Chưa phân công học kỳ'}"></td>
                                 <td>
                                     <div class="btn-group">
                                         <button class="btn btn-sm btn-primary" onclick="openEditModal(this)"
                                                 th:data-id="${subjTeach.id}" 
                                                 th:data-subject-id="${subjTeach.subjectId.id}"
-                                                th:data-teacher-id="${subjTeach.teacherId.id}">
+                                                th:data-teacher-id="${subjTeach.teacherId.id}"
+                                                th:data-class-id="${subjTeach.classId != null ? subjTeach.classId.id : ''}"
+                                                th:data-school-year-id="${subjTeach.schoolYearId != null ? subjTeach.schoolYearId.id : ''}">
                                             <i class="fas fa-edit"></i> Sửa
                                         </button>
                                         <a th:href="@{'/admin/subjTeach/delete/' + ${subjTeach.id}}" class="btn btn-sm btn-danger"
@@ -158,6 +164,26 @@
                     <div class="modal-body">
                         <div class="row mb-3">
                             <div class="col-md-6">
+                                <label for="addSchoolYearId" class="form-label">Năm học - Học kỳ <span class="text-danger">*</span></label>
+                                <select class="form-select" id="addSchoolYearId" name="schoolYearId.id" required>
+                                    <option value="">-- Chọn năm học - học kỳ --</option>
+                                    <option th:each="year : ${schoolYears}" 
+                                            th:value="${year.id}" 
+                                            th:text="${year.nameYear + ' - ' + year.semesterName}">
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="addClassId" class="form-label">Lớp học <span class="text-danger">*</span></label>
+                                <select class="form-select" id="addClassId" name="classId.id" required>
+                                    <option value="">-- Chọn lớp học --</option>
+                                    <option th:each="class : ${classes}" 
+                                            th:value="${class.id}" 
+                                            th:text="${class.className}">
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
                                 <label for="addSubjectId" class="form-label">Môn học <span class="text-danger">*</span></label>
                                 <select class="form-select" id="addSubjectId" name="subjectId.id" required>
                                     <option value="">-- Chọn môn học --</option>
@@ -167,7 +193,7 @@
                                     </option>
                                 </select>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="addTeacherId" class="form-label">Giảng viên <span class="text-danger">*</span></label>
                                 <select class="form-select" id="addTeacherId" name="teacherId.id" required>
@@ -188,7 +214,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Modal Cập nhật Phân công giảng dạy -->
     <div class="modal fade" id="editSubjTeachModal" tabindex="-1" aria-labelledby="editSubjTeachModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -202,6 +228,26 @@
                         <input type="hidden" id="editSubjTeachId" name="id">
                         <div class="row mb-3">
                             <div class="col-md-6">
+                                <label for="editSchoolYearId" class="form-label">Năm học - Học kỳ <span class="text-danger">*</span></label>
+                                <select class="form-select" id="editSchoolYearId" name="schoolYearId.id" required>
+                                    <option value="">-- Chọn năm học - học kỳ --</option>
+                                    <option th:each="year : ${schoolYears}" 
+                                            th:value="${year.id}" 
+                                            th:text="${year.nameYear + ' - ' + year.semesterName}">
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editClassId" class="form-label">Lớp học <span class="text-danger">*</span></label>
+                                <select class="form-select" id="editClassId" name="classId.id" required>
+                                    <option value="">-- Chọn lớp học --</option>
+                                    <option th:each="class : ${classes}" 
+                                            th:value="${class.id}" 
+                                            th:text="${class.className}">
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
                                 <label for="editSubjectId" class="form-label">Môn học <span class="text-danger">*</span></label>
                                 <select class="form-select" id="editSubjectId" name="subjectId.id" required>
                                     <option value="">-- Chọn môn học --</option>
@@ -211,7 +257,7 @@
                                     </option>
                                 </select>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="editTeacherId" class="form-label">Giảng viên <span class="text-danger">*</span></label>
                                 <select class="form-select" id="editTeacherId" name="teacherId.id" required>
@@ -235,18 +281,21 @@
 
     <div th:replace="base :: footer"></div>
     <div th:replace="base :: scripts"></div>
-    
+
     <script>
-        // Mở modal cập nhật và điền dữ liệu
         function openEditModal(button) {
             const id = button.getAttribute('data-id');
             const subjectId = button.getAttribute('data-subject-id');
             const teacherId = button.getAttribute('data-teacher-id');
+            const classId = button.getAttribute('data-class-id');
+            const schoolYearId = button.getAttribute('data-school-year-id');
 
             // Điền dữ liệu vào modal
             document.getElementById('editSubjTeachId').value = id;
             document.getElementById('editSubjectId').value = subjectId;
             document.getElementById('editTeacherId').value = teacherId;
+            document.getElementById('editClassId').value = classId;
+            document.getElementById('editSchoolYearId').value = schoolYearId;
 
             // Mở modal
             const editModal = new bootstrap.Modal(document.getElementById('editSubjTeachModal'));
@@ -254,13 +303,13 @@
         }
 
         // Hiển thị modal thêm khi có lỗi validation
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('error') && urlParams.get('error') === 'add-validation') {
                 const addModal = new bootstrap.Modal(document.getElementById('addSubjTeachModal'));
                 addModal.show();
             }
-            
+
             if (urlParams.has('error') && urlParams.get('error') === 'update-validation') {
                 const editModal = new bootstrap.Modal(document.getElementById('editSubjTeachModal'));
                 editModal.show();

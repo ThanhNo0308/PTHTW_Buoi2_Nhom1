@@ -1,11 +1,15 @@
 package com.ntn.controllers;
 
 import com.ntn.pojo.Department;
+import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Subject;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Teacher;
+import com.ntn.pojo.Class;
 import com.ntn.pojo.Trainingtype;
+import com.ntn.service.ClassService;
 import com.ntn.service.DepartmentService;
+import com.ntn.service.SchoolYearService;
 import com.ntn.service.SubjectService;
 import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TeacherService;
@@ -42,17 +46,30 @@ public class SubjectTeacherController {
 
     @Autowired
     private TrainingTypeService trainingTypeService;
+    
+    @Autowired
+    private SchoolYearService schoolYearService;
+    
+    @Autowired
+    private ClassService classService;
 
     @GetMapping("/admin/subjTeach")
     public String getSubjectTeachers(
             @RequestParam(name = "teacherId", required = false) Integer teacherId,
             @RequestParam(name = "subjectId", required = false) Integer subjectId,
             @RequestParam(name = "departmentId", required = false) Integer departmentId,
+            @RequestParam(name = "schoolYearId", required = false) Integer schoolYearId,
+            @RequestParam(name = "classId", required = false) Integer classId,
             Model model) {
 
         List<Subjectteacher> subjectTeachers;
-
-        if (teacherId != null) {
+         if (classId != null) {
+            // Lọc theo lớp học
+            subjectTeachers = subjectTeacherService.getSubjectTeachersByClassId(classId);
+        }else if (teacherId != null && schoolYearId != null) {
+            // Lọc theo giảng viên và học kỳ
+            subjectTeachers = subjectTeacherService.getSubjectTeachersByTeacherIdAndSchoolYearId(teacherId, schoolYearId);
+        } else if (teacherId != null) {
             // Lọc theo giảng viên
             subjectTeachers = subjectTeacherService.getSubjectTeachersByTeacherId(teacherId);
         } else if (subjectId != null) {
@@ -61,12 +78,18 @@ public class SubjectTeacherController {
         } else if (departmentId != null) {
             // Lọc theo khoa
             subjectTeachers = subjectTeacherService.getSubjectTeachersByDepartmentId(departmentId);
+        } else if (schoolYearId != null) {
+            // Lọc theo học kỳ
+            subjectTeachers = subjectTeacherService.getSubjectTeachersBySchoolYearId(schoolYearId);
         } else {
             // Lấy tất cả
             subjectTeachers = subjectTeacherService.getAllSubjectTeachers();
         }
 
-        // Thêm danh sách giảng viên, môn học, khoa và hệ đào tạo vào model
+        // Thêm danh sách học kỳ vào model
+        model.addAttribute("schoolYears", schoolYearService.getAllSchoolYears());
+
+        model.addAttribute("classes", classService.getClasses());
         model.addAttribute("teachers", teacherService.getTeachers());
         model.addAttribute("subjects", subjectService.getSubjects());
         model.addAttribute("departments", departmentService.getDepartments());
@@ -82,6 +105,8 @@ public class SubjectTeacherController {
             BindingResult bindingResult,
             @RequestParam(value = "subjectId.id", required = false) Integer subjectId,
             @RequestParam(value = "teacherId.id", required = false) Integer teacherId,
+            @RequestParam(value = "schoolYearId.id", required = false) Integer schoolYearId,
+            @RequestParam(value = "classId.id", required = false) Integer classId,
             RedirectAttributes redirectAttributes) {
 
         try {
@@ -99,6 +124,16 @@ public class SubjectTeacherController {
             if (teacherId != null) {
                 Teacher teacher = teacherService.getTeacherById(teacherId);
                 subjectTeacher.setTeacherId(teacher);
+            }
+
+            if (schoolYearId != null) {
+                Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
+                subjectTeacher.setSchoolYearId(schoolYear);
+            }
+            
+            if (classId != null) {
+                Class classObj = classService.getClassById(classId);
+                subjectTeacher.setClassId(classObj);
             }
 
             boolean success = subjectTeacherService.addOrUpdateSubjectTeacher(subjectTeacher);
@@ -123,6 +158,8 @@ public class SubjectTeacherController {
             BindingResult bindingResult,
             @RequestParam(value = "subjectId.id", required = false) Integer subjectId,
             @RequestParam(value = "teacherId.id", required = false) Integer teacherId,
+            @RequestParam(value = "schoolYearId.id", required = false) Integer schoolYearId,
+            @RequestParam(value = "classId.id", required = false) Integer classId,
             RedirectAttributes redirectAttributes) {
 
         try {
@@ -140,6 +177,16 @@ public class SubjectTeacherController {
             if (teacherId != null) {
                 Teacher teacher = teacherService.getTeacherById(teacherId);
                 subjectTeacher.setTeacherId(teacher);
+            }
+            
+            if (schoolYearId != null) {
+                Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
+                subjectTeacher.setSchoolYearId(schoolYear);
+            }
+            
+            if (classId != null) {
+                Class classObj = classService.getClassById(classId);
+                subjectTeacher.setClassId(classObj);
             }
 
             boolean success = subjectTeacherService.addOrUpdateSubjectTeacher(subjectTeacher);
@@ -208,6 +255,23 @@ public class SubjectTeacherController {
                     int id = Integer.parseInt(text);
                     Teacher teacher = teacherService.getTeacherById(id);
                     setValue(teacher);
+                } catch (NumberFormatException e) {
+                    setValue(null);
+                }
+            }
+        });
+        
+        binder.registerCustomEditor(Class.class, "classId", new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) {
+                if (text == null || text.isEmpty()) {
+                    setValue(null);
+                    return;
+                }
+                try {
+                    int id = Integer.parseInt(text);
+                    Class classObj = classService.getClassById(id);
+                    setValue(classObj);
                 } catch (NumberFormatException e) {
                     setValue(null);
                 }

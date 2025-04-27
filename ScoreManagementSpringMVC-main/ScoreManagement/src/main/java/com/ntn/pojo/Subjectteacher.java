@@ -63,6 +63,12 @@ public class Subjectteacher implements Serializable {
     @JoinColumn(name = "TeacherId", referencedColumnName = "Id")
     @ManyToOne
     private Teacher teacherId;
+    @JoinColumn(name = "SchoolYearId", referencedColumnName = "Id")
+    @ManyToOne
+    private Schoolyear schoolYearId;
+    @JoinColumn(name = "ClassId", referencedColumnName = "Id")
+    @ManyToOne
+    private Class classId;
 
     public Subjectteacher() {
     }
@@ -164,5 +170,21 @@ public class Subjectteacher implements Serializable {
     public void setClassscoretypesSet(Set<Classscoretypes> classscoretypesSet) {
         this.classscoretypesSet = classscoretypesSet;
     }
+
+    public Schoolyear getSchoolYearId() {
+        return schoolYearId;
+    }
+
+    public void setSchoolYearId(Schoolyear schoolYearId) {
+        this.schoolYearId = schoolYearId;
+    }
     
+     public Class getClassId() {
+        return classId;
+    }
+
+    public void setClassId(Class classId) {
+        this.classId = classId;
+    }
+
 }

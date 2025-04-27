@@ -18,14 +18,20 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class StudentSubjectTeacherServiceImpl implements StudentSubjectTeacherService {
-    
+
     @Autowired
     private StudentSubjectTeacherRepository studentSubjectTeacherRepository;
+
     @Override
     public List<Studentsubjectteacher> getStudsubjteachs() {
         return this.studentSubjectTeacherRepository.getStudsubjteachs();
     }
-    
+
+    @Override
+    public List<Studentsubjectteacher> getBySchoolYearIdThroughSubjectTeacher(int schoolYearId) {
+        return this.studentSubjectTeacherRepository.getBySchoolYearId(schoolYearId);
+    }
+
     @Override
     public List<Studentsubjectteacher> getAll() {
         return this.studentSubjectTeacherRepository.getAll();
@@ -67,23 +73,18 @@ public class StudentSubjectTeacherServiceImpl implements StudentSubjectTeacherSe
     }
 
     @Override
-    public List<Studentsubjectteacher> getBySchoolYearId(int schoolYearId) {
-        return this.studentSubjectTeacherRepository.getBySchoolYearId(schoolYearId);
-    }
-
-    @Override
     public List<Studentsubjectteacher> getByClassId(int classId) {
         return this.studentSubjectTeacherRepository.getByClassId(classId);
     }
 
     @Override
-    public boolean checkDuplicate(Integer studentId, Integer subjectTeacherId, Integer schoolYearId) {
-        return this.studentSubjectTeacherRepository.checkDuplicate(studentId, subjectTeacherId, schoolYearId);
+    public boolean checkDuplicate(Integer studentId, Integer subjectTeacherId) {
+        return this.studentSubjectTeacherRepository.checkDuplicate(studentId, subjectTeacherId);
     }
 
     @Override
-    public boolean checkDuplicateExcept(Integer studentId, Integer subjectTeacherId, Integer schoolYearId, Integer exceptId) {
-        return this.studentSubjectTeacherRepository.checkDuplicateExcept(studentId, subjectTeacherId, schoolYearId, exceptId);
+    public boolean checkDuplicateExcept(Integer studentId, Integer subjectTeacherId, Integer exceptId) {
+        return this.studentSubjectTeacherRepository.checkDuplicateExcept(studentId, subjectTeacherId, exceptId);
     }
 
     @Override
@@ -92,30 +93,28 @@ public class StudentSubjectTeacherServiceImpl implements StudentSubjectTeacherSe
     }
 
     @Override
-    public int batchEnrollStudents(int classId, int subjectTeacherId, int schoolYearId) {
-        return this.studentSubjectTeacherRepository.batchEnrollStudents(classId, subjectTeacherId, schoolYearId);
+    public int batchEnrollStudents(int classId, int subjectTeacherId) {
+        return this.studentSubjectTeacherRepository.batchEnrollStudents(classId, subjectTeacherId);
     }
-    
+
     @Override
     public long countEnrollments() {
         return this.studentSubjectTeacherRepository.countEnrollments();
     }
-    
-    @Override
-    public List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher,
-            int schoolYearID) {
 
-        return this.studentSubjectTeacherRepository.getStudentsubjectteacherBySubjectTeacherID(listsubjectteacher, schoolYearID);
-    }
-    
-     @Override
-    public List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID, int selectedSchoolYearId) {
-        return this.studentSubjectTeacherRepository.getListStudentsubjectteacher(subjectteacherID, selectedSchoolYearId);
+    @Override
+    public List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher) {
+        return this.studentSubjectTeacherRepository.getStudentsubjectteacherBySubjectTeacherID(listsubjectteacher);
     }
 
     @Override
-    public List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID, int schoolyearID) {
-        return this.studentSubjectTeacherRepository.getListStudentsubjectteacherByStudentID(studentID, schoolyearID);
+    public List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID) {
+        return this.studentSubjectTeacherRepository.getListStudentsubjectteacher(subjectteacherID);
     }
-    
+
+    @Override
+    public List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID) {
+        return this.studentSubjectTeacherRepository.getListStudentsubjectteacherByStudentID(studentID);
+    }
+
 }

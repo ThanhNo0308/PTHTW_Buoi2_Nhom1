@@ -29,6 +29,16 @@ public interface SubjectTeacherService {
     Subjectteacher getSubJectTeacherById(int id);
 
     List<Subjectteacher> getSubjectTeacherByTeacherID(int TeacherID);
-    
+
     List<Subjectteacher> getSubjectTeacherByListSubjectTeacherId(List<Studentsubjectteacher> listStudentSubjectTeacher);
+
+    List<Subjectteacher> getSubjectTeachersBySchoolYearId(int schoolYearId);
+
+    List<Subjectteacher> getSubjectTeachersByTeacherIdAndSchoolYearId(int teacherId, int schoolYearId);
+
+    List<Subjectteacher> getSubjectTeachersByClassId(int classId);
+
+    List<Subjectteacher> getSubjectTeachersByTeacherIdAndClassId(int teacherId, int classId);
+
+    List<Subjectteacher> getSubjectTeachersByTeacherIdAndClassIdAndSchoolYearId(int teacherId, int classId, int schoolYearId);
 }

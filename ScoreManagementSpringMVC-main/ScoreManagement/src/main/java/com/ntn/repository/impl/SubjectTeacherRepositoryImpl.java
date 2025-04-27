@@ -184,4 +184,97 @@ public class SubjectTeacherRepositoryImpl implements SubjectTeacherRepository {
         return resultList;
     }
 
+    @Override
+    public List<Subjectteacher> getSubjectTeachersBySchoolYearId(int schoolYearId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Subjectteacher> query = builder.createQuery(Subjectteacher.class);
+        Root<Subjectteacher> root = query.from(Subjectteacher.class);
+
+        // Tạo điều kiện where schoolYearId.id = ?
+        query.where(builder.equal(root.get("schoolYearId").get("id"), schoolYearId));
+
+        // Sắp xếp kết quả theo ID
+        query.orderBy(builder.asc(root.get("id")));
+
+        return session.createQuery(query).getResultList();
+    }
+
+    @Override
+    public List<Subjectteacher> getSubjectTeachersByTeacherIdAndSchoolYearId(int teacherId, int schoolYearId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Subjectteacher> query = builder.createQuery(Subjectteacher.class);
+        Root<Subjectteacher> root = query.from(Subjectteacher.class);
+
+        // Tạo hai điều kiện: teacherId.id = ? AND schoolYearId.id = ?
+        Predicate teacherPredicate = builder.equal(root.get("teacherId").get("id"), teacherId);
+        Predicate schoolYearPredicate = builder.equal(root.get("schoolYearId").get("id"), schoolYearId);
+
+        // Kết hợp hai điều kiện với AND
+        query.where(builder.and(teacherPredicate, schoolYearPredicate));
+
+        // Sắp xếp kết quả theo ID
+        query.orderBy(builder.asc(root.get("id")));
+
+        return session.createQuery(query).getResultList();
+    }
+    
+    @Override
+    public List<Subjectteacher> getSubjectTeachersByClassId(int classId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Subjectteacher> query = builder.createQuery(Subjectteacher.class);
+        Root<Subjectteacher> root = query.from(Subjectteacher.class);
+
+        // Tạo điều kiện where classId.id = ?
+        query.where(builder.equal(root.get("classId").get("id"), classId));
+
+        // Sắp xếp kết quả theo ID
+        query.orderBy(builder.asc(root.get("id")));
+
+        return session.createQuery(query).getResultList();
+    }
+
+    @Override
+    public List<Subjectteacher> getSubjectTeachersByTeacherIdAndClassId(int teacherId, int classId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Subjectteacher> query = builder.createQuery(Subjectteacher.class);
+        Root<Subjectteacher> root = query.from(Subjectteacher.class);
+
+        // Tạo hai điều kiện: teacherId.id = ? AND classId.id = ?
+        Predicate teacherPredicate = builder.equal(root.get("teacherId").get("id"), teacherId);
+        Predicate classPredicate = builder.equal(root.get("classId").get("id"), classId);
+        
+        // Kết hợp hai điều kiện với AND
+        query.where(builder.and(teacherPredicate, classPredicate));
+
+        // Sắp xếp kết quả theo ID
+        query.orderBy(builder.asc(root.get("id")));
+
+        return session.createQuery(query).getResultList();
+    }
+
+    @Override
+    public List<Subjectteacher> getSubjectTeachersByTeacherIdAndClassIdAndSchoolYearId(int teacherId, int classId, int schoolYearId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Subjectteacher> query = builder.createQuery(Subjectteacher.class);
+        Root<Subjectteacher> root = query.from(Subjectteacher.class);
+
+        // Tạo ba điều kiện: teacherId.id = ? AND classId.id = ? AND schoolYearId.id = ?
+        Predicate teacherPredicate = builder.equal(root.get("teacherId").get("id"), teacherId);
+        Predicate classPredicate = builder.equal(root.get("classId").get("id"), classId);
+        Predicate schoolYearPredicate = builder.equal(root.get("schoolYearId").get("id"), schoolYearId);
+        
+        // Kết hợp các điều kiện với AND
+        query.where(builder.and(teacherPredicate, classPredicate, schoolYearPredicate));
+
+        // Sắp xếp kết quả theo ID
+        query.orderBy(builder.asc(root.get("id")));
+
+        return session.createQuery(query).getResultList();
+    }
+
 }

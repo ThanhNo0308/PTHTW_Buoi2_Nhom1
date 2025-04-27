@@ -95,24 +95,6 @@ public class StudentSubjectTeacherController {
                 }
             }
         });
-
-        // Xử lý SchoolYear
-        binder.registerCustomEditor(Schoolyear.class, "schoolYearId", new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                if (text == null || text.isEmpty()) {
-                    setValue(null);
-                    return;
-                }
-                try {
-                    int id = Integer.parseInt(text);
-                    Schoolyear schoolYear = schoolYearService.getSchoolYearById(id);
-                    setValue(schoolYear);
-                } catch (NumberFormatException e) {
-                    setValue(null);
-                }
-            }
-        });
     }
 
     @GetMapping("/admin/enrollment")
@@ -141,8 +123,8 @@ public class StudentSubjectTeacherController {
             // Lọc theo môn học
             enrollments = studentSubjectTeacherService.getBySubjectId(subjectId);
         } else if (schoolYearId != null) {
-            // Lọc theo năm học
-            enrollments = studentSubjectTeacherService.getBySchoolYearId(schoolYearId);
+            // Lọc theo năm học - sử dụng phương thức mới
+            enrollments = studentSubjectTeacherService.getBySchoolYearIdThroughSubjectTeacher(schoolYearId);
         } else if (classId != null) {
             // Lọc theo lớp học
             enrollments = studentSubjectTeacherService.getByClassId(classId);
@@ -172,7 +154,6 @@ public class StudentSubjectTeacherController {
             BindingResult bindingResult,
             @RequestParam(value = "studentId.id", required = false) Integer studentId,
             @RequestParam(value = "subjectTeacherId.id", required = false) Integer subjectTeacherId,
-            @RequestParam(value = "schoolYearId.id", required = false) Integer schoolYearId,
             Model model,
             RedirectAttributes redirectAttributes) {
 
@@ -191,18 +172,16 @@ public class StudentSubjectTeacherController {
             if (subjectTeacherId != null) {
                 Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
                 enrollment.setSubjectTeacherId(subjectTeacher);
+                
+                // Không cần set schoolYearId nữa vì đã bỏ trường này
             }
 
-            if (schoolYearId != null) {
-                Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
-                enrollment.setSchoolYearId(schoolYear);
-            }
-
-            // Kiểm tra trùng lặp
+            // Kiểm tra trùng lặp (đã sửa không còn schoolYearId)
             boolean isDuplicate = studentSubjectTeacherService.checkDuplicate(
-                    studentId, subjectTeacherId, schoolYearId);
+                studentId, subjectTeacherId);
+            
             if (isDuplicate) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Sinh viên đã đăng ký môn học này trong học kỳ đã chọn");
+                redirectAttributes.addFlashAttribute("errorMessage", "Sinh viên đã đăng ký môn học này");
                 return "redirect:/admin/enrollment";
             }
 
@@ -239,7 +218,6 @@ public class StudentSubjectTeacherController {
             BindingResult bindingResult,
             @RequestParam(value = "studentId.id", required = false) Integer studentId,
             @RequestParam(value = "subjectTeacherId.id", required = false) Integer subjectTeacherId,
-            @RequestParam(value = "schoolYearId.id", required = false) Integer schoolYearId,
             Model model,
             RedirectAttributes redirectAttributes) {
 
@@ -258,18 +236,16 @@ public class StudentSubjectTeacherController {
             if (subjectTeacherId != null) {
                 Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
                 enrollment.setSubjectTeacherId(subjectTeacher);
+                
+                // Không cần set schoolYearId nữa
             }
 
-            if (schoolYearId != null) {
-                Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
-                enrollment.setSchoolYearId(schoolYear);
-            }
-
-            // Kiểm tra trùng lặp (ngoại trừ chính nó)
+            // Kiểm tra trùng lặp (ngoại trừ chính nó) - đã cập nhật tham số
             boolean isDuplicate = studentSubjectTeacherService.checkDuplicateExcept(
-                    studentId, subjectTeacherId, schoolYearId, enrollment.getId());
+                    studentId, subjectTeacherId, enrollment.getId());
+            
             if (isDuplicate) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Sinh viên đã đăng ký môn học này trong học kỳ đã chọn");
+                redirectAttributes.addFlashAttribute("errorMessage", "Sinh viên đã đăng ký môn học này");
                 return "redirect:/admin/enrollment";
             }
 
@@ -328,20 +304,20 @@ public class StudentSubjectTeacherController {
     public String batchAdd(
             @RequestParam(value = "classId", required = false) Integer classId,
             @RequestParam(value = "subjectTeacherId", required = false) Integer subjectTeacherId,
-            @RequestParam(value = "schoolYearId", required = false) Integer schoolYearId,
             Model model,
             RedirectAttributes redirectAttributes) {
 
         try {
-            if (classId == null || subjectTeacherId == null || schoolYearId == null) {
-                model.addAttribute("errorMessage", "Vui lòng chọn đầy đủ thông tin lớp, môn học-giảng viên và học kỳ");
+            if (classId == null || subjectTeacherId == null) {
+                model.addAttribute("errorMessage", "Vui lòng chọn đầy đủ thông tin lớp và môn học-giảng viên");
                 model.addAttribute("classes", classService.getClasses());
                 model.addAttribute("subjectTeachers", subjectTeacherService.getAllSubjectTeachers());
                 model.addAttribute("schoolYears", schoolYearService.getAllSchoolYears());
                 return "admin/enrollment-batch-add";
             }
 
-            int count = studentSubjectTeacherService.batchEnrollStudents(classId, subjectTeacherId, schoolYearId);
+            // SchoolYearId không còn được sử dụng ở đây
+            int count = studentSubjectTeacherService.batchEnrollStudents(classId, subjectTeacherId);
 
             if (count > 0) {
                 redirectAttributes.addFlashAttribute("successMessage",

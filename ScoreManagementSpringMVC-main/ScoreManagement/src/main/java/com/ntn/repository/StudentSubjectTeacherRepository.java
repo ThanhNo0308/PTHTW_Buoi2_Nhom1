@@ -28,23 +28,23 @@ public interface StudentSubjectTeacherRepository {
 
     List<Studentsubjectteacher> getBySubjectId(int subjectId);
 
+    List<Studentsubjectteacher> getByClassId(int classId);
+    
     List<Studentsubjectteacher> getBySchoolYearId(int schoolYearId);
 
-    List<Studentsubjectteacher> getByClassId(int classId);
+    boolean checkDuplicate(Integer studentId, Integer subjectTeacherId);
 
-    boolean checkDuplicate(Integer studentId, Integer subjectTeacherId, Integer schoolYearId);
-
-    boolean checkDuplicateExcept(Integer studentId, Integer subjectTeacherId, Integer schoolYearId, Integer exceptId);
+    boolean checkDuplicateExcept(Integer studentId, Integer subjectTeacherId, Integer exceptId);
 
     boolean hasRelatedScores(int enrollmentId);
 
-    int batchEnrollStudents(int classId, int subjectTeacherId, int schoolYearId);
+    int batchEnrollStudents(int classId, int subjectTeacherId);
 
     long countEnrollments();
 
-    List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher, int schoolYearID);
+    List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher);
 
-    List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID, int selectedSchoolYearId);
+    List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID);
 
-    List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID, int schoolyearID);
+    List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID);
 }

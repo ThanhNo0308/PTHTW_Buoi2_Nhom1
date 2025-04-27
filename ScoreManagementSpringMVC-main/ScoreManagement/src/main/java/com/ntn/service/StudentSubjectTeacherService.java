@@ -32,24 +32,24 @@ public interface StudentSubjectTeacherService {
 
     List<Studentsubjectteacher> getBySubjectId(int subjectId);
 
-    List<Studentsubjectteacher> getBySchoolYearId(int schoolYearId);
 
     List<Studentsubjectteacher> getByClassId(int classId);
 
-    boolean checkDuplicate(Integer studentId, Integer subjectTeacherId, Integer schoolYearId);
-
-    boolean checkDuplicateExcept(Integer studentId, Integer subjectTeacherId, Integer schoolYearId, Integer exceptId);
+   boolean checkDuplicate(Integer studentId, Integer subjectTeacherId);
+    boolean checkDuplicateExcept(Integer studentId, Integer subjectTeacherId, Integer exceptId);
+    int batchEnrollStudents(int classId, int subjectTeacherId);
+    
+    List<Studentsubjectteacher> getBySchoolYearIdThroughSubjectTeacher(int schoolYearId);
 
     boolean hasRelatedScores(int enrollmentId);
 
-    int batchEnrollStudents(int classId, int subjectTeacherId, int schoolYearId);
 
     long countEnrollments();
 
-    List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher, int schoolYearID);
+    List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher);
 
-    List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID, int selectedSchoolYearId);
+    List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID);
 
-    List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID, int schoolyearID);
+    List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID);
 
 }

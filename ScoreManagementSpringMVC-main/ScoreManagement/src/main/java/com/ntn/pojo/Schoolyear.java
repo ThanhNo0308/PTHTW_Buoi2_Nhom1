@@ -67,9 +67,6 @@ public class Schoolyear implements Serializable {
     @JsonIgnore
     @OneToMany(mappedBy = "schoolYearId")
     private List<Score> scoreList;
-    @JsonIgnore
-    @OneToMany(mappedBy = "schoolYearId")
-    private List<Studentsubjectteacher> studentsubjectteacherList;
 
     public Schoolyear() {
     }
@@ -94,15 +91,6 @@ public class Schoolyear implements Serializable {
 
     public void setScoreList(List<Score> scoreList) {
         this.scoreList = scoreList;
-    }
-
-    @XmlTransient
-    public List<Studentsubjectteacher> getStudentsubjectteacherList() {
-        return studentsubjectteacherList;
-    }
-
-    public void setStudentsubjectteacherList(List<Studentsubjectteacher> studentsubjectteacherList) {
-        this.studentsubjectteacherList = studentsubjectteacherList;
     }
 
     @Override
