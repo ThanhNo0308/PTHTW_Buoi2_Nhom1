@@ -38,7 +38,7 @@ const Header = () => {
               />
               <div className="brand-text">
                 <span className="fw-bold">Trường Đại học</span>
-                <span className="fw-bolder text-warning">MilkyWay</span>
+                <span className="fw-bolder text-warning"> MilkyWay</span>
               </div>
             </Link>
           </div>

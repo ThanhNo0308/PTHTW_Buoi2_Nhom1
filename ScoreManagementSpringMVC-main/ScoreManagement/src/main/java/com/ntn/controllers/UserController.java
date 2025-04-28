@@ -100,6 +100,10 @@ public class UserController {
             return "redirect:/admin/register?error";
         }
 
+        if (userService.isEmailExistsInUserTable(email)) {
+            return "redirect:/admin/register?error=email-exists";
+        }
+
         // Thực hiện đăng ký người dùng giáo viên
         User user = userService.addTeacherUser(params);
         if (user != null) {
@@ -216,33 +220,42 @@ public class UserController {
     }
 
     @PostMapping("/registerStudent")
-    public String registerStudent(@RequestParam Map<String, String> params, Model model) {
+    public String registerStudent(@RequestParam Map<String, String> params, RedirectAttributes redirectAttributes) {
         String email = params.get("email");
         String username = params.get("username");
 
+        // In ra log để kiểm tra
+        System.out.println("Processing registration for email: " + email);
+
         // Kiểm tra email có nằm trong danh sách sinh viên không
         if (!userService.isEmailExists(email)) {
-            model.addAttribute("error", "invalid-email");
+            System.out.println("Email không tồn tại trong danh sách sinh viên");
             return "redirect:/registerStudent?error=invalid-email";
         }
 
         // Kiểm tra định dạng email
         if (!email.endsWith("@dh.edu.vn")) {
-            model.addAttribute("error", "email-format");
+            System.out.println("Email không đúng định dạng @dh.edu.vn");
             return "redirect:/registerStudent?error=email-format";
+        }
+
+        if (userService.isEmailExistsInUserTable(email)) {
+            System.out.println("Email đã tồn tại trong bảng User");
+            return "redirect:/registerStudent?error=email-exists";
         }
 
         // Kiểm tra xác nhận mật khẩu
         String password = params.get("password");
         String confirmPassword = params.get("confirmPassword");
         if (password == null || !password.equals(confirmPassword) || password.length() < 6) {
-            model.addAttribute("error", "password");
+            System.out.println("Lỗi mật khẩu: " + (password == null ? "null"
+                    : (!password.equals(confirmPassword) ? "không khớp" : "độ dài < 6")));
             return "redirect:/registerStudent?error=password";
         }
 
         // Kiểm tra avatar đã chọn chưa
         if (params.get("avatar") == null || params.get("avatar").isEmpty()) {
-            model.addAttribute("error", "avatar-required");
+            System.out.println("Avatar chưa được chọn");
             return "redirect:/registerStudent?error=avatar-required";
         }
 
@@ -250,10 +263,15 @@ public class UserController {
         params.put("username", username);
 
         // Đăng ký tài khoản sinh viên
-        User user = userService.addUser(params);
-        if (user != null) {
-            return "redirect:/login?success";
-        } else {
+        try {
+            User user = userService.addUser(params);
+            if (user != null) {
+                return "redirect:/login?success";
+            } else {
+                return "redirect:/registerStudent?error=system";
+            }
+        } catch (Exception e) {
+            System.out.println("Lỗi đăng ký: " + e.getMessage());
             return "redirect:/registerStudent?error=system";
         }
     }

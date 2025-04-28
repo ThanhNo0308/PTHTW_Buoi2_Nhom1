@@ -39,4 +39,6 @@ public interface UserService extends UserDetailsService {
     boolean updateUser(User user);
 
     boolean deleteUser(int id);
+    
+    boolean isEmailExistsInUserTable(String email);
 }

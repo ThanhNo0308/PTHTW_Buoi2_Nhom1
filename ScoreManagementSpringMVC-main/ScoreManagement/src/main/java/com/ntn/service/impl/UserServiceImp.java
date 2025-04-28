@@ -85,6 +85,7 @@ public class UserServiceImp implements UserService {
     public User getUserByUn(String username) {
         return this.userRepo.getUserByUsername(username);
     }
+    
 
     @Override
     public User getUserByEmail(String email) {
@@ -94,6 +95,11 @@ public class UserServiceImp implements UserService {
     @Override
     public boolean authUser(String username, String password) {
         return this.userRepo.authUser(username, password);
+    }
+    
+    @Override
+    public boolean isEmailExistsInUserTable(String email) {
+        return this.userRepo.isEmailExistsInUserTable(email);
     }
 
     @Override
@@ -109,7 +115,7 @@ public class UserServiceImp implements UserService {
             // Tìm thấy Student với email tương ứng
             Student foundStudent = students.get(0);
             User user = new User();
-            user.setName(foundStudent.getLastName());
+            user.setName(foundStudent.getLastName() + " " + foundStudent.getFirstName());
             user.setGender(foundStudent.getGender());
             user.setIdentifyCard(foundStudent.getIdentifyCard());
             user.setHometown(foundStudent.getHometown());

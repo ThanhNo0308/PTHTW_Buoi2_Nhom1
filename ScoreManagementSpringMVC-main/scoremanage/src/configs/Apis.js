@@ -63,9 +63,23 @@ export const userApis = {
     },
 
     // Đăng ký sinh viên
-    registerStudent: (studentData) => {
-        return axios.post(`${SERVER}${endpoints["registerstudent"]}`, studentData);
-    },
+    registerStudent: (data) => {
+        console.log("Gửi yêu cầu đăng ký:", endpoints["registerstudent"]);
+        
+        // Đảm bảo dữ liệu không có giá trị undefined hoặc null
+        const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
+          if (value !== null && value !== undefined) {
+            acc[key] = value;
+          }
+          return acc;
+        }, {});
+        
+        return API.post(endpoints["registerstudent"], cleanData, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      },
     // Cập nhật thông tin cá nhân
     updateProfile: (profileData) => {
         return API.post(endpoints["profile"], profileData);

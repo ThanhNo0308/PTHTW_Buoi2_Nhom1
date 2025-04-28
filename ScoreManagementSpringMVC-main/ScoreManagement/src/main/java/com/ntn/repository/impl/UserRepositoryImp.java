@@ -96,6 +96,14 @@ public class UserRepositoryImp implements UserRepository {
     }
 
     @Override
+    public boolean isEmailExistsInUserTable(String email) {
+        Session s = this.factory.getObject().getCurrentSession();
+        Query q = s.createQuery("FROM User WHERE email = :email");
+        q.setParameter("email", email);
+        return !q.getResultList().isEmpty();
+    }
+
+    @Override
     public boolean findTeacherEmail(String email) {
         Session session = this.factory.getObject().getCurrentSession();
         Query query = session.createQuery("FROM Teacher WHERE email = :email", Teacher.class);

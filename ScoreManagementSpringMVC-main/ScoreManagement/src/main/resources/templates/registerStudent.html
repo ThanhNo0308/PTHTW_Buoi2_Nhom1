@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Đăng ký tài khoản | Hệ thống quản lý điểm số</title>
+    <head>
+        <title>Đăng ký tài khoản | Hệ thống quản lý điểm số</title>
     <th:block th:replace="base :: styles"></th:block>
-    
+
 </head>
 <body>
     <div th:replace="base :: header"></div>
@@ -16,31 +16,22 @@
                 </h2>
                 <p class="text-white-50 mb-0">Nhập thông tin của bạn để tạo tài khoản</p>
             </div>
-            
+
             <div class="register-form">
                 <!-- Thông báo lỗi -->
-                <div th:if="${param.error}" class="alert alert-danger mb-4">
-                    <div th:if="${param.error == 'email'}">
-                        <i class="fas fa-exclamation-circle me-2"></i> Email không hợp lệ hoặc không tồn tại trong hệ thống.
-                    </div>
-                    <div th:if="${param.error == 'password'}">
-                        <i class="fas fa-exclamation-circle me-2"></i> Mật khẩu không khớp hoặc không đủ độ dài.
-                    </div>
-                    <div th:if="${param.error == 'avatar'}">
-                        <i class="fas fa-exclamation-circle me-2"></i> Vui lòng chọn ảnh đại diện.
-                    </div>
-                    <div th:if="${param.error == 'email-format'}">
-                        <i class="fas fa-exclamation-circle me-2"></i> Email phải là email do trường cấp (@dh.edu.com)
-                    </div>
-                    <div th:if="${param.error == 'avatar-required'}">
-                        <i class="fas fa-exclamation-circle me-2"></i> Vui lòng chọn ảnh đại diện
-                    </div>
-                    <div th:if="${param.error == 'invalid-email'}">
-                        <i class="fas fa-exclamation-circle me-2"></i> Email không tồn tại trong hệ thống hoặc đã được đăng ký
-                    </div>
-                    <div th:if="${param.error == 'system'}">
-                        <i class="fas fa-exclamation-circle me-2"></i> Lỗi hệ thống, vui lòng thử lại sau
-                    </div>
+                <div class="alert alert-danger mb-4" th:if="${param.error}">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span th:switch="${param.error[0]}">
+                        <span th:case="'email-exists'">Email này đã được đăng ký trong hệ thống. Vui lòng sử dụng email khác.</span>
+                        <span th:case="'email'">Email không hợp lệ hoặc không tồn tại trong hệ thống.</span>
+                        <span th:case="'password'">Mật khẩu không khớp hoặc không đủ độ dài.</span>
+                        <span th:case="'avatar'">Vui lòng chọn ảnh đại diện.</span>
+                        <span th:case="'email-format'">Email phải là email do trường cấp (@dh.edu.vn)</span>
+                        <span th:case="'avatar-required'">Vui lòng chọn ảnh đại diện</span>
+                        <span th:case="'invalid-email'">Email không tồn tại trong hệ thống hoặc đã được đăng ký</span>
+                        <span th:case="'system'">Lỗi hệ thống, vui lòng thử lại sau</span>
+                        <span th:case="*">Đã xảy ra lỗi khi đăng ký. Vui lòng kiểm tra thông tin và thử lại.</span>
+                    </span>
                 </div>
 
                 <form th:action="@{/registerStudent}" method="post" enctype="multipart/form-data">
@@ -49,7 +40,7 @@
                             <div class="avatar-preview mb-4" id="avatarPreview">
                                 <i class="fas fa-user"></i>
                             </div>
-                            
+
                             <div class="mb-4">
                                 <label for="avatar" class="form-label">Ảnh đại diện <span class="text-danger">*</span></label>
                                 <input type="file" class="form-control" id="avatar" name="avatar" 
@@ -58,7 +49,7 @@
                                 <small class="form-text text-muted">Chọn ảnh đại diện (jpg, png, jpeg)</small>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-6">
                             <div class="mb-4">
                                 <label for="email" class="form-label">Email sinh viên <span class="text-danger">*</span></label>
@@ -160,7 +151,8 @@
         // Xử lý xem trước ảnh đại diện
         function previewImage(event) {
             const file = event.target.files[0];
-            if (!file) return;
+            if (!file)
+                return;
 
             const validTypes = ["image/png", "image/jpeg", "image/jpg"];
             if (!validTypes.includes(file.type)) {
@@ -170,28 +162,28 @@
             }
 
             const reader = new FileReader();
-            reader.onloadend = function() {
+            reader.onloadend = function () {
                 const base64String = reader.result;
                 const base64Data = base64String.split(',')[1];
                 document.getElementById('base64Avatar').value = base64Data;
-                
+
                 // Cập nhật xem trước ảnh
                 const previewDiv = document.getElementById('avatarPreview');
                 previewDiv.innerHTML = '';
-                
+
                 const img = document.createElement('img');
                 img.src = base64String;
                 previewDiv.appendChild(img);
             };
             reader.readAsDataURL(file);
         }
-        
+
         // Xử lý hiển thị/ẩn mật khẩu
         document.querySelectorAll('.toggle-password').forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function () {
                 const targetId = this.getAttribute('data-target');
                 const input = document.getElementById(targetId);
-                
+
                 if (input.type === 'password') {
                     input.type = 'text';
                     this.querySelector('i').classList.remove('fa-eye');
@@ -203,6 +195,48 @@
                 }
             });
         });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const emailInput = document.getElementById('email');
+            const emailFeedback = document.createElement('div');
+            emailFeedback.className = 'invalid-feedback';
+
+            emailInput.addEventListener('blur', async function () {
+                const email = this.value.trim();
+                if (email && email.includes('@')) {
+                    try {
+                        const response = await fetch(`/ScoreManagement/api/check-email?email=${encodeURIComponent(email)}`);
+                        const data = await response.json();
+
+                        if (data.exists) {
+                            emailInput.classList.add('is-invalid');
+                            emailFeedback.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> Email đã tồn tại trong hệ thống';
+                            emailInput.parentNode.appendChild(emailFeedback);
+                        } else {
+                            emailInput.classList.remove('is-invalid');
+                            if (emailInput.parentNode.contains(emailFeedback)) {
+                                emailInput.parentNode.removeChild(emailFeedback);
+                            }
+                        }
+                    } catch (error) {
+                        console.error("Lỗi kiểm tra email:", error);
+                    }
+                }
+            });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const errorParam = urlParams.get('error');
+
+            if (errorParam) {
+                console.log("Error parameter found:", errorParam);
+                // Kiểm tra xem các phần tử lỗi có tồn tại không
+                document.querySelectorAll('.alert-danger div').forEach(div => {
+                    console.log("Error div condition:", div.getAttribute('th:if'));
+                });
+            }
+        });
+
+
     </script>
 </body>
 </html>

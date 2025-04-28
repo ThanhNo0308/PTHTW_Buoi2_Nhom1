@@ -14,6 +14,8 @@ public interface UserRepository {
     User getUserByUsername(String username);
 
     User getUserByEmail(String email);
+    
+    boolean isEmailExistsInUserTable(String email);
 
     boolean authUser(String username, String password);
 

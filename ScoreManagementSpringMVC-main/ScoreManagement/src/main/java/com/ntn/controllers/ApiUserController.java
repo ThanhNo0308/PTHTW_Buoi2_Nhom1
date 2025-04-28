@@ -131,6 +131,12 @@ public class ApiUserController {
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
+        if (userService.isEmailExistsInUserTable(email)) {
+            response.put("status", "error");
+            response.put("message", "Email đã tồn tại trong hệ thống. Vui lòng sử dụng email khác.");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
         // Kiểm tra xác nhận mật khẩu
         if (password == null || !password.equals(confirmPassword) || password.length() < 6) {
             response.put("status", "error");
@@ -445,5 +451,14 @@ public class ApiUserController {
 
         response.put("exists", exists);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/check-email")
+    public ResponseEntity<Map<String, Object>> checkEmail(@RequestParam String email) {
+        Map<String, Object> response = new HashMap<>();
+        boolean exists = userService.isEmailExistsInUserTable(email);
+        response.put("exists", exists);
+        response.put("message", exists ? "Email đã tồn tại trong hệ thống" : "Email hợp lệ");
+        return ResponseEntity.ok(response);
     }
 }
