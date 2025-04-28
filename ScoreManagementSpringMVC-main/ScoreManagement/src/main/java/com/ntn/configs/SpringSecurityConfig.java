@@ -155,16 +155,19 @@ public class SpringSecurityConfig {
     }
 
     @Bean
-    @Order(1) // Đặt độ ưu tiên cao hơn filterChain thông thường
+    @Order(1)
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/api/**") // Chỉ áp dụng cho các request tới /api/**
+                .securityMatcher("/api/**", "/ScoreManagement/api/**") // Thêm cả đường dẫn có ScoreManagement
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/login", "/api/register/student").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Cho phép OPTIONS
+                .requestMatchers("/api/login", "/api/register/student",
+                        "/ScoreManagement/api/login", "/ScoreManagement/api/register/student").permitAll()
                 .anyRequest().authenticated()
                 );
 

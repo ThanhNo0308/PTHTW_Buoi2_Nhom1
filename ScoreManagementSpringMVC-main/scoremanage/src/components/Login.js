@@ -54,6 +54,14 @@ const Login = () => {
             userData.username = username; // Sử dụng username đăng nhập
           }
 
+          userData.role = res.data.role;
+
+          if (!["Student", "Teacher", "Admin"].includes(userData.role)) {
+            setError("Vai trò người dùng không hợp lệ.");
+            setLoading(false);
+            return;
+          }
+
           // Lưu vào context và cookie
           dispatch({
             "type": "login",
@@ -66,7 +74,7 @@ const Login = () => {
           console.log("Saved user data:", userData);
 
           // Chuyển hướng dựa vào vai trò
-          switch (res.data.role) {
+          switch (userData.role) {
             case "Student":
               navigate("/student/dashboard?success=true");
               break;

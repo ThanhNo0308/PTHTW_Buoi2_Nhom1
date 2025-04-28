@@ -194,6 +194,7 @@ public class ApiUserController {
      */
     @GetMapping("/current-user")
     public ResponseEntity<?> getCurrentUser(Principal principal) {
+         System.out.println("Principal received: " + (principal != null ? principal.getName() : "null"));
         if (principal == null) {
             return new ResponseEntity<>("Không có người dùng đăng nhập", HttpStatus.UNAUTHORIZED);
         }
@@ -207,11 +208,11 @@ public class ApiUserController {
         response.put("user", user);
 
         // Thêm thông tin chi tiết theo vai trò
-        if (user.getRole().equals("Student")) {
+        if (user.getRole() == User.Role.Student) {
             List<Student> students = studentService.getStudentbyEmail(user.getEmail());
             Student student = students != null && !students.isEmpty() ? students.get(0) : null;
             response.put("roleSpecificInfo", student);
-        } else if (user.getRole().equals("Teacher")) {
+        } else if (user.getRole() == User.Role.Teacher) {
             Teacher teacher = teacherService.getTeacherByEmail(user.getEmail());
             response.put("roleSpecificInfo", teacher);
         }
