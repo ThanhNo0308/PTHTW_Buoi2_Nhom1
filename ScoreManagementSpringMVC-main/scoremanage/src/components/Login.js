@@ -56,7 +56,7 @@ const Login = () => {
 
           // Lưu vào context và cookie
           dispatch({
-            "type": "LOGIN",
+            "type": "login",
             "payload": userData
           });
 

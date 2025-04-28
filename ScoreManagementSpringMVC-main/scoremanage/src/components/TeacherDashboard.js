@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MyUserContext } from "../App";
 import axios from 'axios';
-import { endpoints, authApi } from '../configs/Apis';
+import { endpoints, authApi, SERVER, API } from '../configs/Apis';
 import { Alert, Spinner } from 'react-bootstrap';
 import "../assets/css/base.css";
 import "../assets/css/styles.css";
@@ -24,12 +24,9 @@ const TeacherDashboard = () => {
     const loadTeacherInfo = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(endpoints["current-user"], {
-          headers: {
-            "Authorization": `Bearer ${user.token}`
-          }
-        });
-
+        // Use API instead of axios with SERVER
+        const res = await API.get(endpoints["current-user"]);
+  
         if (res.data) {
           setTeacherInfo(res.data);
           // Nếu có query param success, hiển thị thông báo
@@ -45,7 +42,7 @@ const TeacherDashboard = () => {
         setLoading(false);
       }
     };
-
+  
     loadTeacherInfo();
   }, [user, navigate]);
 
