@@ -4,6 +4,7 @@
  */
 package com.ntn.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
@@ -103,6 +104,7 @@ public class Forumcomment implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public List<Forumcomment> getForumcommentList() {
         return forumcommentList;
     }

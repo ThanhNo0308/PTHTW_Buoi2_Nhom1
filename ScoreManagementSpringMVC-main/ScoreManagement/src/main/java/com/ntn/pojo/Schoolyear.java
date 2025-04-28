@@ -85,6 +85,7 @@ public class Schoolyear implements Serializable {
 
 
     @XmlTransient
+    @JsonIgnore
     public List<Score> getScoreList() {
         return scoreList;
     }
@@ -118,6 +119,7 @@ public class Schoolyear implements Serializable {
         return nameYear + " - " + semesterName;
     }
     @XmlTransient
+    @JsonIgnore
     public Set<Classscoretypes> getClassscoretypesSet() {
         return classscoretypesSet;
     }

@@ -153,6 +153,7 @@ public class Student implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public List<Notification> getNotificationList() {
         return notificationList;
     }
@@ -162,6 +163,7 @@ public class Student implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public List<Score> getScoreList() {
         return scoreList;
     }
@@ -171,6 +173,7 @@ public class Student implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public List<Studentsubjectteacher> getStudentsubjectteacherList() {
         return studentsubjectteacherList;
     }

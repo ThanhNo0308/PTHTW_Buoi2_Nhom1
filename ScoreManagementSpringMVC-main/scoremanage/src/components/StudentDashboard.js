@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { MyUserContext } from "../App";
 import axios from 'axios';
-import { endpoints } from '../configs/Apis';
+import { endpoints ,API} from '../configs/Apis';
 import { Alert, Spinner } from 'react-bootstrap';
 import "../assets/css/base.css";
 import "../assets/css/styles.css";
@@ -19,11 +19,7 @@ const StudentDashboard = () => {
     const loadStudentInfo = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(endpoints["current-user"], {
-          headers: {
-            "Authorization": `Bearer ${user.token}`
-          }
-        });
+        const res = await API.get(endpoints["current-user"]);
 
         if (res.data) {
           setStudent(res.data);

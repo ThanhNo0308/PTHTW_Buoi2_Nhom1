@@ -86,6 +86,7 @@ public class Subjectteacher implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public List<Forum> getForumList() {
         return forumList;
     }
@@ -95,6 +96,7 @@ public class Subjectteacher implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public List<Notification> getNotificationList() {
         return notificationList;
     }
@@ -104,6 +106,7 @@ public class Subjectteacher implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public List<Score> getScoreList() {
         return scoreList;
     }
@@ -113,6 +116,7 @@ public class Subjectteacher implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public List<Studentsubjectteacher> getStudentsubjectteacherList() {
         return studentsubjectteacherList;
     }
@@ -163,6 +167,7 @@ public class Subjectteacher implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public Set<Classscoretypes> getClassscoretypesSet() {
         return classscoretypesSet;
     }

@@ -123,6 +123,7 @@ public class Teacher implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public List<Subjectteacher> getSubjectteacherList() {
         return subjectteacherList;
     }
@@ -132,6 +133,7 @@ public class Teacher implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public List<Class> getClassList() {
         return classList;
     }

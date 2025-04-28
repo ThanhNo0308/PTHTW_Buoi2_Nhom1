@@ -143,6 +143,7 @@ public class User implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public List<Forumcomment> getForumcommentList() {
         return forumcommentList;
     }
@@ -152,6 +153,7 @@ public class User implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public List<Forum> getForumList() {
         return forumList;
     }

@@ -93,6 +93,7 @@ public class Subject implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public List<Subjectteacher> getSubjectteacherList() {
         return subjectteacherList;
     }

@@ -84,6 +84,7 @@ public class Class implements Serializable {
 
 
     @XmlTransient
+    @JsonIgnore
     public List<Student> getStudentList() {
         return studentList;
     }
@@ -135,6 +136,7 @@ public class Class implements Serializable {
 
 
     @XmlTransient
+    @JsonIgnore
     public Set<Classscoretypes> getClassscoretypesSet() {
         return classscoretypesSet;
     }
@@ -152,6 +154,7 @@ public class Class implements Serializable {
     }
     
     @XmlTransient
+    @JsonIgnore
     public List<Subjectteacher> getSubjectteacherList() {
         return subjectteacherList;
     }

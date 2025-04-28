@@ -2,6 +2,7 @@ package com.ntn.configs;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.ntn.filters.JwtFilter;
 import java.text.SimpleDateFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +27,7 @@ import org.springframework.web.multipart.support.StandardServletMultipartResolve
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 import java.util.List;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @Order(2)
@@ -158,18 +160,19 @@ public class SpringSecurityConfig {
     @Order(1)
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/api/**", "/ScoreManagement/api/**") // Thêm cả đường dẫn có ScoreManagement
+                .securityMatcher("/api/**", "/ScoreManagement/api/**")
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Cho phép OPTIONS
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/login", "/api/register/student",
                         "/ScoreManagement/api/login", "/ScoreManagement/api/register/student").permitAll()
                 .anyRequest().authenticated()
-                );
+                )
+                .addFilterBefore(new JwtFilter(), UsernamePasswordAuthenticationFilter.class); 
 
         return http.build();
     }

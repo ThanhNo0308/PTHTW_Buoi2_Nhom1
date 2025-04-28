@@ -72,6 +72,7 @@ public class Department implements Serializable {
 
 
     @XmlTransient
+    @JsonIgnore
     public List<Teacher> getTeacherList() {
         return teacherList;
     }
@@ -81,6 +82,7 @@ public class Department implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public List<Major> getMajorList() {
         return majorList;
     }
@@ -123,6 +125,7 @@ public class Department implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public Set<Subject> getSubjectSet() {
         return subjectSet;
     }

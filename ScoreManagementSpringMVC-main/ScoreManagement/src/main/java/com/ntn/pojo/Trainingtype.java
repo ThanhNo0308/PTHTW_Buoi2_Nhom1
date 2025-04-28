@@ -66,6 +66,7 @@ public class Trainingtype implements Serializable {
 
 
     @XmlTransient
+    @JsonIgnore
     public List<Major> getMajorList() {
         return majorList;
     }

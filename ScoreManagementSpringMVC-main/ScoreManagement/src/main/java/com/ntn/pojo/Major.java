@@ -90,6 +90,7 @@ public class Major implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public List<Class> getClassList() {
         return classList;
     }

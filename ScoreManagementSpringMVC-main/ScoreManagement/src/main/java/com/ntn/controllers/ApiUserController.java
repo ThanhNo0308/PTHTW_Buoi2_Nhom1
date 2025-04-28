@@ -194,7 +194,7 @@ public class ApiUserController {
      */
     @GetMapping("/current-user")
     public ResponseEntity<?> getCurrentUser(Principal principal) {
-         System.out.println("Principal received: " + (principal != null ? principal.getName() : "null"));
+        System.out.println("Principal received: " + (principal != null ? principal.getName() : "null"));
         if (principal == null) {
             return new ResponseEntity<>("Không có người dùng đăng nhập", HttpStatus.UNAUTHORIZED);
         }
@@ -204,17 +204,51 @@ public class ApiUserController {
             return new ResponseEntity<>("Người dùng không tồn tại", HttpStatus.NOT_FOUND);
         }
 
+        // Tạo DTO thay vì trả về entity trực tiếp
         Map<String, Object> response = new HashMap<>();
-        response.put("user", user);
+        Map<String, Object> userMap = new HashMap<>();
+        userMap.put("id", user.getId());
+        userMap.put("name", user.getName());
+        userMap.put("email", user.getEmail());
+        userMap.put("username", user.getUsername());
+        userMap.put("image", user.getImage());
+        userMap.put("role", user.getRole());
+
+        response.put("user", userMap);
 
         // Thêm thông tin chi tiết theo vai trò
-        if (user.getRole() == User.Role.Student) {
+        if (user.getRole() == User.Role.Teacher) {
+            Teacher teacher = teacherService.getTeacherByEmail(user.getEmail());
+            if (teacher != null) {
+                Map<String, Object> teacherMap = new HashMap<>();
+                teacherMap.put("id", teacher.getId());
+                teacherMap.put("teacherName", teacher.getTeacherName());
+                teacherMap.put("email", teacher.getEmail());
+
+                // Chỉ lấy thông tin cần thiết từ Department
+                if (teacher.getDepartmentId() != null) {
+                    Map<String, Object> deptMap = new HashMap<>();
+                    deptMap.put("id", teacher.getDepartmentId().getId());
+                    deptMap.put("departmentName", teacher.getDepartmentId().getDepartmentName());
+                    teacherMap.put("departmentId", deptMap);
+                }
+
+                response.put("roleSpecificInfo", teacherMap);
+            }
+        } else if (user.getRole() == User.Role.Student) {
+            // Xử lý tương tự cho Student
             List<Student> students = studentService.getStudentbyEmail(user.getEmail());
             Student student = students != null && !students.isEmpty() ? students.get(0) : null;
-            response.put("roleSpecificInfo", student);
-        } else if (user.getRole() == User.Role.Teacher) {
-            Teacher teacher = teacherService.getTeacherByEmail(user.getEmail());
-            response.put("roleSpecificInfo", teacher);
+            if (student != null) {
+                Map<String, Object> studentMap = new HashMap<>();
+                studentMap.put("id", student.getId());
+                studentMap.put("studentName", student.getFirstName());
+                studentMap.put("email", student.getEmail());
+                studentMap.put("studentId", student.getStudentCode());
+                // Thêm các thông tin cần thiết khác
+
+                response.put("roleSpecificInfo", studentMap);
+            }
         }
 
         return new ResponseEntity<>(response, HttpStatus.OK);
