@@ -112,7 +112,7 @@
                             <tr th:each="student, stat : ${students}">
                                 <td th:text="${stat.count}"></td>
                                 <td th:text="${student.studentCode}"></td>
-                                <td th:text="${student.firstName + ' ' + student.lastName}"></td>
+                                <td th:text="${student.lastName + ' ' + student.firstName}"></td>
                                 <td th:text="${student.gender == 1 ? 'Nam' : 'Nữ'}"></td>
                                 <td th:text="${student.email}"></td>
                                 <td>

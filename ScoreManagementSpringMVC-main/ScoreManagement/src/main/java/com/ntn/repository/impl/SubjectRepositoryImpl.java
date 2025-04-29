@@ -171,10 +171,6 @@ public class SubjectRepositoryImpl implements SubjectRepository {
         return session.createQuery(query).getResultList();
     }
 
-    
-
-   
-
     @Override
     public List<Integer> getSubjectTeacherId(List<Studentsubjectteacher> studentSubjectTeacher) {
         // Sử dụng một Set để lưu trữ các SubjectTeacherId.id duy nhất
@@ -217,10 +213,6 @@ public class SubjectRepositoryImpl implements SubjectRepository {
         List<Integer> resultList = q.getResultList();
         return resultList;
     }
-
-    
-
-    
 
     @Override
     public boolean addOrUpdateSubject(Subject subject) {

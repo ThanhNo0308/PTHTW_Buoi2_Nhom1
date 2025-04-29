@@ -50,6 +50,26 @@ public class SubjectTeacherRepositoryImpl implements SubjectTeacherRepository {
     }
 
     @Override
+    public List<Subjectteacher> getSubjectTeachersBySubjectIdAndClassId(int subjectId, int classId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Subjectteacher> query = builder.createQuery(Subjectteacher.class);
+        Root<Subjectteacher> root = query.from(Subjectteacher.class);
+
+        // Tạo hai điều kiện: subjectId.id = ? AND classId.id = ?
+        Predicate subjectPredicate = builder.equal(root.get("subjectId").get("id"), subjectId);
+        Predicate classPredicate = builder.equal(root.get("classId").get("id"), classId);
+
+        // Kết hợp hai điều kiện với AND
+        query.where(builder.and(subjectPredicate, classPredicate));
+
+        // Sắp xếp kết quả theo ID
+        query.orderBy(builder.asc(root.get("id")));
+
+        return session.createQuery(query).getResultList();
+    }
+
+    @Override
     public Subjectteacher getSubjectTeacherById(int id) {
         Session session = this.factory.getObject().getCurrentSession();
         return session.get(Subjectteacher.class, id);
@@ -219,7 +239,7 @@ public class SubjectTeacherRepositoryImpl implements SubjectTeacherRepository {
 
         return session.createQuery(query).getResultList();
     }
-    
+
     @Override
     public List<Subjectteacher> getSubjectTeachersByClassId(int classId) {
         Session session = this.factory.getObject().getCurrentSession();
@@ -246,7 +266,7 @@ public class SubjectTeacherRepositoryImpl implements SubjectTeacherRepository {
         // Tạo hai điều kiện: teacherId.id = ? AND classId.id = ?
         Predicate teacherPredicate = builder.equal(root.get("teacherId").get("id"), teacherId);
         Predicate classPredicate = builder.equal(root.get("classId").get("id"), classId);
-        
+
         // Kết hợp hai điều kiện với AND
         query.where(builder.and(teacherPredicate, classPredicate));
 
@@ -267,7 +287,7 @@ public class SubjectTeacherRepositoryImpl implements SubjectTeacherRepository {
         Predicate teacherPredicate = builder.equal(root.get("teacherId").get("id"), teacherId);
         Predicate classPredicate = builder.equal(root.get("classId").get("id"), classId);
         Predicate schoolYearPredicate = builder.equal(root.get("schoolYearId").get("id"), schoolYearId);
-        
+
         // Kết hợp các điều kiện với AND
         query.where(builder.and(teacherPredicate, classPredicate, schoolYearPredicate));
 

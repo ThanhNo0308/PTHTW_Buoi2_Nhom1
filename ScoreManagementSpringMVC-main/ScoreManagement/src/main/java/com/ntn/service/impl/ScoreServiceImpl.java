@@ -70,7 +70,7 @@ public class ScoreServiceImpl implements ScoreService {
 
     @Autowired
     private SubjectTeacherService subjectTeacherService;
-    
+
     @Autowired
     private SubjectTeacherRepository subjectTeacherRepository;
 
@@ -82,7 +82,7 @@ public class ScoreServiceImpl implements ScoreService {
 
     @Autowired
     private ClassScoreTypeRepository classScoreTypeRepository;
-    
+
     @Autowired
     private TypeScoreRepository typeScoreRepository;
 
@@ -155,7 +155,6 @@ public class ScoreServiceImpl implements ScoreService {
     }
 
     @Override
-    @Transactional
     public boolean importScoresFromCsv(MultipartFile file, int subjectTeacherId, int schoolYearId) throws Exception {
         try (CSVParser parser = new CSVParser(
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8),
@@ -163,12 +162,23 @@ public class ScoreServiceImpl implements ScoreService {
 
             List<Score> scores = new ArrayList<>();
             Subjectteacher subjectTeacher = subjectTeacherRepository.getSubJectTeacherById(subjectTeacherId);
+            Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
 
             for (CSVRecord record : parser) {
-                String studentCode = record.get("Mã SV");
+                String studentCode;
+                try {
+                    studentCode = record.get("MSSV");
+                } catch (IllegalArgumentException e) {
+                    // Thử tìm tên cột thay thế nếu không tìm thấy "MSSV"
+                    try {
+                        studentCode = record.get("Mã SV");
+                    } catch (IllegalArgumentException e2) {
+                        continue; // Bỏ qua record nếu không tìm thấy cột sinh viên
+                    }
+                }
 
                 for (String headerName : parser.getHeaderNames()) {
-                    if (!headerName.equals("Mã SV") && !headerName.equals("Họ tên")) {
+                    if (!headerName.equals("MSSV") && !headerName.equals("Họ tên") && !headerName.equals("Mã SV")) {
                         try {
                             float scoreValue = Float.parseFloat(record.get(headerName));
 
@@ -180,14 +190,16 @@ public class ScoreServiceImpl implements ScoreService {
                                 score.setStudentID(student);
                             }
 
-                            Typescore typeScore = typeScoreRepository.getScoreTypeByName(headerName);
-                            score.setScoreType(typeScore); // Sửa từ setTypeScoreID thành setScoreType
-
-                            score.setScoreValue(scoreValue); // Sửa từ setScore thành setScoreValue
-                            score.setIsDraft(true); // Mặc định là nháp
-                            score.setIsLocked(false); // Mặc định không khoá
-
-                            scores.add(score);
+                            // Tìm loại điểm - Thêm logic so khớp không phân biệt hoa thường và khoảng trắng
+                            Typescore typeScore = findScoreType(headerName);
+                            if (typeScore != null) {
+                                score.setScoreType(typeScore);
+                                score.setScoreValue(scoreValue);
+                                score.setIsDraft(true);
+                                score.setIsLocked(false);
+                                score.setSchoolYearId(schoolYear);
+                                scores.add(score);
+                            }
                         } catch (NumberFormatException e) {
                             // Bỏ qua các giá trị không phải số
                         }
@@ -201,6 +213,44 @@ public class ScoreServiceImpl implements ScoreService {
         }
     }
 
+    private Typescore findScoreType(String scoreName) {
+        // Trước tiên thử tìm chính xác như trước đây
+        Typescore typeScore = typeScoreRepository.getScoreTypeByName(scoreName);
+
+        if (typeScore != null) {
+            return typeScore;
+        }
+
+        // Nếu không tìm thấy, thử tìm không phân biệt hoa/thường và khoảng trắng
+        String normalizedName = scoreName.trim().toLowerCase();
+        List<Typescore> allTypes = typeScoreRepository.getAllScoreTypes();
+
+        for (Typescore type : allTypes) {
+            if (type.getScoreType().trim().toLowerCase().equals(normalizedName)) {
+                return type;
+            }
+        }
+
+        // Nếu vẫn không tìm thấy, thử tìm không phân biệt dấu tiếng Việt
+        for (Typescore type : allTypes) {
+            if (normalizeString(type.getScoreType()).equals(normalizeString(scoreName))) {
+                return type;
+            }
+        }
+
+        return null; // Không tìm thấy loại điểm tương ứng
+    }
+
+    private String normalizeString(String input) {
+        if (input == null) {
+            return "";
+        }
+        String temp = input.trim().toLowerCase();
+        // Loại bỏ khoảng trắng thừa
+        temp = temp.replaceAll("\\s+", " ");
+        return temp;
+    }
+
     @Override
     public byte[] exportScoresToCsv(int subjectTeacherId, int classId, int schoolYearId) throws Exception {
         List<Score> scores = this.scoreRepo.getScoresBySubjectTeacherIdAndClassIdAndSchoolYearId(
@@ -209,7 +259,7 @@ public class ScoreServiceImpl implements ScoreService {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (CSVPrinter printer = new CSVPrinter(
                 new java.io.OutputStreamWriter(out, StandardCharsets.UTF_8),
-                CSVFormat.DEFAULT.withHeader("Mã SV", "Họ tên", "Giữa kỳ", "Cuối kỳ", "Tổng kết"))) {
+                CSVFormat.DEFAULT.withHeader("MSSV", "Họ tên", "Giữa kỳ", "Cuối kỳ", "Tổng kết"))) {
 
             // Group scores by student
             for (Score score : scores) {
@@ -273,7 +323,7 @@ public class ScoreServiceImpl implements ScoreService {
         PdfPCell cell = new PdfPCell();
         cell.setPadding(5);
 
-        cell.setPhrase(new Paragraph("Mã SV"));
+        cell.setPhrase(new Paragraph("MSSV"));
         table.addCell(cell);
 
         cell.setPhrase(new Paragraph("Họ tên"));
@@ -508,16 +558,12 @@ public class ScoreServiceImpl implements ScoreService {
                 .collect(Collectors.toList());
     }
 
-    
-
     @Override
     public Score getScoreByStudentSubjectSchoolYearAndType(
             int studentId, int subjectTeacherId, int schoolYearId, String scoreType) {
         return scoreRepo.getScoreByStudentSubjectSchoolYearAndType(
                 studentId, subjectTeacherId, schoolYearId, scoreType);
     }
-
-    
 
     @Override
     public boolean saveScore(Score score) {
@@ -620,12 +666,10 @@ public class ScoreServiceImpl implements ScoreService {
             return weights;
         }
     }
-    
+
     @Override
     public boolean deleteScore(Integer scoreId) {
         return scoreRepo.deleteScore(scoreId);
     }
-
-    
 
 }

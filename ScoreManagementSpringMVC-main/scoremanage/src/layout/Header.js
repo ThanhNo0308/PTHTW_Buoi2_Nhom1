@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import "../assets/css/base.css";
 import "../assets/css/styles.css";
 import logo from '../assets/images/logo.png';
+import cookie from "react-cookies";
 import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { MyUserContext } from '../App';
@@ -18,6 +19,7 @@ const Header = () => {
   const [user, dispatch] = useContext(MyUserContext);
   
   const logout = () => {
+    cookie.remove("user", { path: '/' });
     dispatch({
       type: "logout"
     });

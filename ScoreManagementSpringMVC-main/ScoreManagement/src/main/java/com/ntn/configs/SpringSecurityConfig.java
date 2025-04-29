@@ -28,6 +28,7 @@ import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 import java.util.List;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.multipart.support.MultipartFilter;
 
 @Configuration
 @Order(2)
@@ -172,8 +173,15 @@ public class SpringSecurityConfig {
                         "/ScoreManagement/api/login", "/ScoreManagement/api/register/student").permitAll()
                 .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtFilter(), UsernamePasswordAuthenticationFilter.class); 
+                // Đặt MultipartFilter trước JwtFilter
+                .addFilterBefore(multipartFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public MultipartFilter multipartFilter() {
+        return new MultipartFilter();
     }
 }

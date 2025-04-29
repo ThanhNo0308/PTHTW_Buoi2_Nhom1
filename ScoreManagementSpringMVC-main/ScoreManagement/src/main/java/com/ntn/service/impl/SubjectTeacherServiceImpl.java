@@ -86,7 +86,7 @@ public class SubjectTeacherServiceImpl implements SubjectTeacherService {
     public List<Subjectteacher> getSubjectTeachersByTeacherIdAndSchoolYearId(int teacherId, int schoolYearId) {
         return this.subjectTeacherRepo.getSubjectTeachersByTeacherIdAndSchoolYearId(teacherId, schoolYearId);
     }
-    
+
     @Override
     public List<Subjectteacher> getSubjectTeachersByClassId(int classId) {
         return this.subjectTeacherRepo.getSubjectTeachersByClassId(classId);
@@ -100,6 +100,11 @@ public class SubjectTeacherServiceImpl implements SubjectTeacherService {
     @Override
     public List<Subjectteacher> getSubjectTeachersByTeacherIdAndClassIdAndSchoolYearId(int teacherId, int classId, int schoolYearId) {
         return this.subjectTeacherRepo.getSubjectTeachersByTeacherIdAndClassIdAndSchoolYearId(teacherId, classId, schoolYearId);
+    }
+
+    @Override
+    public List<Subjectteacher> getSubjectTeachersBySubjectIdAndClassId(int subjectId, int classId) {
+        return this.subjectTeacherRepo.getSubjectTeachersBySubjectIdAndClassId(subjectId, classId);
     }
 
 }

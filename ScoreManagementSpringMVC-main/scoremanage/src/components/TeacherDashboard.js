@@ -26,7 +26,7 @@ const TeacherDashboard = () => {
         setLoading(true);
         // Use API instead of axios with SERVER
         const res = await API.get(endpoints["current-user"]);
-  
+
         if (res.data) {
           setTeacherInfo(res.data);
           // Nếu có query param success, hiển thị thông báo
@@ -42,7 +42,7 @@ const TeacherDashboard = () => {
         setLoading(false);
       }
     };
-  
+
     loadTeacherInfo();
   }, [user, navigate]);
 
@@ -99,8 +99,8 @@ const TeacherDashboard = () => {
               Nhập điểm
             </div>
             <div className="card-body">
-              <Link to="/listscore" className="btn btn-success btn-lg d-block mb-3">
-                <i className="fas fa-file-import me-2"></i> Quản lý điểm số
+              <Link to="/teacher/scores/import" className="btn btn-success btn-lg d-block mb-3">
+                <i className="fas fa-file-import me-2"></i> Nhập điểm từ file
               </Link>
               <p>Nhập điểm cho sinh viên theo từng môn học và lớp.</p>
             </div>
@@ -116,7 +116,7 @@ const TeacherDashboard = () => {
               Tra cứu thông tin
             </div>
             <div className="card-body">
-              <Link to="/liststudent" className="btn btn-info btn-lg d-block mb-3 text-white">
+              <Link to="/teacher/students/search" className="btn btn-info btn-lg d-block mb-3">
                 <i className="fas fa-search me-2"></i> Tìm kiếm sinh viên
               </Link>
               <p>Tìm kiếm thông tin sinh viên theo mã, tên hoặc lớp.</p>

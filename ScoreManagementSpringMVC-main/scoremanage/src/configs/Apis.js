@@ -24,6 +24,18 @@ export const endpoints = {
   "scores-save": `${SERVER_CONTEXT}/api/scores/save-scores`,
   "scores-notification": `${SERVER_CONTEXT}/api/scores/send-score-notification`,
 
+  "scores-import-form": `${SERVER_CONTEXT}/api/scores/import-scores-form`,
+  "scores-import": `${SERVER_CONTEXT}/api/scores/import-scores`,
+  "scores-template": `${SERVER_CONTEXT}/api/scores/scores/template`,
+  "scores-export-csv": `${SERVER_CONTEXT}/api/scores/classes`,  // + /{classId}/export-csv
+  "scores-export-pdf": `${SERVER_CONTEXT}/api/scores/classes`,  // + /{classId}/export-pdf
+  "scores-students-search": `${SERVER_CONTEXT}/api/scores/students/search`,
+  "scores-student-detail": `${SERVER_CONTEXT}/api/scores/students`,  // + /{studentCode}/detail
+  "scores-student-scores": `${SERVER_CONTEXT}/api/scores/students`, // + /{studentId}/scores?schoolYearId=...
+  "scores-available-school-years": `${SERVER_CONTEXT}/api/scores/available-school-years`,
+  "classes-by-subject": `${SERVER_CONTEXT}/api/scores/classes/by-subject`,
+
+
   "register": `${SERVER_CONTEXT}/api/users/`,
   "schoolyear": `${SERVER_CONTEXT}/api/schoolyear`,
   "listsubject": `${SERVER_CONTEXT}/api/listsubject`,
@@ -232,7 +244,89 @@ export const scoreApis = {
       `${endpoints["scores-notification"]}?studentId=${studentId}` +
       `&subjectName=${encodeURIComponent(subjectName)}`
     );
-  }
+  },
+
+  // Lấy dữ liệu form import điểm
+  getImportScoresFormData: () => {
+    return API.get(endpoints["scores-import-form"]);
+  },
+  
+  // Import điểm từ file CSV
+  importScores: (file, subjectTeacherId, classId, schoolYearId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('subjectTeacherId', subjectTeacherId);
+    formData.append('classId', classId);
+    formData.append('schoolYearId', schoolYearId);
+    
+    const user = cookie.load("user");
+    const token = user?.token;
+    
+    // Sử dụng axios trực tiếp để có toàn quyền kiểm soát request
+    return axios.post(
+      `${SERVER}${endpoints["scores-import"]}`, 
+      formData, 
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+          // Không set Content-Type để trình duyệt tự xử lý multipart boundary
+        }
+      }
+    );
+  },
+  
+  // Tải file mẫu nhập điểm
+  getScoreTemplate: () => {
+    return API.get(endpoints["scores-template"]);
+  },
+  
+  // Xuất điểm ra CSV
+  exportScoresToCsv: (classId, subjectTeacherId, schoolYearId) => {
+    return API.get(
+      `${endpoints["scores-export-csv"]}/${classId}/export-csv?` +
+      `subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}`
+    );
+  },
+  
+  // Xuất điểm ra PDF
+  exportScoresToPdf: (classId, subjectTeacherId, schoolYearId) => {
+    return API.get(
+      `${endpoints["scores-export-pdf"]}/${classId}/export-pdf?` +
+      `subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}`
+    );
+  },
+  
+  // Tìm kiếm sinh viên
+  searchStudents: (query, type = 'name') => {
+    return API.get(
+      `${endpoints["scores-students-search"]}?query=${encodeURIComponent(query)}&type=${type}`
+    );
+  },
+  
+  // Xem chi tiết sinh viên
+  getStudentDetail: (studentCode) => {
+    return API.get(`${endpoints["scores-student-detail"]}/${studentCode}/detail`);
+  },
+  
+  // Xem điểm của sinh viên
+  getStudentScores: (studentCode, schoolYearId = null) => {
+    let url = `${endpoints["scores-student-scores"]}/${studentCode}/scores`;
+    if (schoolYearId) {
+      url += `?schoolYearId=${schoolYearId}`;
+    }
+    return API.get(url);
+  },
+
+  getAvailableSchoolYears: (subjectId, classId) => {
+    return API.get(
+      `${endpoints["scores-available-school-years"]}?subjectId=${subjectId}&classId=${classId}`
+    );
+  },
+
+  // API để lấy các lớp dựa trên môn học
+  getClassesBySubject: (subjectId) => {
+    return API.get(`${endpoints["classes-by-subject"]}?subjectId=${subjectId}`);
+  },
 };
 
 export default axios.create({

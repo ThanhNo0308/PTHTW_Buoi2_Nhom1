@@ -3,7 +3,7 @@ import Header from "./layout/Header";
 import Footer from "./layout/Footer";
 import Home from "./components/Home";
 import Login from "./components/Login";
-import React, { createContext, useReducer } from 'react';
+import React, { createContext, useReducer, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import "./App.css"
@@ -13,6 +13,12 @@ import Profile from "./components/Profile";
 import TeacherClassesList from "./components/TeacherClassesList";
 import TeacherClassDetail from "./components/TeacherClassDetail";
 import ScoreManagement from "./components/ScoreManagement";
+import StudentDetail from "./components/StudentDetail";
+import StudentScores from "./components/StudentScores";
+import StudentSearch from "./components/StudentSearch";
+import ScoreImport from "./components/ScoreImport";
+
+
 import ListScore from "./components/ListScore";
 import ListStudent from "./components/ListStudent";
 import MyUserReducer from "./reducers/MyUserReducer";
@@ -31,7 +37,7 @@ export const MyUserContext = createContext();
 
 
 const App = () => {
-  const [user, dispatch] = useReducer(MyUserReducer, cookie.load("user") || null);
+  const [user, dispatch] = useReducer(MyUserReducer, cookie.load("user") || null);  
   return (<>
     <MyUserContext.Provider value={[user, dispatch]}>
       <SchoolYearProvider>
@@ -49,6 +55,11 @@ const App = () => {
                 <Route path="/teacher/classes" element={<div style={{ margin: '50px 150px' }}><TeacherClassesList /></div>} />
                 <Route path="/teacher/classes/:classId" element={<div style={{ margin: '50px 150px' }}><TeacherClassDetail /></div>} />
                 <Route path="/teacher/classes/:classId/scores" element={<div style={{ margin: '50px 150px' }}><ScoreManagement /></div>} />
+                <Route path="/teacher/student/:studentCode/detail" element={<div style={{ margin: '50px 150px' }}><StudentDetail /></div>} />
+                <Route path="/teacher/student/:studentCode/scores" element={<div style={{ margin: '50px 150px' }}><StudentScores /></div>} />
+                <Route path="/teacher/students/search" element={<div style={{ margin: '50px 150px' }}><StudentSearch /></div>} />
+                <Route path="/teacher/scores/import" element={<div style={{ margin: '50px 150px' }}><ScoreImport /></div>} />
+
 
                 <Route path="/register" element={<div style={{ margin: '50px 200px 50px 200px' }}><Register /></div>} />
                 <Route path="/listscore" element={<div style={{ margin: '50px 150px' }}><ListScore /></div>} />
@@ -58,11 +69,11 @@ const App = () => {
                 <Route path="/listoldclass" element={<div style={{ margin: '50px 150px' }}><ListOldClass /></div>} />
                 <Route path="/listscoreofstudent" element={<div style={{ margin: '50px 150px' }}><ListScoreOfStudent /></div>} />
                 <Route path="/chatfirebase" element={<div style={{ margin: '50px 150px' }}><FireBase /></div>} />
-                
+
               </Routes>
               <Footer className="footer" />
             </BrowserRouter>
-            </ListStudentsProvider>
+          </ListStudentsProvider>
         </UniqueSubjectTeacherIdProvider>
       </SchoolYearProvider>
 

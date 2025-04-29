@@ -1,8 +1,11 @@
 package com.ntn.controllers;
 
-import com.ntn.pojo.ListScoreDTO;
+import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Score;
+import com.ntn.pojo.Class;
 import com.ntn.pojo.Student;
+import com.ntn.pojo.Subjectteacher;
+import com.ntn.pojo.Teacher;
 import com.ntn.pojo.Typescore;
 import com.ntn.service.ClassService;
 import com.ntn.service.EmailService;
@@ -12,19 +15,27 @@ import com.ntn.service.StudentService;
 import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TeacherService;
 import com.ntn.service.TypeScoreService;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/scores")
@@ -50,6 +61,9 @@ public class ApiScoreController {
 
     @Autowired
     private SubjectTeacherService subjectTeacherService;
+
+    @Autowired
+    private TeacherService teacherService;
 
     /**
      * Lấy danh sách loại điểm
@@ -473,6 +487,501 @@ public class ApiScoreController {
             e.printStackTrace();
             response.put("success", false);
             response.put("message", "Lỗi: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @GetMapping("/available-school-years")
+    public ResponseEntity<Map<String, Object>> getAvailableSchoolYears(
+            @RequestParam("subjectId") Integer subjectId,
+            @RequestParam("classId") Integer classId) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Lấy trực tiếp các SchoolYearId từ bảng SubjectTeacher dựa trên SubjectId và ClassId
+            List<Subjectteacher> subjectTeachers = subjectTeacherService.getSubjectTeachersBySubjectIdAndClassId(
+                    subjectId, classId);
+
+            // Lấy ra các SchoolYear từ các SubjectTeacher
+            List<Schoolyear> schoolYears = new ArrayList<>();
+            Set<Integer> uniqueSchoolYearIds = new HashSet<>();
+
+            for (Subjectteacher st : subjectTeachers) {
+                if (st.getSchoolYearId() != null && !uniqueSchoolYearIds.contains(st.getSchoolYearId().getId())) {
+                    uniqueSchoolYearIds.add(st.getSchoolYearId().getId());
+                    schoolYears.add(st.getSchoolYearId());
+                }
+            }
+
+            response.put("success", true);
+            response.put("schoolYears", schoolYears);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi khi lấy danh sách năm học: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @GetMapping("/students/search")
+    public ResponseEntity<Map<String, Object>> searchStudents(
+            @RequestParam(value = "query", required = false) String query,
+            @RequestParam(value = "type", defaultValue = "name") String searchType) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            List<Student> students = new ArrayList<>();
+
+            if (query != null && !query.trim().isEmpty()) {
+                if ("code".equals(searchType)) {
+                    students = studentService.findStudentsByCode(query);
+                } else if ("name".equals(searchType)) {
+                    students = studentService.findStudentsByName(query);
+                } else {
+                    students = studentService.findStudentsByClass(query);
+                }
+            }
+
+            response.put("success", true);
+            response.put("students", students);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi khi tìm kiếm sinh viên: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @GetMapping("/classes/by-subject")
+    public ResponseEntity<Map<String, Object>> getClassesBySubject(
+            @RequestParam("subjectId") Integer subjectId) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Lấy tất cả Subjectteacher có subjectId trùng khớp
+            List<Subjectteacher> subjectTeachers = subjectTeacherService.getSubjectTeachersBySubjectId(subjectId);
+
+            // Lấy danh sách lớp từ các Subjectteacher
+            List<Map<String, Object>> classes = new ArrayList<>();
+            Set<Integer> uniqueClassIds = new HashSet<>();
+
+            for (Subjectteacher st : subjectTeachers) {
+                if (st.getClassId() != null && !uniqueClassIds.contains(st.getClassId().getId())) {
+                    uniqueClassIds.add(st.getClassId().getId());
+
+                    // Convert Class entity to map để trả về
+                    Map<String, Object> classInfo = new HashMap<>();
+                    classInfo.put("id", st.getClassId().getId());
+                    classInfo.put("className", st.getClassId().getClassName());
+
+                    classes.add(classInfo);
+                }
+            }
+
+            response.put("success", true);
+            response.put("classes", classes);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Lỗi khi lấy danh sách lớp: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * API xem chi tiết sinh viên
+     */
+    @GetMapping("/students/{studentCode}/detail")
+    public ResponseEntity<Map<String, Object>> getStudentDetail(@PathVariable String studentCode) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Optional<Student> student = studentService.findByStudentId(studentCode);
+
+            if (student.isPresent()) {
+                response.put("success", true);
+                response.put("student", student.get());
+
+                // Tính điểm trung bình theo học kỳ
+                List<Schoolyear> schoolYears = schoolYearService.getAllSchoolYears();
+                Map<Integer, Double> averageScores = new HashMap<>();
+
+                for (Schoolyear schoolYear : schoolYears) {
+                    List<Score> scores = scoreService.getSubjectScoresByStudentCodeAndSchoolYear(
+                            studentCode, schoolYear.getId());
+
+                    if (!scores.isEmpty()) {
+                        double totalScore = 0;
+                        int totalCredits = 0;
+
+                        for (Score score : scores) {
+                            if (score.getAverageScore() != null) {
+                                int credits = score.getSubjectTeacherID().getSubjectId().getCredits();
+                                totalScore += score.getAverageScore() * credits;
+                                totalCredits += credits;
+                            }
+                        }
+
+                        if (totalCredits > 0) {
+                            averageScores.put(schoolYear.getId(), totalScore / totalCredits);
+                        }
+                    }
+                }
+
+                response.put("schoolYears", schoolYears);
+                response.put("averageScores", averageScores);
+
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy sinh viên với mã " + studentCode);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * API xem điểm của sinh viên
+     */
+    @GetMapping("/students/{studentCode}/scores")
+    public ResponseEntity<Map<String, Object>> getStudentScores(
+            @PathVariable String studentCode,
+            @RequestParam(value = "schoolYearId", required = false) Integer schoolYearId) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Optional<Student> studentOpt = studentService.findByStudentId(studentCode);
+
+            if (studentOpt.isPresent()) {
+                Student student = studentOpt.get();
+                response.put("student", student);
+
+                List<Score> scores;
+                Schoolyear currentSchoolYear;
+
+                if (schoolYearId != null) {
+                    scores = scoreService.getSubjectScoresByStudentCodeAndSchoolYear(studentCode, schoolYearId);
+                    currentSchoolYear = schoolYearService.getSchoolYearById(schoolYearId);
+                } else {
+                    // Lấy năm học hiện tại
+                    int currentSchoolYearId = schoolYearService.getCurrentSchoolYearId();
+                    scores = scoreService.getSubjectScoresByStudentCodeAndSchoolYear(studentCode, currentSchoolYearId);
+                    currentSchoolYear = schoolYearService.getSchoolYearById(currentSchoolYearId);
+                }
+
+                response.put("scores", scores);
+                response.put("currentSchoolYear", currentSchoolYear);
+                response.put("schoolYears", schoolYearService.getAllSchoolYears());
+
+                // Tính điểm trung bình học kỳ
+                if (!scores.isEmpty()) {
+                    double totalScore = 0;
+                    int totalCredits = 0;
+
+                    for (Score score : scores) {
+                        if (score.getAverageScore() != null) {
+                            int credits = score.getSubjectTeacherID().getSubjectId().getCredits();
+                            totalScore += score.getAverageScore() * credits;
+                            totalCredits += credits;
+                        }
+                    }
+
+                    if (totalCredits > 0) {
+                        response.put("semesterAverage", totalScore / totalCredits);
+                    } else {
+                        response.put("semesterAverage", 0);
+                    }
+                } else {
+                    response.put("semesterAverage", 0);
+                }
+
+                response.put("success", true);
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy sinh viên với mã " + studentCode);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * API lấy dữ liệu cho form nhập điểm từ file
+     */
+    @GetMapping("/import-scores-form")
+    public ResponseEntity<Map<String, Object>> getImportScoresFormData(Authentication authentication) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            String username = authentication.getName();
+            Teacher teacher = teacherService.getTeacherByUsername(username);
+
+            if (teacher == null) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy thông tin giảng viên");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            List<Subjectteacher> subjectTeachers = subjectTeacherService.getSubjectTeachersByTeacherId(teacher.getId());
+            List<Schoolyear> schoolYears = schoolYearService.getAllSchoolYears();
+            List<Class> classes = classService.getClassesByTeacher(teacher.getId());
+
+            response.put("success", true);
+            response.put("subjectTeachers", subjectTeachers);
+            response.put("schoolYears", schoolYears);
+            response.put("classes", classes);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * API tải file mẫu để nhập điểm
+     */
+    @GetMapping("/scores/template")
+    public ResponseEntity<Map<String, Object>> getScoreTemplate() {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Tạo file mẫu CSV
+            String csvContent = "MSSV,Họ tên,Giữa kỳ,Cuối kỳ,Cột điểm 1,Cột điểm 2,Cột điểm 3\n"
+                    + "SV001,Nguyễn Văn A,8.5,9.0,7.5,8.0,9.5\n"
+                    + "SV002,Trần Thị B,7.0,8.0,6.5,7.0,8.5\n";
+
+            // Encode the CSV content as Base64
+            String base64Content = Base64.getEncoder().encodeToString(csvContent.getBytes(StandardCharsets.UTF_8));
+
+            response.put("success", true);
+            response.put("fileContent", base64Content);
+            response.put("fileName", "score_template.csv");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * API import điểm từ file CSV
+     */
+    @PostMapping("/import-scores")
+    public ResponseEntity<Map<String, Object>> importScores(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("subjectTeacherId") int subjectTeacherId,
+            @RequestParam("classId") int classId,
+            @RequestParam("schoolYearId") int schoolYearId,
+            Authentication authentication) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            String username = authentication.getName();
+            Teacher teacher = teacherService.getTeacherByUsername(username);
+
+            if (teacher == null) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy thông tin giảng viên");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            // Kiểm tra xem giảng viên có được phân công môn học này không
+            Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
+            if (subjectTeacher == null || !subjectTeacher.getTeacherId().getId().equals(teacher.getId())) {
+                response.put("success", false);
+                response.put("message", "Không có quyền nhập điểm cho môn học này");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            // Kiểm tra xem file CSV có các cột điểm phù hợp với loại điểm trong hệ thống hay không
+            try (CSVParser parser = new CSVParser(
+                    new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8),
+                    CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+
+                // Lấy tên các cột trong file CSV
+                List<String> headerNames = parser.getHeaderNames();
+
+                // Lấy các loại điểm được cấu hình trong hệ thống
+                List<String> scoreTypes = typeScoreService.getScoreTypesByClass(classId, subjectTeacherId, schoolYearId);
+
+                // Kiểm tra xem có cột điểm nào trong CSV không có trong hệ thống không
+                List<String> customScoreColumns = new ArrayList<>();
+                for (String headerName : headerNames) {
+                    if (!headerName.equals("MSSV") && !headerName.equals("Họ tên")) {
+                        String normalizedHeaderName = headerName.trim().toLowerCase();
+                        boolean matched = false;
+
+                        // Kiểm tra với các loại điểm mặc định không phân biệt hoa/thường
+                        if (normalizedHeaderName.equals("giữa kỳ") || normalizedHeaderName.equals("cuối kỳ")) {
+                            matched = true;
+                        } else {
+                            // Kiểm tra với các loại điểm tùy chỉnh không phân biệt hoa/thường
+                            for (String configuredType : scoreTypes) {
+                                if (configuredType.trim().toLowerCase().equals(normalizedHeaderName)) {
+                                    matched = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!matched) {
+                            customScoreColumns.add(headerName);
+                        }
+                    }
+                }
+
+                // Nếu có cột điểm tùy chỉnh trong CSV nhưng chưa được cấu hình trong hệ thống
+                if (!customScoreColumns.isEmpty()) {
+                    StringBuilder missingColumns = new StringBuilder();
+                    for (String column : customScoreColumns) {
+                        missingColumns.append(column).append(", ");
+                    }
+
+                    if (missingColumns.length() > 2) {
+                        missingColumns.setLength(missingColumns.length() - 2); // Xóa ", " cuối cùng
+                    }
+
+                    response.put("success", false);
+                    response.put("message", "File CSV chứa các loại điểm chưa được cấu hình: " + missingColumns
+                            + ". Vui lòng thêm các loại điểm này vào hệ thống trước khi import.");
+                    response.put("missingScoreTypes", customScoreColumns);
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+            }
+
+            // Nếu tất cả các điều kiện đều thoả mãn, tiến hành import điểm
+            boolean success = scoreService.importScoresFromCsv(file, subjectTeacherId, schoolYearId);
+
+            if (success) {
+                response.put("success", true);
+                response.put("message", "Import điểm thành công");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("message", "Không thể import điểm. Vui lòng kiểm tra lại file");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Lỗi: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * API xuất điểm ra file CSV
+     */
+    @GetMapping("/classes/{classId}/export-csv")
+    public ResponseEntity<Map<String, Object>> exportScoresToCsv(
+            @PathVariable int classId,
+            @RequestParam int subjectTeacherId,
+            @RequestParam int schoolYearId,
+            Authentication authentication) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Xác thực giảng viên
+            String username = authentication.getName();
+            Teacher teacher = teacherService.getTeacherByUsername(username);
+
+            if (teacher == null) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy thông tin giảng viên");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            // Kiểm tra giảng viên có quyền xuất điểm lớp này không
+            Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
+            if (subjectTeacher == null || !subjectTeacher.getTeacherId().getId().equals(teacher.getId())) {
+                response.put("success", false);
+                response.put("message", "Không có quyền xuất điểm cho lớp học này");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            // Xuất điểm ra CSV
+            byte[] csvContent = scoreService.exportScoresToCsv(subjectTeacherId, classId, schoolYearId);
+
+            // Convert to Base64
+            String base64Content = Base64.getEncoder().encodeToString(csvContent);
+
+            response.put("success", true);
+            response.put("fileContent", base64Content);
+            response.put("fileName", "scores_class_" + classId + ".csv");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Lỗi xuất điểm: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * API xuất điểm ra file PDF
+     */
+    @GetMapping("/classes/{classId}/export-pdf")
+    public ResponseEntity<Map<String, Object>> exportScoresToPdf(
+            @PathVariable int classId,
+            @RequestParam int subjectTeacherId,
+            @RequestParam int schoolYearId,
+            Authentication authentication) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Xác thực giảng viên
+            String username = authentication.getName();
+            Teacher teacher = teacherService.getTeacherByUsername(username);
+
+            if (teacher == null) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy thông tin giảng viên");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            // Kiểm tra giảng viên có quyền xuất điểm lớp này không
+            Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
+            if (subjectTeacher == null || !subjectTeacher.getTeacherId().getId().equals(teacher.getId())) {
+                response.put("success", false);
+                response.put("message", "Không có quyền xuất điểm cho lớp học này");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            // Xuất điểm ra PDF
+            byte[] pdfContent = scoreService.exportScoresToPdf(subjectTeacherId, classId, schoolYearId);
+
+            // Convert to Base64
+            String base64Content = Base64.getEncoder().encodeToString(pdfContent);
+
+            response.put("success", true);
+            response.put("fileContent", base64Content);
+            response.put("fileName", "scores_class_" + classId + ".pdf");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Lỗi xuất điểm: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

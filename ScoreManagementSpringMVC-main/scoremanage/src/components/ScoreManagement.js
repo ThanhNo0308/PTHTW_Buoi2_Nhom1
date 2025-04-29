@@ -71,8 +71,21 @@ const ScoreManagement = () => {
       setLoading(true);
       setError("");
 
+      console.log("Loading data with params:", {
+        classId, 
+        subjectTeacherId, 
+        schoolYearId, 
+        username: user.username
+      });
+
       // Load class details
       const classResponse = await teacherClassApis.getClassDetail(classId, user.username);
+      if (!classResponse.data) {
+        console.error("Empty response from class details API");
+        setError("Không nhận được dữ liệu từ máy chủ");
+        return;
+      }
+      
       if (classResponse.data && classResponse.data.classroom) {
         setClassroom(classResponse.data.classroom);
         setStudents(classResponse.data.students || []);

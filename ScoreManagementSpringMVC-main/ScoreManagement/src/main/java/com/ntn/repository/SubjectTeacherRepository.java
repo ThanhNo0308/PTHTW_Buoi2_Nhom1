@@ -41,4 +41,6 @@ public interface SubjectTeacherRepository {
     List<Subjectteacher> getSubjectTeachersByTeacherIdAndClassId(int teacherId, int classId);
 
     List<Subjectteacher> getSubjectTeachersByTeacherIdAndClassIdAndSchoolYearId(int teacherId, int classId, int schoolYearId);
+    
+    List<Subjectteacher> getSubjectTeachersBySubjectIdAndClassId(int subjectId, int classId);
 }
