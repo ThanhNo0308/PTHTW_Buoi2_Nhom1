@@ -18,8 +18,10 @@ import com.ntn.service.StudentService;
 import com.ntn.service.TypeScoreService;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,24 +82,34 @@ public class TypeScoreServiceImpl implements TypeScoreService {
 
     @Override
     public List<String> getScoreTypesByClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId) {
-        List<String> scoreTypes = new ArrayList<>();
+        // Debug log
+        System.out.println("Getting score types for class=" + classId + ", subjectTeacher=" + subjectTeacherId + ", schoolYear=" + schoolYearId);
+
+        Set<String> scoreTypes = new HashSet<>();
 
         // Luôn đảm bảo có các loại điểm mặc định
         scoreTypes.add("Giữa kỳ");
         scoreTypes.add("Cuối kỳ");
 
         // Thêm các loại điểm tùy chỉnh từ bảng class_score_types
-        List<Classscoretypes> classScoreTypes = classScoreTypeRepository.getScoreTypesByClass(
-                classId, subjectTeacherId, schoolYearId);
+        try {
+            List<Classscoretypes> classScoreTypes = classScoreTypeRepository.getScoreTypesByClass(
+                    classId, subjectTeacherId, schoolYearId);
 
-        for (Classscoretypes cst : classScoreTypes) {
-            String scoreTypeName = cst.getScoreType().getScoreType();
-            if (!scoreTypes.contains(scoreTypeName)) {
-                scoreTypes.add(scoreTypeName);
+            for (Classscoretypes cst : classScoreTypes) {
+                if (cst.getScoreType() != null && cst.getScoreType().getScoreType() != null) {
+                    String scoreTypeName = cst.getScoreType().getScoreType();
+                    scoreTypes.add(scoreTypeName);
+                }
             }
+
+            System.out.println("Found " + scoreTypes.size() + " score types for class " + classId + ": " + scoreTypes);
+        } catch (Exception e) {
+            System.err.println("Error getting score types: " + e.getMessage());
+            e.printStackTrace();
         }
 
-        return scoreTypes;
+        return new ArrayList<>(scoreTypes);
     }
 
     @Override

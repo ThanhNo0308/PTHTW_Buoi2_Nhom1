@@ -297,4 +297,37 @@ public class SubjectTeacherRepositoryImpl implements SubjectTeacherRepository {
         return session.createQuery(query).getResultList();
     }
 
+    @Override
+    public Subjectteacher findByIdClassIdAndSchoolYearId(int id, int classId, int schoolYearId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        try {
+            String hql = "FROM Subjectteacher s WHERE s.id = :id "
+                    + "AND s.classId.id = :classId "
+                    + "AND s.schoolYearId.id = :schoolYearId";
+
+            // Sửa dòng lỗi - sử dụng TypedQuery thay vì Query thông thường
+            jakarta.persistence.TypedQuery<Subjectteacher> query
+                    = session.createQuery(hql, Subjectteacher.class);
+            query.setParameter("id", id);
+            query.setParameter("classId", classId);
+            query.setParameter("schoolYearId", schoolYearId);
+
+            // Sử dụng getResultList() và kiểm tra kết quả thay vì uniqueResult()
+            List<Subjectteacher> results = query.getResultList();
+            Subjectteacher result = results.isEmpty() ? null : results.get(0);
+
+            if (result != null) {
+                System.out.println("Found SubjectTeacher with ID: " + result.getId());
+            } else {
+                System.out.println("No matching SubjectTeacher found");
+            }
+
+            return result;
+        } catch (Exception e) {
+            System.err.println("Error finding SubjectTeacher: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 }

@@ -253,26 +253,20 @@ export const scoreApis = {
   
   // Import điểm từ file CSV
   importScores: (file, subjectTeacherId, classId, schoolYearId) => {
+    console.log("Sending import with:", {subjectTeacherId, classId, schoolYearId});
+    
     const formData = new FormData();
     formData.append('file', file);
     formData.append('subjectTeacherId', subjectTeacherId);
     formData.append('classId', classId);
     formData.append('schoolYearId', schoolYearId);
-    
-    const user = cookie.load("user");
-    const token = user?.token;
-    
-    // Sử dụng axios trực tiếp để có toàn quyền kiểm soát request
-    return axios.post(
-      `${SERVER}${endpoints["scores-import"]}`, 
-      formData, 
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`
-          // Không set Content-Type để trình duyệt tự xử lý multipart boundary
-        }
+  
+    return axios.post(`${SERVER}${SERVER_CONTEXT}/api/scores/import-scores`, formData, {
+      headers: {
+        'Authorization': `Bearer ${cookie.load("user")?.token}`,
+        'Content-Type': 'multipart/form-data'
       }
-    );
+    });
   },
   
   // Tải file mẫu nhập điểm
@@ -317,9 +311,9 @@ export const scoreApis = {
     return API.get(url);
   },
 
-  getAvailableSchoolYears: (subjectId, classId) => {
+  getAvailableSchoolYears: (subjectTeacherId, classId) => {
     return API.get(
-      `${endpoints["scores-available-school-years"]}?subjectId=${subjectId}&classId=${classId}`
+      `${endpoints["scores-available-school-years"]}?subjectTeacherId=${subjectTeacherId}&classId=${classId}`
     );
   },
 

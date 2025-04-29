@@ -493,32 +493,59 @@ public class ApiScoreController {
 
     @GetMapping("/available-school-years")
     public ResponseEntity<Map<String, Object>> getAvailableSchoolYears(
-            @RequestParam("subjectId") Integer subjectId,
+            @RequestParam("subjectTeacherId") Integer subjectTeacherId,
             @RequestParam("classId") Integer classId) {
 
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // Lấy trực tiếp các SchoolYearId từ bảng SubjectTeacher dựa trên SubjectId và ClassId
-            List<Subjectteacher> subjectTeachers = subjectTeacherService.getSubjectTeachersBySubjectIdAndClassId(
-                    subjectId, classId);
+            // Log để debug
+            System.out.println("Fetching school years for subjectTeacherId=" + subjectTeacherId + ", classId=" + classId);
 
-            // Lấy ra các SchoolYear từ các SubjectTeacher
+            // Lấy trực tiếp SubjectTeacher từ ID
+            Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
+
+            if (subjectTeacher == null) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy thông tin phân công giảng dạy");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            // Kiểm tra xem subjectTeacher có đúng classId không
+            if (subjectTeacher.getClassId() == null || subjectTeacher.getClassId().getId() != classId) {
+                System.out.println("Warning: ClassId mismatch! SubjectTeacher has classId="
+                        + (subjectTeacher.getClassId() != null ? subjectTeacher.getClassId().getId() : "null")
+                        + " but requested classId=" + classId);
+            }
+
+            // Lấy ra schoolYear từ subjectTeacher
             List<Schoolyear> schoolYears = new ArrayList<>();
-            Set<Integer> uniqueSchoolYearIds = new HashSet<>();
+            if (subjectTeacher.getSchoolYearId() != null) {
+                schoolYears.add(subjectTeacher.getSchoolYearId());
+            }
 
-            for (Subjectteacher st : subjectTeachers) {
-                if (st.getSchoolYearId() != null && !uniqueSchoolYearIds.contains(st.getSchoolYearId().getId())) {
-                    uniqueSchoolYearIds.add(st.getSchoolYearId().getId());
-                    schoolYears.add(st.getSchoolYearId());
+            // Nếu không tìm thấy schoolYear trực tiếp, lấy các năm học được phân công cho giảng viên và lớp này
+            if (schoolYears.isEmpty()) {
+                List<Subjectteacher> relatedAssignments = subjectTeacherService
+                        .getSubjectTeachersBySubjectIdAndClassId(
+                                subjectTeacher.getSubjectId().getId(),
+                                classId);
+
+                Set<Integer> uniqueSchoolYearIds = new HashSet<>();
+
+                for (Subjectteacher st : relatedAssignments) {
+                    if (st.getSchoolYearId() != null && !uniqueSchoolYearIds.contains(st.getSchoolYearId().getId())) {
+                        uniqueSchoolYearIds.add(st.getSchoolYearId().getId());
+                        schoolYears.add(st.getSchoolYearId());
+                    }
                 }
             }
 
             response.put("success", true);
             response.put("schoolYears", schoolYears);
-
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            e.printStackTrace();
             response.put("success", false);
             response.put("message", "Lỗi khi lấy danh sách năm học: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -802,12 +829,27 @@ public class ApiScoreController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
-            // Kiểm tra xem giảng viên có được phân công môn học này không
-            Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
-            if (subjectTeacher == null || !subjectTeacher.getTeacherId().getId().equals(teacher.getId())) {
-                response.put("success", false);
-                response.put("message", "Không có quyền nhập điểm cho môn học này");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            // Sử dụng phương thức findByIdClassIdAndSchoolYearId để tìm subjectTeacher chính xác
+            Subjectteacher subjectTeacher = subjectTeacherService.findByIdClassIdAndSchoolYearId(
+                    subjectTeacherId, classId, schoolYearId);
+
+            if (subjectTeacher == null) {
+                // Nếu không tìm thấy chính xác theo cả 3 tiêu chí, thử tìm theo ID
+                subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
+
+                // Kiểm tra và log cảnh báo nếu không khớp với classId và schoolYearId
+                if (subjectTeacher != null) {
+                    // Kiểm tra xem giáo viên có đúng không
+                    if (!subjectTeacher.getTeacherId().getId().equals(teacher.getId())) {
+                        response.put("success", false);
+                        response.put("message", "Không có quyền nhập điểm cho môn học này");
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                    }
+                } else {
+                    response.put("success", false);
+                    response.put("message", "Không tìm thấy thông tin phân công giảng dạy");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                }
             }
 
             // Kiểm tra xem file CSV có các cột điểm phù hợp với loại điểm trong hệ thống hay không
@@ -817,24 +859,29 @@ public class ApiScoreController {
 
                 // Lấy tên các cột trong file CSV
                 List<String> headerNames = parser.getHeaderNames();
+                System.out.println("CSV headers: " + headerNames);
 
-                // Lấy các loại điểm được cấu hình trong hệ thống
-                List<String> scoreTypes = typeScoreService.getScoreTypesByClass(classId, subjectTeacherId, schoolYearId);
+                // Lấy các loại điểm được cấu hình trong hệ thống từ bảng classscoretypes
+                List<String> configuredScoreTypes = typeScoreService.getScoreTypesByClass(classId, subjectTeacherId, schoolYearId);
+                System.out.println("Configured score types: " + configuredScoreTypes);
+
+                // Lấy tất cả loại điểm để tham khảo
+                List<Typescore> allScoreTypes = typeScoreService.getAllScoreTypes();
 
                 // Kiểm tra xem có cột điểm nào trong CSV không có trong hệ thống không
-                List<String> customScoreColumns = new ArrayList<>();
+                List<String> missingScoreColumns = new ArrayList<>();
                 for (String headerName : headerNames) {
-                    if (!headerName.equals("MSSV") && !headerName.equals("Họ tên")) {
-                        String normalizedHeaderName = headerName.trim().toLowerCase();
+                    if (!headerName.equals("MSSV") && !headerName.equals("Họ tên") && !headerName.equals("Mã SV")) {
                         boolean matched = false;
+                        String normalizedHeader = normalizeString(headerName);
 
-                        // Kiểm tra với các loại điểm mặc định không phân biệt hoa/thường
-                        if (normalizedHeaderName.equals("giữa kỳ") || normalizedHeaderName.equals("cuối kỳ")) {
+                        // Kiểm tra với loại điểm mặc định: Giữa kỳ và Cuối kỳ
+                        if (normalizedHeader.equals(normalizeString("Giữa kỳ")) || normalizedHeader.equals(normalizeString("Cuối kỳ"))) {
                             matched = true;
                         } else {
-                            // Kiểm tra với các loại điểm tùy chỉnh không phân biệt hoa/thường
-                            for (String configuredType : scoreTypes) {
-                                if (configuredType.trim().toLowerCase().equals(normalizedHeaderName)) {
+                            // Kiểm tra với các loại điểm đã cấu hình trong hệ thống
+                            for (String configType : configuredScoreTypes) {
+                                if (normalizeString(configType).equals(normalizedHeader)) {
                                     matched = true;
                                     break;
                                 }
@@ -842,32 +889,33 @@ public class ApiScoreController {
                         }
 
                         if (!matched) {
-                            customScoreColumns.add(headerName);
+                            missingScoreColumns.add(headerName);
                         }
                     }
                 }
 
                 // Nếu có cột điểm tùy chỉnh trong CSV nhưng chưa được cấu hình trong hệ thống
-                if (!customScoreColumns.isEmpty()) {
+                if (!missingScoreColumns.isEmpty()) {
                     StringBuilder missingColumns = new StringBuilder();
-                    for (String column : customScoreColumns) {
+                    for (String column : missingScoreColumns) {
                         missingColumns.append(column).append(", ");
                     }
 
                     if (missingColumns.length() > 2) {
-                        missingColumns.setLength(missingColumns.length() - 2); // Xóa ", " cuối cùng
+                        missingColumns.setLength(missingColumns.length() - 2);
                     }
 
                     response.put("success", false);
                     response.put("message", "File CSV chứa các loại điểm chưa được cấu hình: " + missingColumns
                             + ". Vui lòng thêm các loại điểm này vào hệ thống trước khi import.");
-                    response.put("missingScoreTypes", customScoreColumns);
+                    response.put("missingScoreTypes", missingScoreColumns);
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
             }
 
             // Nếu tất cả các điều kiện đều thoả mãn, tiến hành import điểm
-            boolean success = scoreService.importScoresFromCsv(file, subjectTeacherId, schoolYearId);
+            // Truyền thêm classId vào phương thức importScoresFromCsv
+            boolean success = scoreService.importScoresFromCsv(file, subjectTeacherId, classId, schoolYearId);
 
             if (success) {
                 response.put("success", true);
@@ -884,6 +932,16 @@ public class ApiScoreController {
             response.put("message", "Lỗi: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+// Hàm chuẩn hóa chuỗi cho việc so sánh không phân biệt hoa/thường và khoảng trắng
+    private String normalizeString(String input) {
+        if (input == null) {
+            return "";
+        }
+
+        // Loại bỏ khoảng trắng thừa, chuyển thành chữ thường
+        return input.trim().toLowerCase();
     }
 
     /**

@@ -15,6 +15,7 @@ import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.Query;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,23 +55,30 @@ public class ClassScoreTypeRepositoryImpl implements ClassScoreTypeRepository {
     @Override
     public List<Classscoretypes> getScoreTypesByClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId) {
         Session session = this.sessionFactory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Classscoretypes> query = builder.createQuery(Classscoretypes.class);
-        Root<Classscoretypes> root = query.from(Classscoretypes.class);
 
-        query.where(
-                builder.and(
-                        builder.equal(root.get("classId").get("id"), classId),
-                        builder.equal(root.get("subjectTeacherId").get("id"), subjectTeacherId),
-                        builder.equal(root.get("schoolYearId").get("id"), schoolYearId)
-                )
-        );
+        try {
+            String hql = "FROM Classscoretypes c WHERE "
+                    + "c.classId.id = :classId AND "
+                    + "c.subjectTeacherId.id = :subjectTeacherId AND "
+                    + "c.schoolYearId.id = :schoolYearId";
 
-        return session.createQuery(query).getResultList();
+            Query query = session.createQuery(hql);
+            query.setParameter("classId", classId);
+            query.setParameter("subjectTeacherId", subjectTeacherId);
+            query.setParameter("schoolYearId", schoolYearId);
+
+            List<Classscoretypes> result = query.getResultList();
+            System.out.println("Found " + result.size() + " score type configurations");
+
+            return result;
+        } catch (Exception e) {
+            System.err.println("Error querying class score types: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 
     @Override
-    @Transactional
     public boolean updateScoreTypeWeights(Integer classId, Integer subjectTeacherId, Integer schoolYearId, Map<String, Float> weights) {
         try {
             Session session = this.sessionFactory.getObject().getCurrentSession();

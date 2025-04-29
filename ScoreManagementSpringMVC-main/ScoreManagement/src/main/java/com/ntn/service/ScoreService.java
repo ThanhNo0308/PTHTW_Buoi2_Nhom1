@@ -32,7 +32,7 @@ public interface ScoreService {
 
     boolean saveListScoreByListScoreDTO(ListScoreDTO listScoreDTO);
 
-    boolean importScoresFromCsv(MultipartFile file, int subjectTeacherId, int schoolYearId) throws Exception;
+    boolean importScoresFromCsv(MultipartFile file, int subjectTeacherId, int classId, int schoolYearId) throws Exception;
 
     byte[] exportScoresToCsv(int subjectTeacherId, int classId, int schoolYearId) throws Exception;
 

@@ -4,6 +4,7 @@ import { scoreApis } from '../configs/Apis';
 import { MyUserContext } from '../App';
 import { useNavigate } from 'react-router-dom';
 import cookie from 'react-cookies';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload, faUpload, faInfoCircle, faCheck, faExclamationTriangle, faSignInAlt } from '@fortawesome/free-solid-svg-icons';
 
@@ -29,7 +30,7 @@ const ScoreImport = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [missingScoreTypes, setMissingScoreTypes] = useState([]);
-
+  const [originalAssignments, setOriginalAssignments] = useState([]);
   // Tải dữ liệu ban đầu
   useEffect(() => {
     if (!user || !user.token) {
@@ -43,38 +44,32 @@ const ScoreImport = () => {
         const response = await scoreApis.getImportScoresFormData();
 
         if (response.data && response.data.success) {
-          // Thay đổi: Nhóm các phân công theo môn học thay vì lọc
-          const subjectTeachersMap = {};
+          // Lấy tất cả assignments nhưng giữ nguyên dữ liệu gốc
+          const allAssignments = response.data.subjectTeachers.map(assignment => ({
+            id: assignment.id,  // SubjectTeacherId thực
+            subjectId: assignment.subjectId.id,
+            subjectName: assignment.subjectId.subjectName,
+            classId: assignment.classId?.id,
+            className: assignment.classId?.className,
+            schoolYearId: assignment.schoolYearId?.id
+          }));
 
-          response.data.subjectTeachers.forEach(subject => {
-            const subjectId = subject.subjectId.id;
-            const subjectName = subject.subjectId.subjectName;
-            const subjectCode = subject.subjectId.subjectCode;
-
-            // Tạo key duy nhất cho mỗi môn học
-            const key = `${subjectId}-${subjectCode}-${subjectName}`;
-
-            if (!subjectTeachersMap[key]) {
-              subjectTeachersMap[key] = {
-                id: subjectId,
-                subjectId: subject.subjectId,
-                // Lưu tất cả các assignments liên quan đến môn học này
-                assignments: []
-              };
-            }
-
-            // Thêm assignment này vào danh sách
-            subjectTeachersMap[key].assignments.push(subject);
+          // Gom nhóm theo cặp subjectId và classId để lấy đúng phân công
+          const assignmentMap = {};
+          allAssignments.forEach(assignment => {
+            const key = `${assignment.subjectId}_${assignment.classId}`;
+            assignmentMap[key] = assignment;
           });
 
-          // Chuyển đổi map thành array
-          const uniqueSubjects = Object.values(subjectTeachersMap);
+          // Tạo mảng các môn học (không trùng lặp) kèm theo subjectTeacherId đúng
+          setSubjectTeachers(allAssignments);
 
-          console.log("Grouped subjects with assignments:", uniqueSubjects);
-          setSubjectTeachers(uniqueSubjects);
+          // Lưu tất cả assignments để sử dụng sau này
+          setOriginalAssignments(allAssignments);
 
           setAllClasses(response.data.classes || []);
-          setFilteredClasses(response.data.classes || []);
+          // Không lọc classes ban đầu - để người dùng chọn môn học trước
+          setFilteredClasses([]);
           setSchoolYears(response.data.schoolYears || []);
           const assignedYears = response.data.schoolYears.filter(year =>
             year.assignedToTeacher === true || year.isCurrent === true
@@ -104,7 +99,6 @@ const ScoreImport = () => {
   useEffect(() => {
     const fetchClassesBySubject = async () => {
       if (!selectedSubjectTeacher) {
-        // Nếu chưa chọn môn, hiển thị tất cả lớp
         setFilteredClasses(allClasses);
         return;
       }
@@ -112,81 +106,91 @@ const ScoreImport = () => {
       try {
         setLoading(true);
 
-        // Gọi API mới để lấy danh sách lớp theo môn học
-        const response = await scoreApis.getClassesBySubject(selectedSubjectTeacher);
+        // Tìm môn học được chọn
+        const selectedSubject = subjectTeachers.find(
+          s => s.id.toString() === selectedSubjectTeacher
+        );
 
-        if (response.data && response.data.success) {
-          console.log("Classes by subject:", response.data.classes);
+        // Lọc các lớp có phân công với môn học này
+        const classesForSubject = originalAssignments
+          .filter(a => a.subjectId === selectedSubject.subjectId)
+          .map(a => ({
+            id: a.classId,
+            className: a.className,
+            assignment: a  // Lưu lại để dùng sau
+          }))
+          .filter(c => c.id && c.className); // Loại bỏ các giá trị null
 
-          // Kiểm tra xem có dữ liệu trả về không
-          if (response.data.classes && response.data.classes.length > 0) {
-            setFilteredClasses(response.data.classes);
+        setFilteredClasses(classesForSubject);
 
-            // Reset selected class nếu đã chọn nhưng không còn trong danh sách mới
-            const classExists = response.data.classes.some(c => c.id.toString() === selectedClass);
-            if (selectedClass && !classExists) {
-              setSelectedClass('');
-            }
-          } else {
-            // Nếu không có lớp nào, hiển thị thông báo
-            setFilteredClasses([]);
-            setError("Không tìm thấy lớp nào cho môn học này");
+        // Reset selected class
+        if (selectedClass) {
+          const classExists = classesForSubject.some(
+            c => c.id.toString() === selectedClass
+          );
+          if (!classExists) {
+            setSelectedClass('');
           }
-        } else {
-          setFilteredClasses(allClasses);
         }
       } catch (error) {
-        console.error("Error fetching classes by subject:", error);
+        console.error("Error filtering classes:", error);
         setFilteredClasses(allClasses);
-        setError(`Lỗi khi lấy danh sách lớp: ${error.message}`);
       } finally {
         setLoading(false);
       }
     };
 
     fetchClassesBySubject();
-  }, [selectedSubjectTeacher, allClasses]);
+  }, [selectedSubjectTeacher, allClasses, originalAssignments]);
 
   // Thêm useEffect để lọc học kỳ khi chọn môn và lớp
   useEffect(() => {
-    if (selectedSubjectTeacher && selectedClass) {
-      // Tải danh sách học kỳ khi chọn môn học và lớp
-      const fetchSchoolYears = async () => {
-        try {
-          setLoading(true);
-          const response = await scoreApis.getAvailableSchoolYears(
-            parseInt(selectedSubjectTeacher),
-            parseInt(selectedClass)
-          );
+    if (selectedSubjectTeacher) {  // Chỉ kiểm tra selectedSubjectTeacher
+      // Tìm assignment tương ứng để lấy classId
+      const selected = subjectTeachers.find(st => st.id.toString() === selectedSubjectTeacher);
+      const classId = selected?.classId; // Lấy classId từ phân công giảng dạy
 
-          if (response.data && response.data.success) {
-            setFilteredSchoolYears(response.data.schoolYears || []);
+      if (classId) {
+        // Tải danh sách học kỳ cho phân công giảng dạy này
+        const fetchSchoolYears = async () => {
+          try {
+            setLoading(true);
+            const response = await scoreApis.getAvailableSchoolYears(
+              parseInt(selectedSubjectTeacher),
+              parseInt(classId)  // Sử dụng classId từ phân công giảng dạy
+            );
 
-            // Nếu có năm học, chọn năm đầu tiên
-            if (response.data.schoolYears && response.data.schoolYears.length > 0) {
-              setSelectedSchoolYear(response.data.schoolYears[0].id.toString());
+            if (response.data && response.data.success) {
+              setFilteredSchoolYears(response.data.schoolYears || []);
+              // Nếu có năm học, chọn năm đầu tiên
+              if (response.data.schoolYears && response.data.schoolYears.length > 0) {
+                setSelectedSchoolYear(response.data.schoolYears[0].id.toString());
+              } else {
+                setSelectedSchoolYear('');
+              }
             } else {
+              setFilteredSchoolYears([]);
               setSelectedSchoolYear('');
             }
-          } else {
+          } catch (error) {
+            console.error("Error fetching school years:", error);
             setFilteredSchoolYears([]);
             setSelectedSchoolYear('');
+          } finally {
+            setLoading(false);
           }
-        } catch (error) {
-          console.error("Error fetching school years:", error);
-          setFilteredSchoolYears([]);
-          setSelectedSchoolYear('');
-        } finally {
-          setLoading(false);
-        }
-      };
+        };
 
-      fetchSchoolYears();
+        fetchSchoolYears();
+      } else {
+        setFilteredSchoolYears([]);
+        setSelectedSchoolYear('');
+      }
     } else {
       setFilteredSchoolYears([]);
       setSelectedSchoolYear('');
     }
-  }, [selectedSubjectTeacher, selectedClass]);
+  }, [selectedSubjectTeacher, subjectTeachers]);
 
   // Tải file mẫu
   const handleDownloadTemplate = async () => {
@@ -280,7 +284,7 @@ const ScoreImport = () => {
       setError('Vui lòng điền đầy đủ thông tin và chọn file');
       return;
     }
-    
+
     // Làm mới token trước khi upload
     const tokenValid = await refreshUserToken();
     if (!tokenValid) {
@@ -292,6 +296,17 @@ const ScoreImport = () => {
       setError('');
       setSuccess('');
       setMissingScoreTypes([]);
+
+      if (csvPreview && csvPreview.length > 0) {
+        const headers = csvPreview[0];
+        console.log("CSV Headers:", headers);
+
+        // Log từng header và mã Unicode của nó để debug vấn đề encoding
+        headers.forEach(header => {
+          console.log(`Header: "${header}" - Unicode chars:`,
+            [...header].map(c => c.charCodeAt(0).toString(16)));
+        });
+      }
 
       console.log("Sending import request for:", {
         file: file.name,
@@ -323,14 +338,14 @@ const ScoreImport = () => {
       }
     } catch (err) {
       console.error("Import error:", err);
-      
+
       if (err.response && err.response.status === 401) {
         setError('Phiên làm việc đã hết hạn hoặc bạn không có quyền truy cập chức năng này');
-        
+
         // Hiển thị nút đăng nhập lại thay vì tự động chuyển hướng
       } else if (err.response && err.response.data && err.response.data.message) {
         setError(`Lỗi: ${err.response.data.message}`);
-        
+
         // Xử lý lỗi thiếu loại điểm
         if (err.response.data.missingScoreTypes) {
           setMissingScoreTypes(err.response.data.missingScoreTypes);
@@ -350,13 +365,13 @@ const ScoreImport = () => {
       subjectTeacherId: selectedSubjectTeacher,
       schoolYearId: selectedSchoolYear
     });
-    
+
     // Kiểm tra dữ liệu trước khi điều hướng
     if (!selectedClass || !selectedSubjectTeacher || !selectedSchoolYear) {
       setError("Thiếu thông tin để cấu hình loại điểm. Vui lòng chọn đầy đủ môn học, lớp và năm học.");
       return;
     }
-    
+
     // Sử dụng navigate thay vì window.location để tránh reload trang
     navigate(`/teacher/classes/${selectedClass}/scores?subjectTeacherId=${selectedSubjectTeacher}&schoolYearId=${selectedSchoolYear}`);
   };
@@ -414,52 +429,36 @@ const ScoreImport = () => {
               <div className="row mb-3">
                 <div className="col-md-6">
                   <Form.Group>
-                    <Form.Label>Môn học</Form.Label>
+                    <Form.Label>Phân công giảng dạy</Form.Label>
                     <Form.Control
                       as="select"
                       value={selectedSubjectTeacher}
-                      onChange={(e) => setSelectedSubjectTeacher(e.target.value)}
+                      onChange={(e) => {
+                        setSelectedSubjectTeacher(e.target.value);
+                        // Tìm assignment tương ứng và tự động chọn lớp học
+                        const selected = subjectTeachers.find(st => st.id.toString() === e.target.value);
+                        if (selected && selected.classId) {
+                          setSelectedClass(selected.classId.toString());
+
+                          // Log để xác nhận đã chọn đúng lớp học
+                          console.log("Auto-selected class:", {
+                            subjectTeacherId: selected.id,
+                            classId: selected.classId,
+                            className: selected.className
+                          });
+                        }
+                      }}
                       required
                     >
-                      <option value="">-- Chọn môn học --</option>
+                      <option value="">-- Chọn phân công giảng dạy --</option>
                       {subjectTeachers.map(subj => (
                         <option key={subj.id} value={subj.id}>
-                          {subj.subjectId.subjectCode} - {subj.subjectId.subjectName}
+                          {subj.subjectName} - Lớp: {subj.className || 'Chưa phân lớp'}
                         </option>
                       ))}
                     </Form.Control>
                   </Form.Group>
                 </div>
-                <div className="col-md-6">
-                  <Form.Group>
-                    <Form.Label>Lớp học</Form.Label>
-                    <Form.Control
-                      as="select"
-                      value={selectedClass}
-                      onChange={(e) => setSelectedClass(e.target.value)}
-                      required
-                      disabled={!selectedSubjectTeacher || loading} // Disable nếu chưa chọn môn hoặc đang tải
-                    >
-                      <option value="">-- Chọn lớp học --</option>
-                      {filteredClasses.length > 0 ? (
-                        filteredClasses.map(cls => (
-                          <option key={cls.id} value={cls.id}>
-                            {cls.className}
-                          </option>
-                        ))
-                      ) : (
-                        <option value="" disabled>Không có lớp học phù hợp</option>
-                      )}
-                    </Form.Control>
-                    {filteredClasses.length === 0 && selectedSubjectTeacher && !loading && (
-                      <small className="text-danger">
-                        Không tìm thấy lớp học nào cho môn học này. Vui lòng liên hệ admin để kiểm tra phân công giảng dạy.
-                      </small>
-                    )}
-                  </Form.Group>
-                </div>
-              </div>
-              <div className="row mb-3">
                 <div className="col-md-6">
                   <Form.Group>
                     <Form.Label>Năm học</Form.Label>
@@ -468,7 +467,7 @@ const ScoreImport = () => {
                       value={selectedSchoolYear}
                       onChange={(e) => setSelectedSchoolYear(e.target.value)}
                       required
-                      disabled={!selectedClass || filteredSchoolYears.length === 0}
+                      disabled={!selectedSubjectTeacher || filteredSchoolYears.length === 0}
                     >
                       <option value="">-- Chọn học kỳ --</option>
                       {filteredSchoolYears.map(year => (
@@ -477,14 +476,17 @@ const ScoreImport = () => {
                         </option>
                       ))}
                     </Form.Control>
-                    {filteredSchoolYears.length === 0 && selectedClass && !loading && (
+                    {filteredSchoolYears.length === 0 && selectedSubjectTeacher && !loading && (
                       <small className="text-danger">
                         Không tìm thấy phân công năm học nào cho môn và lớp này.
                       </small>
                     )}
                   </Form.Group>
                 </div>
-                <div className="col-md-6">
+              </div>
+              <div className="row mb-3">
+                
+                <div className="col-md-12">
                   <Form.Group>
                     <Form.Label>File CSV</Form.Label>
                     <div className="input-group">
@@ -533,7 +535,7 @@ const ScoreImport = () => {
                   Hướng dẫn:
                 </h6>
                 <ul className="mb-0">
-                  <li>File CSV phải có định dạng: MSSV, Họ tên, Giữa kỳ, Cuối kỳ, [Điểm bổ sung 1], [Điểm bổ sung 2], [Điểm bổ sung 3]</li>
+                  <li>File CSV phải có định dạng: MSSV, Họ tên, [Điểm bổ sung 1], [Điểm bổ sung 2], [Điểm bổ sung 3], Giữa kỳ, Cuối kỳ</li>
                   <li>Dòng đầu tiên nên là tiêu đề các cột</li>
                   <li>Điểm số phải trong khoảng từ 0 đến 10</li>
                   <li>Nếu điểm trống, để trống ô đó trong CSV</li>

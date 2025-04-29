@@ -27,6 +27,7 @@ import com.ntn.service.EmailService;
 import com.ntn.service.SchoolYearService;
 import com.ntn.service.ScoreService;
 import com.ntn.service.SubjectTeacherService;
+import com.ntn.service.TypeScoreService;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -76,6 +77,9 @@ public class ScoreServiceImpl implements ScoreService {
 
     @Autowired
     private SchoolYearService schoolYearService;
+
+    @Autowired
+    private TypeScoreService typeScoreService;
 
     @Autowired
     private LocalSessionFactoryBean sessionFactory;
@@ -155,100 +159,147 @@ public class ScoreServiceImpl implements ScoreService {
     }
 
     @Override
-    public boolean importScoresFromCsv(MultipartFile file, int subjectTeacherId, int schoolYearId) throws Exception {
+    @Transactional
+    public boolean importScoresFromCsv(MultipartFile file, int subjectTeacherId, int classId, int schoolYearId) throws Exception {
         try (CSVParser parser = new CSVParser(
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8),
                 CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
 
             List<Score> scores = new ArrayList<>();
-            Subjectteacher subjectTeacher = subjectTeacherRepository.getSubJectTeacherById(subjectTeacherId);
-            Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
 
+            // Tìm SubjectTeacher chính xác bằng cả 3 thông số
+            Subjectteacher subjectTeacher = subjectTeacherRepository.findByIdClassIdAndSchoolYearId(
+                    subjectTeacherId, classId, schoolYearId);
+
+            // Log chi tiết để debug
+            System.out.println("Finding SubjectTeacher with params: "
+                    + "subjectTeacherId=" + subjectTeacherId
+                    + ", classId=" + classId
+                    + ", schoolYearId=" + schoolYearId);
+
+            if (subjectTeacher == null) {
+                // Nếu không tìm thấy với 3 tiêu chí, thử tìm chỉ với ID
+                System.out.println("SubjectTeacher not found with all 3 params. Trying with ID only.");
+                subjectTeacher = subjectTeacherRepository.getSubJectTeacherById(subjectTeacherId);
+
+                // Log cảnh báo nếu classId không khớp
+                if (subjectTeacher != null && subjectTeacher.getClassId() != null
+                        && subjectTeacher.getClassId().getId() != classId) {
+                    System.out.println("WARNING: ClassId mismatch! Selected classId=" + classId
+                            + ", but subjectTeacher has classId=" + subjectTeacher.getClassId().getId());
+                }
+            }
+
+            if (subjectTeacher == null) {
+                throw new Exception("Không tìm thấy thông tin phân công giảng dạy với ID=" + subjectTeacherId);
+            }
+
+            Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
+            if (schoolYear == null) {
+                throw new Exception("Không tìm thấy thông tin học kỳ với ID=" + schoolYearId);
+            }
+
+            // Xử lý từng record trong CSV
             for (CSVRecord record : parser) {
                 String studentCode;
                 try {
                     studentCode = record.get("MSSV");
                 } catch (IllegalArgumentException e) {
-                    // Thử tìm tên cột thay thế nếu không tìm thấy "MSSV"
                     try {
                         studentCode = record.get("Mã SV");
                     } catch (IllegalArgumentException e2) {
-                        continue; // Bỏ qua record nếu không tìm thấy cột sinh viên
+                        System.err.println("Không tìm thấy cột MSSV hoặc Mã SV trong file CSV");
+                        continue;
                     }
                 }
 
+                // Tìm thông tin sinh viên
+                Student student = typeScoreRepository.getStudentByCode(studentCode);
+                if (student == null) {
+                    System.err.println("Không tìm thấy sinh viên với mã: " + studentCode);
+                    continue;
+                }
+
+                // Xử lý từng cột điểm trong file CSV
                 for (String headerName : parser.getHeaderNames()) {
                     if (!headerName.equals("MSSV") && !headerName.equals("Họ tên") && !headerName.equals("Mã SV")) {
+                        String scoreValueStr = record.get(headerName);
+
+                        // Bỏ qua nếu giá trị điểm trống
+                        if (scoreValueStr == null || scoreValueStr.trim().isEmpty()) {
+                            continue;
+                        }
+
                         try {
-                            float scoreValue = Float.parseFloat(record.get(headerName));
+                            float scoreValue = Float.parseFloat(scoreValueStr);
 
-                            Score score = new Score();
-                            score.setSubjectTeacherID(subjectTeacher);
-
-                            Student student = typeScoreRepository.getStudentByCode(studentCode);
-                            if (student != null) {
-                                score.setStudentID(student);
+                            // Kiểm tra điểm có hợp lệ không (0-10)
+                            if (scoreValue < 0 || scoreValue > 10) {
+                                System.err.println("Điểm không hợp lệ (" + scoreValue + ") cho sinh viên " + studentCode);
+                                continue;
                             }
 
-                            // Tìm loại điểm - Thêm logic so khớp không phân biệt hoa thường và khoảng trắng
+                            // Tìm loại điểm theo tên
                             Typescore typeScore = findScoreType(headerName);
-                            if (typeScore != null) {
-                                score.setScoreType(typeScore);
-                                score.setScoreValue(scoreValue);
-                                score.setIsDraft(true);
-                                score.setIsLocked(false);
-                                score.setSchoolYearId(schoolYear);
-                                scores.add(score);
+                            if (typeScore == null) {
+                                System.err.println("Không tìm thấy loại điểm cho header: " + headerName);
+                                continue;
                             }
+
+                            // Tạo hoặc cập nhật điểm
+                            Score score = new Score();
+                            score.setStudentID(student);
+                            score.setSubjectTeacherID(subjectTeacher);
+                            score.setScoreType(typeScore);
+                            score.setScoreValue(scoreValue);
+                            score.setIsDraft(true);
+                            score.setIsLocked(false);
+                            score.setSchoolYearId(schoolYear);
+                            scores.add(score);
+
                         } catch (NumberFormatException e) {
-                            // Bỏ qua các giá trị không phải số
+                            System.err.println("Giá trị không phải số (" + scoreValueStr + ") cho sinh viên " + studentCode);
                         }
                     }
                 }
             }
 
+            // Lưu tất cả điểm
             return scoreRepo.saveScores(scores);
-        } catch (IOException e) {
-            throw new Exception("Không thể đọc file CSV: " + e.getMessage());
+
+        } catch (Exception e) {
+            System.err.println("Lỗi khi import điểm: " + e.getMessage());
+            e.printStackTrace();
+            throw new Exception("Không thể import điểm: " + e.getMessage());
         }
     }
 
-    private Typescore findScoreType(String scoreName) {
-        // Trước tiên thử tìm chính xác như trước đây
-        Typescore typeScore = typeScoreRepository.getScoreTypeByName(scoreName);
-
+    // Hàm hỗ trợ tìm loại điểm (không phân biệt hoa thường và khoảng trắng)
+    private Typescore findScoreType(String headerName) {
+        // Tìm chính xác trước
+        Typescore typeScore = typeScoreRepository.getScoreTypeByName(headerName);
         if (typeScore != null) {
             return typeScore;
         }
 
-        // Nếu không tìm thấy, thử tìm không phân biệt hoa/thường và khoảng trắng
-        String normalizedName = scoreName.trim().toLowerCase();
+        // Nếu không tìm thấy, thử so sánh không phân biệt hoa thường và khoảng trắng
         List<Typescore> allTypes = typeScoreRepository.getAllScoreTypes();
+        String normalizedHeader = normalizeString(headerName);
 
         for (Typescore type : allTypes) {
-            if (type.getScoreType().trim().toLowerCase().equals(normalizedName)) {
+            if (normalizeString(type.getScoreType()).equals(normalizedHeader)) {
                 return type;
             }
         }
 
-        // Nếu vẫn không tìm thấy, thử tìm không phân biệt dấu tiếng Việt
-        for (Typescore type : allTypes) {
-            if (normalizeString(type.getScoreType()).equals(normalizeString(scoreName))) {
-                return type;
-            }
-        }
-
-        return null; // Không tìm thấy loại điểm tương ứng
+        return null;
     }
 
     private String normalizeString(String input) {
         if (input == null) {
             return "";
         }
-        String temp = input.trim().toLowerCase();
-        // Loại bỏ khoảng trắng thừa
-        temp = temp.replaceAll("\\s+", " ");
-        return temp;
+        return input.trim().toLowerCase();
     }
 
     @Override

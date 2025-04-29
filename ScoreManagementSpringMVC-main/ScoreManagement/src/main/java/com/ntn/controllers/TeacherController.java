@@ -213,36 +213,36 @@ public class TeacherController {
         }
     }
 
-    @PostMapping("/classes/{id}/scores/import")
-    public String importScores(@PathVariable("id") int classId,
-            @RequestParam("file") MultipartFile file,
-            Authentication authentication,
-            RedirectAttributes redirectAttributes) {
-        try {
-            // Lấy thông tin giảng viên đang đăng nhập
-            String username = authentication.getName();
-            int teacherId = teacherService.getTeacherIdByUsername(username);
-
-            // Lấy subjectTeacherId từ teacherId và classId
-            int subjectTeacherId = teacherService.getSubjectTeacherIdByTeacherAndClass(teacherId, classId);
-
-            // Lấy năm học hiện tại
-            int currentSchoolYearId = schoolYearService.getCurrentSchoolYearId();
-
-            // Nhập điểm từ file CSV
-            boolean success = scoreService.importScoresFromCsv(file, subjectTeacherId, currentSchoolYearId);
-
-            if (success) {
-                redirectAttributes.addFlashAttribute("successMessage", "Nhập điểm thành công");
-            } else {
-                redirectAttributes.addFlashAttribute("errorMessage", "Không thể nhập điểm");
-            }
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi nhập điểm: " + e.getMessage());
-        }
-
-        return "redirect:/teacher/classes/" + classId + "/scores";
-    }
+//    @PostMapping("/classes/{id}/scores/import")
+//    public String importScores(@PathVariable("id") int classId,
+//            @RequestParam("file") MultipartFile file,
+//            Authentication authentication,
+//            RedirectAttributes redirectAttributes) {
+//        try {
+//            // Lấy thông tin giảng viên đang đăng nhập
+//            String username = authentication.getName();
+//            int teacherId = teacherService.getTeacherIdByUsername(username);
+//
+//            // Lấy subjectTeacherId từ teacherId và classId
+//            int subjectTeacherId = teacherService.getSubjectTeacherIdByTeacherAndClass(teacherId, classId);
+//
+//            // Lấy năm học hiện tại
+//            int currentSchoolYearId = schoolYearService.getCurrentSchoolYearId();
+//
+//            // Nhập điểm từ file CSV
+//            boolean success = scoreService.importScoresFromCsv(file, subjectTeacherId, currentSchoolYearId);
+//
+//            if (success) {
+//                redirectAttributes.addFlashAttribute("successMessage", "Nhập điểm thành công");
+//            } else {
+//                redirectAttributes.addFlashAttribute("errorMessage", "Không thể nhập điểm");
+//            }
+//        } catch (Exception e) {
+//            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi nhập điểm: " + e.getMessage());
+//        }
+//
+//        return "redirect:/teacher/classes/" + classId + "/scores";
+//    }
 
     /**
      * Xuất điểm ra file CSV
@@ -401,43 +401,43 @@ public class TeacherController {
         return "teacher/import-scores";
     }
 
-    @PostMapping("/scores/import")
-    public String importScores(@RequestParam("file") MultipartFile file,
-            @RequestParam("subjectTeacherId") int subjectTeacherId,
-            @RequestParam("classId") int classId,
-            @RequestParam("schoolYearId") int schoolYearId,
-            RedirectAttributes redirectAttributes,
-            Authentication authentication) {
-        try {
-            String username = authentication.getName();
-            Teacher teacher = teacherService.getTeacherByUsername(username);
-
-            if (teacher == null) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy thông tin giảng viên");
-                return "redirect:/teacher/scores/import";
-            }
-
-            // Kiểm tra xem giảng viên có được phân công môn học này không
-            Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
-            if (subjectTeacher == null || !subjectTeacher.getTeacherId().getId().equals(teacher.getId())) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Không có quyền nhập điểm cho môn học này");
-                return "redirect:/teacher/scores/import";
-            }
-
-            boolean success = scoreService.importScoresFromCsv(file, subjectTeacherId, schoolYearId);
-
-            if (success) {
-                redirectAttributes.addFlashAttribute("successMessage", "Nhập điểm thành công");
-            } else {
-                redirectAttributes.addFlashAttribute("errorMessage", "Không thể nhập điểm. Vui lòng kiểm tra lại file");
-            }
-
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
-        }
-
-        return "redirect:/teacher/scores/import";
-    }
+//    @PostMapping("/scores/import")
+//    public String importScores(@RequestParam("file") MultipartFile file,
+//            @RequestParam("subjectTeacherId") int subjectTeacherId,
+//            @RequestParam("classId") int classId,
+//            @RequestParam("schoolYearId") int schoolYearId,
+//            RedirectAttributes redirectAttributes,
+//            Authentication authentication) {
+//        try {
+//            String username = authentication.getName();
+//            Teacher teacher = teacherService.getTeacherByUsername(username);
+//
+//            if (teacher == null) {
+//                redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy thông tin giảng viên");
+//                return "redirect:/teacher/scores/import";
+//            }
+//
+//            // Kiểm tra xem giảng viên có được phân công môn học này không
+//            Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
+//            if (subjectTeacher == null || !subjectTeacher.getTeacherId().getId().equals(teacher.getId())) {
+//                redirectAttributes.addFlashAttribute("errorMessage", "Không có quyền nhập điểm cho môn học này");
+//                return "redirect:/teacher/scores/import";
+//            }
+//
+//            boolean success = scoreService.importScoresFromCsv(file, subjectTeacherId, schoolYearId);
+//
+//            if (success) {
+//                redirectAttributes.addFlashAttribute("successMessage", "Nhập điểm thành công");
+//            } else {
+//                redirectAttributes.addFlashAttribute("errorMessage", "Không thể nhập điểm. Vui lòng kiểm tra lại file");
+//            }
+//
+//        } catch (Exception e) {
+//            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+//        }
+//
+//        return "redirect:/teacher/scores/import";
+//    }
 
     /**
      * Tải về file mẫu để nhập điểm
