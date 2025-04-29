@@ -84,7 +84,7 @@ const TeacherDashboard = () => {
               Quản lý lớp học
             </div>
             <div className="card-body">
-              <Link to="/listclass" className="btn btn-primary btn-lg d-block mb-3">
+              <Link to="/teacher/classes" className="btn btn-primary btn-lg d-block mb-3">
                 <i className="fas fa-chalkboard me-2"></i> Danh sách lớp dạy
               </Link>
               <p>Xem danh sách các lớp học bạn được phân công giảng dạy, quản lý điểm của lớp.</p>

@@ -65,5 +65,7 @@ public interface ScoreService {
     boolean saveScoreWeights(Integer subjectTeacherId, Integer schoolYearId, Map<String, Double> weights);
 
     Map<String, Double> getScoreWeights(Integer subjectTeacherId, Integer schoolYearId);
+    
+    boolean deleteScore(Integer scoreId);
 
 }

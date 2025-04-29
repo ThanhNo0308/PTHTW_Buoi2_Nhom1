@@ -6,11 +6,15 @@ package com.ntn.service.impl;
 
 import com.ntn.pojo.Classscoretypes;
 import com.ntn.pojo.Schoolyear;
+import com.ntn.pojo.Score;
+import com.ntn.pojo.Student;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Typescore;
 import com.ntn.repository.ClassScoreTypeRepository;
 import com.ntn.repository.SchoolYearRepository;
 import com.ntn.repository.TypeScoreRepository;
+import com.ntn.service.ScoreService;
+import com.ntn.service.StudentService;
 import com.ntn.service.TypeScoreService;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,21 +32,28 @@ import org.springframework.transaction.annotation.Transactional;
  * @author Admin
  */
 @Service
-public class TypeScoreServiceImpl implements TypeScoreService{
+public class TypeScoreServiceImpl implements TypeScoreService {
+
     @Autowired
     private TypeScoreRepository typeScoreRepository;
-    
+
+    @Autowired
+    private StudentService studentService;
+
+    @Autowired
+    private ScoreService scoreService;
+
     @Autowired
     private ClassScoreTypeRepository classScoreTypeRepository;
-    
+
     @Autowired
     private LocalSessionFactoryBean sessionFactory;
-    
-     @Override
+
+    @Override
     public Typescore getScoreTypeByName(String name) {
         return this.typeScoreRepository.getScoreTypeByName(name);
     }
-    
+
     @Override
     @Transactional
     public boolean addScoreType(String typeName, int subjectTeacherId) {
@@ -56,7 +67,7 @@ public class TypeScoreServiceImpl implements TypeScoreService{
         // Thêm loại điểm mới
         return typeScoreRepository.addScoreType(typeName, subjectTeacherId);
     }
-    
+
     @Override
     public List<Typescore> getAllScoreTypes() {
         return typeScoreRepository.getAllScoreTypes();
@@ -66,7 +77,7 @@ public class TypeScoreServiceImpl implements TypeScoreService{
     public boolean addScoreType(Typescore newType) {
         return this.typeScoreRepository.addScoreType(newType);
     }
-    
+
     @Override
     public List<String> getScoreTypesByClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId) {
         List<String> scoreTypes = new ArrayList<>();
@@ -181,16 +192,50 @@ public class TypeScoreServiceImpl implements TypeScoreService{
 
     @Override
     public boolean removeScoreTypeFromClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType) {
-        List<Classscoretypes> classScoreTypes = classScoreTypeRepository.getScoreTypesByClass(
-                classId, subjectTeacherId, schoolYearId);
-
-        for (Classscoretypes cst : classScoreTypes) {
-            if (cst.getScoreType().getScoreType().equals(scoreType)) {
-                return classScoreTypeRepository.deleteScoreType(cst.getId());
+        try {
+            // Lấy TypeScore object từ tên
+            Typescore typeScoreObj = typeScoreRepository.getScoreTypeByName(scoreType);
+            if (typeScoreObj == null) {
+                return false;
             }
-        }
 
-        return false;
+            // 1. Xóa các điểm liên quan trong bảng Score
+            // Lấy danh sách học sinh trong lớp
+            List<Student> students = studentService.getStudentByClassId(classId);
+            boolean scoreDeleted = true;
+
+            for (Student student : students) {
+                // Xóa điểm của học sinh có loại điểm tương ứng
+                List<Score> scores = scoreService.getListScoreBySubjectTeacherIdAndSchoolYearIdAndStudentId(
+                        subjectTeacherId, schoolYearId, student.getId());
+
+                for (Score score : scores) {
+                    if (score.getScoreType() != null
+                            && score.getScoreType().getScoreType().equals(scoreType)) {
+                        // Xóa điểm này
+                        boolean success = scoreService.deleteScore(score.getId());
+                        if (!success) {
+                            scoreDeleted = false;
+                        }
+                    }
+                }
+            }
+
+            // 2. Xóa loại điểm trong bảng ClassScoreTypes
+            List<Classscoretypes> classScoreTypes = classScoreTypeRepository.getScoreTypesByClass(
+                    classId, subjectTeacherId, schoolYearId);
+
+            for (Classscoretypes cst : classScoreTypes) {
+                if (cst.getScoreType().getScoreType().equals(scoreType)) {
+                    return classScoreTypeRepository.deleteScoreType(cst.getId());
+                }
+            }
+
+            return scoreDeleted;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override

@@ -26,6 +26,9 @@
                 <div th:if="${param.error == 'email-exists'}">
                     <i class="fas fa-exclamation-circle me-2"></i> Email này đã được đăng ký trong hệ thống. Vui lòng sử dụng email khác.
                 </div>
+                <div class="alert alert-success mb-4" th:if="${param.success}">
+                    <i class="fas fa-exclamation-circle me-2"></i> Đăng ký tài khoản giảng viên thành công.
+                </div>
 
                 <form th:action="@{/admin/register}" method="post">
                     <div class="row">

@@ -10,7 +10,9 @@ import "./App.css"
 import Register from "./components/Register";
 import RegisterStudent from "./components/RegisterStudent";
 import Profile from "./components/Profile";
-import HandleClass from "./components/HandleClass";
+import TeacherClassesList from "./components/TeacherClassesList";
+import TeacherClassDetail from "./components/TeacherClassDetail";
+import ScoreManagement from "./components/ScoreManagement";
 import ListScore from "./components/ListScore";
 import ListStudent from "./components/ListStudent";
 import MyUserReducer from "./reducers/MyUserReducer";
@@ -42,9 +44,13 @@ const App = () => {
                 <Route path="/registerstudent" element={<div style={{ margin: '50px 200px 50px 200px' }}><RegisterStudent /></div>} />
                 <Route path="/login" element={<div style={{ margin: '100px' }}><Login /></div>} />
                 <Route path="/profile" element={<div style={{ margin: '100px' }}><Profile /></div>} />
-                
+                <Route path="/student/dashboard" element={<div style={{ margin: '50px 150px' }}><StudentDashboard /></div>} />
+                <Route path="/teacher/dashboard" element={<div style={{ margin: '50px 150px' }}><TeacherDashboard /></div>} />
+                <Route path="/teacher/classes" element={<div style={{ margin: '50px 150px' }}><TeacherClassesList /></div>} />
+                <Route path="/teacher/classes/:classId" element={<div style={{ margin: '50px 150px' }}><TeacherClassDetail /></div>} />
+                <Route path="/teacher/classes/:classId/scores" element={<div style={{ margin: '50px 150px' }}><ScoreManagement /></div>} />
+
                 <Route path="/register" element={<div style={{ margin: '50px 200px 50px 200px' }}><Register /></div>} />
-                <Route path="/listclass" element={<div style={{ margin: '50px 150px' }}><HandleClass /></div>} />
                 <Route path="/listscore" element={<div style={{ margin: '50px 150px' }}><ListScore /></div>} />
                 <Route path="/liststudent" element={<div style={{ margin: '50px 150px' }}><ListStudent /></div>} />
                 <Route path="/schoolyear" element={<div style={{ margin: '50px 150px' }}><SchoolYear /></div>} />
@@ -52,8 +58,7 @@ const App = () => {
                 <Route path="/listoldclass" element={<div style={{ margin: '50px 150px' }}><ListOldClass /></div>} />
                 <Route path="/listscoreofstudent" element={<div style={{ margin: '50px 150px' }}><ListScoreOfStudent /></div>} />
                 <Route path="/chatfirebase" element={<div style={{ margin: '50px 150px' }}><FireBase /></div>} />
-                <Route path="/student/dashboard" element={<div style={{ margin: '50px 150px' }}><StudentDashboard /></div>} />
-                <Route path="/teacher/dashboard" element={<div style={{ margin: '50px 150px' }}><TeacherDashboard /></div>} />
+                
               </Routes>
               <Footer className="footer" />
             </BrowserRouter>

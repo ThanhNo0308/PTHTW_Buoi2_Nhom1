@@ -39,5 +39,5 @@ public interface ScoreRepository {
     
     boolean updateScoreLockStatus(int scoreId, boolean locked);
     
-    
+    boolean deleteScore(Integer scoreId);
 }

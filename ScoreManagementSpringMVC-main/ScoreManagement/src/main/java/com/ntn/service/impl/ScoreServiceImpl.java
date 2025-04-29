@@ -620,6 +620,11 @@ public class ScoreServiceImpl implements ScoreService {
             return weights;
         }
     }
+    
+    @Override
+    public boolean deleteScore(Integer scoreId) {
+        return scoreRepo.deleteScore(scoreId);
+    }
 
     
 

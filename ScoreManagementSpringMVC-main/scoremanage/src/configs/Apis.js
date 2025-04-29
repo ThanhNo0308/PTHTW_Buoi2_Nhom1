@@ -5,99 +5,236 @@ const SERVER = "http://localhost:9090";
 
 export const endpoints = {
 
-    "login": `${SERVER_CONTEXT}/api/login`,
-    "registerstudent": `${SERVER_CONTEXT}/api/register/student`,
-    "profile": `${SERVER_CONTEXT}/api/profile`,
+  "login": `${SERVER_CONTEXT}/api/login`,
+  "registerstudent": `${SERVER_CONTEXT}/api/register/student`,
+  "profile": `${SERVER_CONTEXT}/api/profile`,
+  "current-user": `${SERVER_CONTEXT}/api/current-user`,
+  "teacher-classes": `${SERVER_CONTEXT}/api/teacher/classes`,
+  "teacher-class-detail": `${SERVER_CONTEXT}/api/teacher/classes`,  // + /{classId}
+  "teacher-class-scores": `${SERVER_CONTEXT}/api/teacher/classes`,  // + /{classId}/scores
+  "teacher-save-scores": `${SERVER_CONTEXT}/api/teacher/classes`,
+  "scores-type-list": `${SERVER_CONTEXT}/api/scores/score-types/list`,
+  "scores-type-by-class": `${SERVER_CONTEXT}/api/scores/score-types/by-class`,
+  "scores-weights": `${SERVER_CONTEXT}/api/scores/score-types/weights`,
+  "scores-add-type": `${SERVER_CONTEXT}/api/scores/score-types/add`,
+  "scores-remove-type": `${SERVER_CONTEXT}/api/scores/score-types/remove`,
+  "scores-configure-weights": `${SERVER_CONTEXT}/api/scores/classes`,  // + /{classId}/scores/configure-weights
+  "scores-lock": `${SERVER_CONTEXT}/api/scores/lock`,
+  "scores-lock-all": `${SERVER_CONTEXT}/api/scores/lock-all`,
+  "scores-save": `${SERVER_CONTEXT}/api/scores/save-scores`,
+  "scores-notification": `${SERVER_CONTEXT}/api/scores/send-score-notification`,
 
-    "current-user": `${SERVER_CONTEXT}/api/current-user`,
-    "register": `${SERVER_CONTEXT}/api/users/`,
-    "schoolyear": `${SERVER_CONTEXT}/api/schoolyear`,
-    "listsubject": `${SERVER_CONTEXT}/api/listsubject`,
-    "liststudents": `${SERVER_CONTEXT}/api/listsubject/liststudents`,
-    "listscore": `${SERVER_CONTEXT}/api/listscore`,
-    "savelistscore": `${SERVER_CONTEXT}/api/savelistscore`,
-    "listoldclass": `${SERVER_CONTEXT}/api/listoldclass`,
-    "listscoreofstudent": `${SERVER_CONTEXT}/api/listscoreofstudent`,
-    "student-info": `${SERVER_CONTEXT}/api/student/info`,
-    "teacher-info": `${SERVER_CONTEXT}/api/teacher/info`,
-    "teacher-classes": `${SERVER_CONTEXT}/api/teacher/classes`,
+  "register": `${SERVER_CONTEXT}/api/users/`,
+  "schoolyear": `${SERVER_CONTEXT}/api/schoolyear`,
+  "listsubject": `${SERVER_CONTEXT}/api/listsubject`,
+  "liststudents": `${SERVER_CONTEXT}/api/listsubject/liststudents`,
+  "listscore": `${SERVER_CONTEXT}/api/listscore`,
+  "savelistscore": `${SERVER_CONTEXT}/api/savelistscore`,
+  "listoldclass": `${SERVER_CONTEXT}/api/listoldclass`,
+  "listscoreofstudent": `${SERVER_CONTEXT}/api/listscoreofstudent`,
+  "student-info": `${SERVER_CONTEXT}/api/student/info`,
+  "teacher-info": `${SERVER_CONTEXT}/api/teacher/info`,
 }
 
 // Cấu hình axios với token
 export const authApi = () => {
-    return axios.create({
-        baseURL: SERVER,
-        headers: {
-            "Authorization": `Bearer ${cookie.load("user")?.token}`
-        }
-    })
+  return axios.create({
+    baseURL: SERVER,
+    headers: {
+      "Authorization": `Bearer ${cookie.load("user")?.token}`
+    }
+  })
 }
 
 // API với interceptor tự động gắn token
 export const API = axios.create({
-    baseURL: SERVER
+  baseURL: SERVER
 });
 
 // Thêm interceptor để gắn token xác thực vào mỗi request nếu có
 API.interceptors.request.use((config) => {
-    const user = cookie.load("user");
-    if (user && user.token) {
-        config.headers.Authorization = `Bearer ${user.token}`;
-    }
-    return config;
+  const user = cookie.load("user");
+  if (user && user.token) {
+    config.headers.Authorization = `Bearer ${user.token}`;
+  }
+  return config;
 });
 
 // API User
 export const userApis = {
-    // Đăng nhập người dùng
-    login: (username, password, role) => {
-        return axios.post(`${SERVER}${endpoints["login"]}`, {
-            username,
-            password,
-            role
-        }, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-    },
+  // Đăng nhập người dùng
+  login: (username, password, role) => {
+    return axios.post(`${SERVER}${endpoints["login"]}`, {
+      username,
+      password,
+      role
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  },
 
-    // Đăng ký sinh viên
-    registerStudent: (data) => {
-        console.log("Gửi yêu cầu đăng ký:", endpoints["registerstudent"]);
-        
-        // Đảm bảo dữ liệu không có giá trị undefined hoặc null
-        const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
-          if (value !== null && value !== undefined) {
-            acc[key] = value;
-          }
-          return acc;
-        }, {});
-        
-        return API.post(endpoints["registerstudent"], cleanData, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-      },
-    // Cập nhật thông tin cá nhân
-    updateProfile: (profileData) => {
-        return API.post(endpoints["profile"], profileData);
-    },
-    // Đổi mật khẩu
-    changePassword: (passwordData) => {
-        return API.post(`${endpoints["profile"]}/change-password`, passwordData);
-    },
-    // Lấy thông tin chi tiết theo vai trò
-    getRoleSpecificInfo: (userId, role) => {
-        return API.get(`${endpoints["profile"]}/${userId}/${role}`);
-    },
-    // Lấy thông tin người dùng hiện tại
-    getCurrentUser: () => {
-        return API.get(endpoints["current-user"]);
-    }
+  // Đăng ký sinh viên
+  registerStudent: (data) => {
+    console.log("Gửi yêu cầu đăng ký:", endpoints["registerstudent"]);
+
+    // Đảm bảo dữ liệu không có giá trị undefined hoặc null
+    const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
+      if (value !== null && value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+
+    return API.post(endpoints["registerstudent"], cleanData, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  },
+  // Cập nhật thông tin cá nhân
+  updateProfile: (profileData) => {
+    return API.post(endpoints["profile"], profileData);
+  },
+  // Đổi mật khẩu
+  changePassword: (passwordData) => {
+    return API.post(`${endpoints["profile"]}/change-password`, passwordData);
+  },
+  // Lấy thông tin chi tiết theo vai trò
+  getRoleSpecificInfo: (userId, role) => {
+    return API.get(`${endpoints["profile"]}/${userId}/${role}`);
+  },
+  // Lấy thông tin người dùng hiện tại
+  getCurrentUser: () => {
+    return API.get(endpoints["current-user"]);
+  }
+};
+
+export const teacherClassApis = {
+  // Lấy danh sách lớp học của giáo viên
+  getTeacherClasses: (username) => {
+    return API.get(`${endpoints["teacher-classes"]}?username=${username}`);
+  },
+
+  // Lấy thông tin chi tiết lớp học
+  getClassDetail: (classId, username) => {
+    return API.get(`${endpoints["teacher-class-detail"]}/${classId}?username=${username}`);
+  },
+
+  // Lấy điểm của lớp
+  getClassScores: (classId, subjectTeacherId, schoolYearId, username) => {
+    return API.get(
+      `${endpoints["teacher-class-scores"]}/${classId}/scores?` +
+      `subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}&username=${username}`
+    );
+  },
+
+  // Lưu điểm
+  saveScores: (classId, subjectTeacherId, schoolYearId, saveMode, scoresData, username) => {
+    return API.post(
+      `${endpoints["teacher-save-scores"]}/${classId}/scores/save?` +
+      `subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}` +
+      `&saveMode=${saveMode}&username=${username}`,
+      scoresData
+    );
+  }
+};
+
+export const scoreApis = {
+  // Lấy danh sách loại điểm
+  getScoreTypeList: () => {
+    return API.get(`${endpoints["scores-type-list"]}?_=${Date.now()}`); // Thêm timestamp để tránh cache
+  },
+
+  // Lấy danh sách loại điểm theo lớp
+  getScoreTypesByClass: (classId, subjectTeacherId, schoolYearId) => {
+    return API.get(
+      `${endpoints["scores-type-by-class"]}?classId=${classId}` +
+      `&subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}`
+    );
+  },
+
+  // Lấy trọng số điểm
+  getScoreWeights: (classId, subjectTeacherId, schoolYearId) => {
+    return API.get(
+      `${endpoints["scores-weights"]}?classId=${classId}` +
+      `&subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}`
+    );
+  },
+
+  // Thêm loại điểm mới
+  addScoreType: (scoreType, weight, classId, subjectTeacherId, schoolYearId) => {
+    return API.post(endpoints["scores-add-type"], {
+      scoreType,
+      weight,
+      classId,
+      subjectTeacherId,
+      schoolYearId
+    });
+  },
+
+  // Xóa loại điểm
+  removeScoreType: (scoreType, classId, subjectTeacherId, schoolYearId) => {
+    return API.post(endpoints["scores-remove-type"], {
+      scoreType,
+      classId,
+      subjectTeacherId,
+      schoolYearId
+    });
+  },
+
+  // Cấu hình trọng số điểm
+  configureWeights: (classId, subjectTeacherId, schoolYearId, weights) => {
+    return API.post(
+      `${endpoints["scores-configure-weights"]}/${classId}/scores/configure-weights?` +
+      `subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}`,
+      weights
+    );
+  },
+
+  // Khóa/mở khóa điểm của sinh viên
+  lockScore: (studentId, subjectTeacherId, schoolYearId, lock) => {
+    return API.post(endpoints["scores-lock"], {
+      studentId,
+      subjectTeacherId,
+      schoolYearId,
+      lock
+    });
+  },
+
+  // Khóa/mở khóa tất cả điểm
+  lockAllScores: (classId, subjectTeacherId, schoolYearId, lock) => {
+    return API.post(endpoints["scores-lock-all"], {
+      classId,
+      subjectTeacherId,
+      schoolYearId,
+      lock
+    });
+  },
+
+  // Lưu điểm
+  saveScores: (subjectTeacherId, schoolYearId, scores, locked = false) => {
+    return API.post(
+      endpoints["scores-save"],
+      {
+        subjectTeacherId,
+        schoolYearId,
+        scores,
+        locked
+      }
+    );
+  },
+
+  // Gửi thông báo điểm
+  sendScoreNotification: (studentId, subjectName) => {
+    return API.post(
+      `${endpoints["scores-notification"]}?studentId=${studentId}` +
+      `&subjectName=${encodeURIComponent(subjectName)}`
+    );
+  }
 };
 
 export default axios.create({
-    baseURL: SERVER
+  baseURL: SERVER
 })

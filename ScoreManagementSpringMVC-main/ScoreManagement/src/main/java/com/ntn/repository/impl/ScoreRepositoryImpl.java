@@ -42,6 +42,22 @@ public class ScoreRepositoryImpl implements ScoreRepository {
     }
 
     @Override
+    public boolean deleteScore(Integer scoreId) {
+        try {
+            Session session = this.factory.getObject().getCurrentSession();
+            Score score = session.get(Score.class, scoreId);
+            if (score != null) {
+                session.delete(score);
+                return true;
+            }
+            return false;
+        } catch (HibernateException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
     public List<Score> getScoreByStudentCode(String studentCode) {
         Session session = this.factory.getObject().getCurrentSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();
