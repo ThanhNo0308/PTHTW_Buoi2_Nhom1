@@ -11,19 +11,19 @@ const TeacherClassDetail = () => {
     const [user] = useContext(MyUserContext);
     const { selectedSchoolYearId } = useSchoolYear();
     const { setSelectedSubjectTeacherId } = useContext(UniqueSubjectTeacherIdContext);
-    
+
     const [classData, setClassData] = useState(null);
     const [students, setStudents] = useState([]);
     const [subjects, setSubjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    
+
     useEffect(() => {
         const loadClassDetail = async () => {
             try {
                 setLoading(true);
                 const response = await teacherClassApis.getClassDetail(classId, user.username);
-                
+
                 if (response.data) {
                     setClassData(response.data.classroom || null);
                     setStudents(response.data.students || []);
@@ -159,6 +159,7 @@ const TeacherClassDetail = () => {
                                             <th>Họ và tên</th>
                                             <th>Email</th>
                                             <th>Giới tính</th>
+                                            <th>Thao tác</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -169,6 +170,26 @@ const TeacherClassDetail = () => {
                                                 <td>{student.lastName} {student.firstName}</td>
                                                 <td>{student.email}</td>
                                                 <td>{student.gender === 0 ? 'Nam' : 'Nữ'}</td>
+                                                <td>
+                                                    <div className="d-flex gap-2">
+                                                        <Button
+                                                            variant="info"
+                                                            size="sm"
+                                                            as={Link}
+                                                            to={`/teacher/student/${student.studentCode}/detail`}
+                                                        >
+                                                            <i className="fas fa-info-circle me-1"></i> Chi tiết
+                                                        </Button>
+                                                        <Button
+                                                            variant="primary"
+                                                            size="sm"
+                                                            as={Link}
+                                                            to={`/teacher/student/${student.studentCode}/scores${selectedSchoolYearId ? `?schoolYearId=${selectedSchoolYearId}` : ''}`}
+                                                        >
+                                                            <i className="fas fa-chart-bar me-1"></i> Xem điểm
+                                                        </Button>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>

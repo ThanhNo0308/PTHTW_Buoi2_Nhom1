@@ -3,10 +3,10 @@ import { Container, Card, Row, Col, Table, Alert, Spinner, Button, Form } from '
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { scoreApis } from '../configs/Apis';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faUserGraduate, 
-  faArrowLeft, 
-  faExclamationTriangle, 
+import {
+  faUserGraduate,
+  faArrowLeft,
+  faExclamationTriangle,
   faCheckCircle,
   faFileDownload,
   faFilter,
@@ -18,7 +18,7 @@ const StudentScores = () => {
   const { studentCode } = useParams();
   const [searchParams] = useSearchParams();
   const initialSchoolYearId = searchParams.get('schoolYearId');
-  
+
   // State variables
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -30,26 +30,29 @@ const StudentScores = () => {
   const [currentSchoolYear, setCurrentSchoolYear] = useState(null);
   const [semesterAverage, setSemesterAverage] = useState(null);
   const [allScoreTypes, setAllScoreTypes] = useState([]);
-  
+
   // Load student scores data
   useEffect(() => {
     const loadScores = async () => {
       try {
         setLoading(true);
         setError('');
-        
+
         const response = await scoreApis.getStudentScores(
-          studentCode, 
+          studentCode,
           selectedSchoolYear || null
         );
-        
+
         if (response.data && response.data.success) {
           setStudent(response.data.student || {});
-          setScores(response.data.scores || []);
+          const validScores = (response.data.scores || []).filter(score => {
+            return score && score.subjectTeacherID && score.subjectTeacherID.subjectId;
+          });
+          setScores(validScores);
           setSchoolYears(response.data.schoolYears || []);
           setCurrentSchoolYear(response.data.currentSchoolYear || null);
           setSemesterAverage(response.data.semesterAverage);
-          
+
           // Thu thập tất cả các loại điểm từ dữ liệu
           const scoreTypesSet = new Set();
           response.data.scores.forEach(score => {
@@ -57,29 +60,29 @@ const StudentScores = () => {
               scoreTypesSet.add(score.scoreType.scoreType);
             }
           });
-          
+
           // Đảm bảo "Giữa kỳ" và "Cuối kỳ" luôn hiển thị đầu tiên nếu có
           const types = Array.from(scoreTypesSet);
           const midtermIndex = types.indexOf('Giữa kỳ');
           const finalIndex = types.indexOf('Cuối kỳ');
-          
+
           const sortedTypes = [];
-          
+
           // Thêm Giữa kỳ nếu có
           if (midtermIndex !== -1) {
             sortedTypes.push('Giữa kỳ');
             types.splice(midtermIndex, 1);
           }
-          
+
           // Thêm Cuối kỳ nếu có
           if (finalIndex !== -1) {
             sortedTypes.push('Cuối kỳ');
             types.splice(types.indexOf('Cuối kỳ'), 1);
           }
-          
+
           // Thêm các loại điểm còn lại theo thứ tự alphabet
           sortedTypes.push(...types.sort());
-          
+
           setAllScoreTypes(sortedTypes);
         } else {
           setError(response.data?.message || 'Không thể tải dữ liệu điểm');
@@ -91,37 +94,48 @@ const StudentScores = () => {
         setLoading(false);
       }
     };
-    
+
     if (studentCode) {
       loadScores();
     }
   }, [studentCode, selectedSchoolYear]);
-  
+
   // Handle school year change
   const handleSchoolYearChange = (e) => {
     setSelectedSchoolYear(e.target.value);
   };
+
   
+
   // Group scores by subject
   const groupScoresBySubject = () => {
     const groupedScores = {};
-    
+
+    // Kiểm tra scores có phải là một mảng hợp lệ không
+    if (!Array.isArray(scores) || scores.length === 0) {
+      return [];
+    }
+
     scores.forEach(score => {
-      const subjectId = score.subjectTeacherID.subjectID.id;
-      const subjectName = score.subjectTeacherID.subjectID.subjectName;
-      const subjectCode = score.subjectTeacherID.subjectID.subjectCode;
-      
+      // Kiểm tra dữ liệu hợp lệ trước khi truy cập
+      if (!score || !score.subjectTeacherID || !score.subjectTeacherID.subjectId) {
+        console.error("Missing required properties in score object:", score);
+        return; // Bỏ qua score này
+      }
+
+      const subjectId = score.subjectTeacherID.subjectId.id;
+      const subjectName = score.subjectTeacherID.subjectId.subjectName || 'Chưa có tên';
+
       if (!groupedScores[subjectId]) {
         groupedScores[subjectId] = {
           subjectId,
           subjectName,
-          subjectCode,
-          credits: score.subjectTeacherID.subjectID.credits || 0,
+          credits: score.subjectTeacherID.subjectId.credits || 0,
           scores: {},
-          weights: {} // Thêm thông tin về trọng số
+          weights: {}
         };
       }
-      
+
       if (score.scoreType) {
         groupedScores[subjectId].scores[score.scoreType.scoreType] = score.scoreValue;
         // Nếu có thông tin về trọng số, lưu lại
@@ -130,10 +144,12 @@ const StudentScores = () => {
         }
       }
     });
-    
+
     return Object.values(groupedScores);
   };
-  
+
+  const groupedScoresBySubject = groupScoresBySubject();
+
   // Calculate subject average based on score weights
   const calculateSubjectAverage = (subjectScores, subjectWeights) => {
     // Default weights if not configured
@@ -141,31 +157,51 @@ const StudentScores = () => {
       'Giữa kỳ': 0.4,
       'Cuối kỳ': 0.6
     };
-    
+
     let totalWeightedScore = 0;
     let totalWeight = 0;
-    
+
     Object.keys(subjectScores).forEach(type => {
       const score = subjectScores[type];
-      
+
       // Sử dụng trọng số từ dữ liệu nếu có, nếu không dùng giá trị mặc định
       // hoặc phân bổ đều cho các loại điểm khác
-      const weight = subjectWeights[type] || defaultWeights[type] || 
-                    (1 / Object.keys(subjectScores).length);
-      
+      const weight = subjectWeights[type] || defaultWeights[type] ||
+        (1 / Object.keys(subjectScores).length);
+
       totalWeightedScore += score * weight;
       totalWeight += weight;
     });
-    
+
     if (totalWeight > 0) {
       return totalWeightedScore / totalWeight;
     }
-    
+
     return null;
   };
-  
-  const groupedScoresBySubject = groupScoresBySubject();
-  
+
+  // Thêm hàm tính điểm trung bình học kỳ
+  const calculateSemesterAverage = () => {
+    let totalWeightedScore = 0;
+    let totalCredits = 0;
+
+    groupedScoresBySubject.forEach(subject => {
+      const avgScore = calculateSubjectAverage(subject.scores, subject.weights);
+      if (avgScore !== null) {
+        totalWeightedScore += avgScore * subject.credits;
+        totalCredits += subject.credits;
+      }
+    });
+
+    if (totalCredits > 0) {
+      return totalWeightedScore / totalCredits;
+    }
+
+    return null;
+  };
+
+  const calculatedSemesterAverage = calculateSemesterAverage();
+
   if (loading) {
     return (
       <Container className="mt-4 text-center">
@@ -174,23 +210,23 @@ const StudentScores = () => {
       </Container>
     );
   }
-  
+
   return (
     <Container className="mt-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>
           <FontAwesomeIcon icon={faUserGraduate} className="me-2" />
           Bảng điểm: <span className="text-primary">
-            {student ? `${student.firstName} ${student.lastName}` : studentCode}
+            {student ? `${student.lastName} ${student.firstName}` : studentCode}
           </span>
         </h2>
-        
+
         <Button as={Link} to={`/teacher/student/${studentCode}/detail`} variant="secondary">
           <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
           Quay lại
         </Button>
       </div>
-      
+
       {/* Error and Success Alerts */}
       {error && (
         <Alert variant="danger" dismissible onClose={() => setError('')}>
@@ -198,14 +234,14 @@ const StudentScores = () => {
           {error}
         </Alert>
       )}
-      
+
       {success && (
         <Alert variant="success" dismissible onClose={() => setSuccess('')}>
           <FontAwesomeIcon icon={faCheckCircle} className="me-2" />
           {success}
         </Alert>
       )}
-      
+
       {/* Student Info Card */}
       <Row className="mb-4">
         <Col md={4}>
@@ -215,13 +251,13 @@ const StudentScores = () => {
             </Card.Header>
             <Card.Body>
               <p><strong>Mã sinh viên:</strong> {student?.studentCode}</p>
-              <p><strong>Họ và tên:</strong> {student?.firstName} {student?.lastName}</p>
+              <p><strong>Họ và tên:</strong> {student?.lastName} {student?.firstName}</p>
               <p><strong>Lớp:</strong> {student?.classId?.className || '-'}</p>
               <p><strong>Email:</strong> {student?.email || '-'}</p>
             </Card.Body>
           </Card>
         </Col>
-        
+
         <Col md={8}>
           <Card className="shadow-sm">
             <Card.Header className="bg-info text-white">
@@ -230,25 +266,25 @@ const StudentScores = () => {
                   <FontAwesomeIcon icon={faFilter} className="me-2" />
                   Lọc điểm theo học kỳ
                 </span>
-                {semesterAverage !== null && (
+                {calculatedSemesterAverage !== null && (
                   <span className="badge bg-light text-dark">
                     <FontAwesomeIcon icon={faCalculator} className="me-1" />
-                    Điểm TB học kỳ: <span className="text-primary fw-bold">{semesterAverage.toFixed(2)}</span>
+                    Điểm TB học kỳ: <span className="text-primary fw-bold">{calculatedSemesterAverage.toFixed(2)}</span>
                   </span>
                 )}
               </Card.Title>
             </Card.Header>
             <Card.Body>
               <Form.Group>
-                <Form.Select 
+                <Form.Select
                   value={selectedSchoolYear}
                   onChange={handleSchoolYearChange}
                   className="mb-3"
                 >
                   <option value="">-- Tất cả học kỳ --</option>
                   {schoolYears.map(year => (
-                    <option 
-                      key={year.id} 
+                    <option
+                      key={year.id}
                       value={year.id}
                     >
                       {year.nameYear} {year.semesterName}
@@ -257,13 +293,13 @@ const StudentScores = () => {
                   ))}
                 </Form.Select>
               </Form.Group>
-              
+
               {currentSchoolYear && (
                 <Alert variant="info">
                   Đang hiển thị điểm học kỳ: <strong>{currentSchoolYear.nameYear} {currentSchoolYear.semesterName}</strong>
                 </Alert>
               )}
-              
+
               <div className="d-flex justify-content-end">
                 <Button variant="outline-primary" size="sm">
                   <FontAwesomeIcon icon={faFileDownload} className="me-2" />
@@ -274,7 +310,7 @@ const StudentScores = () => {
           </Card>
         </Col>
       </Row>
-      
+
       {/* Scores Table */}
       <Card className="shadow-sm">
         <Card.Header className="bg-primary text-white">
@@ -285,12 +321,11 @@ const StudentScores = () => {
         </Card.Header>
         <Card.Body>
           {groupedScoresBySubject.length > 0 ? (
-            <div className="table-responsive">
+            <div className="table-responsive text-center">
               <Table bordered hover>
                 <thead className="table-light">
                   <tr>
                     <th>STT</th>
-                    <th>Mã môn học</th>
                     <th>Tên môn học</th>
                     <th>Số tín chỉ</th>
                     {/* Tạo cột động cho mỗi loại điểm */}
@@ -305,11 +340,10 @@ const StudentScores = () => {
                   {groupedScoresBySubject.map((subject, index) => {
                     const avgScore = calculateSubjectAverage(subject.scores, subject.weights);
                     const isPassed = avgScore !== null ? avgScore >= 5 : false;
-                    
+
                     return (
                       <tr key={subject.subjectId}>
                         <td>{index + 1}</td>
-                        <td>{subject.subjectCode}</td>
                         <td>{subject.subjectName}</td>
                         <td className="text-center">{subject.credits}</td>
                         {/* Hiển thị điểm cho từng loại điểm */}

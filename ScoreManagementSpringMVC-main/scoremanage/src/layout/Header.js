@@ -120,7 +120,7 @@ const Header = () => {
                 <Nav.Link as={Link} to="/teacher/classes">
                   <FontAwesomeIcon icon={faSchool} className="me-1" /> Lớp học
                 </Nav.Link>
-                <Nav.Link as={Link} to="/teacher/search-students">
+                <Nav.Link as={Link} to="/teacher/students/search">
                   <FontAwesomeIcon icon={faSearch} className="me-1" /> Tìm kiếm sinh viên
                 </Nav.Link>
                 <Nav.Link as={Link} to="/teacher/scores/import">

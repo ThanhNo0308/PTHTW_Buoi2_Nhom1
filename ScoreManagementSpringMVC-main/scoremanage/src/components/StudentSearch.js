@@ -131,7 +131,7 @@ const StudentSearch = () => {
                     {students.map((student) => (
                       <tr key={student.id}>
                         <td>{student.studentCode}</td>
-                        <td>{student.firstName} {student.lastName}</td>
+                        <td>{student.lastName} {student.firstName}</td>
                         <td>{student.classId.className}</td>
                         <td>{student.email}</td>
                         <td>{student.phone || '-'}</td>

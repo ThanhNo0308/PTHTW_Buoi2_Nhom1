@@ -51,5 +51,7 @@ public interface StudentSubjectTeacherService {
     List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID);
 
     List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID);
+    
+    List<Studentsubjectteacher> getEnrollmentsByStudentCode(String studentCode);
 
 }

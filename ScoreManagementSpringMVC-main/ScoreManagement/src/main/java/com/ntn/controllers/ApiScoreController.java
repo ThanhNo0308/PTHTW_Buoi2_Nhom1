@@ -4,6 +4,7 @@ import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Score;
 import com.ntn.pojo.Class;
 import com.ntn.pojo.Student;
+import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.Typescore;
@@ -12,6 +13,7 @@ import com.ntn.service.EmailService;
 import com.ntn.service.SchoolYearService;
 import com.ntn.service.ScoreService;
 import com.ntn.service.StudentService;
+import com.ntn.service.StudentSubjectTeacherService;
 import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TeacherService;
 import com.ntn.service.TypeScoreService;
@@ -20,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,6 +32,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -64,6 +68,9 @@ public class ApiScoreController {
 
     @Autowired
     private TeacherService teacherService;
+
+    @Autowired
+    private StudentSubjectTeacherService studentSubjectTeacherService;
 
     /**
      * Lấy danh sách loại điểm
@@ -633,34 +640,123 @@ public class ApiScoreController {
                 response.put("success", true);
                 response.put("student", student.get());
 
-                // Tính điểm trung bình theo học kỳ
-                List<Schoolyear> schoolYears = schoolYearService.getAllSchoolYears();
+                // Lấy thông tin về các học kỳ
+                List<Schoolyear> allSchoolYears = schoolYearService.getAllSchoolYears();
+                List<Schoolyear> relevantSchoolYears = new ArrayList<>();
                 Map<Integer, Double> averageScores = new HashMap<>();
+                Map<Integer, List<Map<String, Object>>> enrolledSubjects = new HashMap<>();
 
-                for (Schoolyear schoolYear : schoolYears) {
+                // Lấy danh sách đăng ký môn học của sinh viên
+                List<Studentsubjectteacher> studentEnrollments
+                        = studentSubjectTeacherService.getEnrollmentsByStudentCode(studentCode);
+
+                // Tạo map để lưu trữ học kỳ của mỗi đăng ký
+                Map<Integer, Schoolyear> enrollmentSchoolYears = new HashMap<>();
+                Map<Integer, Set<Integer>> schoolYearSubjects = new HashMap<>();
+
+                // Xử lý thông tin đăng ký môn học
+                for (Studentsubjectteacher enrollment : studentEnrollments) {
+                    Subjectteacher subjectTeacher = enrollment.getSubjectTeacherId();
+                    if (subjectTeacher != null && subjectTeacher.getSchoolYearId() != null) {
+                        Schoolyear schoolYear = subjectTeacher.getSchoolYearId();
+                        Integer schoolYearId = schoolYear.getId();
+
+                        // Thêm học kỳ vào danh sách nếu chưa có
+                        enrollmentSchoolYears.putIfAbsent(schoolYearId, schoolYear);
+
+                        // Thêm thông tin môn học đã đăng ký
+                        schoolYearSubjects.putIfAbsent(schoolYearId, new HashSet<>());
+                        schoolYearSubjects.get(schoolYearId).add(subjectTeacher.getSubjectId().getId());
+
+                        // Thêm thông tin môn học đã đăng ký cho frontend
+                        enrolledSubjects.putIfAbsent(schoolYearId, new ArrayList<>());
+                        Map<String, Object> subject = new HashMap<>();
+                        subject.put("id", subjectTeacher.getSubjectId().getId());
+                        subject.put("name", subjectTeacher.getSubjectId().getSubjectName());
+                        subject.put("credits", subjectTeacher.getSubjectId().getCredits());
+                        enrolledSubjects.get(schoolYearId).add(subject);
+                    }
+                }
+
+                // Thêm các học kỳ đã đăng ký vào danh sách
+                for (Schoolyear schoolYear : enrollmentSchoolYears.values()) {
+                    if (!relevantSchoolYears.contains(schoolYear)) {
+                        relevantSchoolYears.add(schoolYear);
+                    }
+                }
+
+                Map<Integer, List<Map<String, Object>>> subjectScoresByYear = new HashMap<>();
+
+                // Bổ sung thông tin điểm cho từng học kỳ
+                for (Schoolyear schoolYear : allSchoolYears) {
                     List<Score> scores = scoreService.getSubjectScoresByStudentCodeAndSchoolYear(
                             studentCode, schoolYear.getId());
 
                     if (!scores.isEmpty()) {
-                        double totalScore = 0;
-                        int totalCredits = 0;
+                        // Thêm học kỳ vào danh sách
+                        if (!relevantSchoolYears.contains(schoolYear)) {
+                            relevantSchoolYears.add(schoolYear);
+                        }
 
+                        // Nhóm điểm theo môn học
+                        Map<Integer, List<Score>> scoresBySubject = new HashMap<>();
                         for (Score score : scores) {
-                            if (score.getAverageScore() != null) {
-                                int credits = score.getSubjectTeacherID().getSubjectId().getCredits();
-                                totalScore += score.getAverageScore() * credits;
-                                totalCredits += credits;
+                            int subjectId = score.getSubjectTeacherID().getSubjectId().getId();
+                            if (!scoresBySubject.containsKey(subjectId)) {
+                                scoresBySubject.put(subjectId, new ArrayList<>());
                             }
+                            scoresBySubject.get(subjectId).add(score);
                         }
 
-                        if (totalCredits > 0) {
-                            averageScores.put(schoolYear.getId(), totalScore / totalCredits);
+                        List<Map<String, Object>> subjectScores = new ArrayList<>();
+                        for (Map.Entry<Integer, List<Score>> entry : scoresBySubject.entrySet()) {
+                            int subjectId = entry.getKey();
+                            List<Score> subjectScoreList = entry.getValue();
+
+                            // Tính điểm trung bình môn học
+                            double totalWeightedScore = 0;
+                            double totalWeight = 0;
+
+                            for (Score score : subjectScoreList) {
+                                if (score.getScoreType() != null && score.getScoreValue() != null) {
+                                    Float weight = scoreService.getScoreWeight(
+                                            score.getSubjectTeacherID().getClassId().getId(),
+                                            score.getSubjectTeacherID().getId(),
+                                            schoolYear.getId(),
+                                            score.getScoreType().getScoreType()
+                                    );
+
+                                    if (weight != null) {
+                                        totalWeightedScore += score.getScoreValue() * weight;
+                                        totalWeight += weight;
+                                    }
+                                }
+                            }
+
+                            double subjectAverage = 0;
+                            if (totalWeight > 0) {
+                                subjectAverage = totalWeightedScore / totalWeight;
+                            }
+
+                            Map<String, Object> subjectScoreInfo = new HashMap<>();
+                            subjectScoreInfo.put("id", subjectId);
+                            subjectScoreInfo.put("name", subjectScoreList.get(0).getSubjectTeacherID().getSubjectId().getSubjectName());
+                            subjectScoreInfo.put("credits", subjectScoreList.get(0).getSubjectTeacherID().getSubjectId().getCredits());
+                            subjectScoreInfo.put("averageScore", subjectAverage);
+
+                            subjectScores.add(subjectScoreInfo);
                         }
+
+                        subjectScoresByYear.put(schoolYear.getId(), subjectScores);
                     }
                 }
 
-                response.put("schoolYears", schoolYears);
+                // Sắp xếp học kỳ theo thứ tự mới nhất trước
+                Collections.sort(relevantSchoolYears, (sy1, sy2) -> Integer.compare(sy2.getId(), sy1.getId()));
+                response.put("subjectScoresByYear", subjectScoresByYear);
+                response.put("schoolYears", relevantSchoolYears);
                 response.put("averageScores", averageScores);
+                response.put("enrolledSubjects", enrolledSubjects);
 
                 return ResponseEntity.ok(response);
             } else {
@@ -669,6 +765,7 @@ public class ApiScoreController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
         } catch (Exception e) {
+            e.printStackTrace();
             response.put("success", false);
             response.put("message", "Lỗi: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -692,6 +789,40 @@ public class ApiScoreController {
                 Student student = studentOpt.get();
                 response.put("student", student);
 
+                // Lấy danh sách đăng ký môn học của sinh viên
+                List<Studentsubjectteacher> enrollments
+                        = studentSubjectTeacherService.getEnrollmentsByStudentCode(studentCode);
+
+                // Tạo map để lưu trữ học kỳ của mỗi đăng ký
+                Set<Integer> enrolledSchoolYearIds = new HashSet<>();
+                Map<Integer, List<Map<String, Object>>> enrolledSubjects = new HashMap<>();
+
+                // Xử lý enrollments để lấy danh sách học kỳ có đăng ký
+                for (Studentsubjectteacher enrollment : enrollments) {
+                    if (enrollment.getSubjectTeacherId() != null
+                            && enrollment.getSubjectTeacherId().getSchoolYearId() != null) {
+
+                        Schoolyear schoolYear = enrollment.getSubjectTeacherId().getSchoolYearId();
+                        enrolledSchoolYearIds.add(schoolYear.getId());
+
+                        // Thêm thông tin môn học đã đăng ký
+                        enrolledSubjects.putIfAbsent(schoolYear.getId(), new ArrayList<>());
+                        Map<String, Object> subject = new HashMap<>();
+                        subject.put("id", enrollment.getSubjectTeacherId().getSubjectId().getId());
+                        subject.put("name", enrollment.getSubjectTeacherId().getSubjectId().getSubjectName());
+                        enrolledSubjects.get(schoolYear.getId()).add(subject);
+                    }
+                }
+
+                // Lấy danh sách tất cả học kỳ
+                List<Schoolyear> allSchoolYears = schoolYearService.getAllSchoolYears();
+
+                // Lọc để chỉ giữ lại học kỳ sinh viên đã đăng ký
+                List<Schoolyear> filteredSchoolYears = allSchoolYears.stream()
+                        .filter(sy -> enrolledSchoolYearIds.contains(sy.getId()))
+                        .collect(Collectors.toList());
+
+
                 List<Score> scores;
                 Schoolyear currentSchoolYear;
 
@@ -704,10 +835,11 @@ public class ApiScoreController {
                     scores = scoreService.getSubjectScoresByStudentCodeAndSchoolYear(studentCode, currentSchoolYearId);
                     currentSchoolYear = schoolYearService.getSchoolYearById(currentSchoolYearId);
                 }
-
+                
+                response.put("enrolledSubjects", enrolledSubjects);
+                response.put("schoolYears", filteredSchoolYears);
                 response.put("scores", scores);
                 response.put("currentSchoolYear", currentSchoolYear);
-                response.put("schoolYears", schoolYearService.getAllSchoolYears());
 
                 // Tính điểm trung bình học kỳ
                 if (!scores.isEmpty()) {
@@ -788,7 +920,7 @@ public class ApiScoreController {
 
         try {
             // Tạo file mẫu CSV
-            String csvContent = "MSSV,Họ tên,Giữa kỳ,Cuối kỳ,Cột điểm 1,Cột điểm 2,Cột điểm 3\n"
+            String csvContent = "MSSV,Họ tên,Điểm bổ sung 1,Điểm bổ sung 2,Điểm bổ sung 3,Giữa kỳ,Cuối kỳ\n"
                     + "SV001,Nguyễn Văn A,8.5,9.0,7.5,8.0,9.5\n"
                     + "SV002,Trần Thị B,7.0,8.0,6.5,7.0,8.5\n";
 
@@ -852,6 +984,17 @@ public class ApiScoreController {
                 }
             }
 
+            List<Student> studentsInClass = studentService.getStudentByClassId(classId);
+
+            // Tạo map để tra cứu nhanh với MSSV là key
+            Map<String, Student> studentCodeMap = new HashMap<>();
+            for (Student student : studentsInClass) {
+                studentCodeMap.put(student.getStudentCode(), student);
+            }
+
+            // Kiểm tra sinh viên trong file CSV
+            List<Map<String, String>> invalidStudents = new ArrayList<>();
+
             // Kiểm tra xem file CSV có các cột điểm phù hợp với loại điểm trong hệ thống hay không
             try (CSVParser parser = new CSVParser(
                     new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8),
@@ -859,14 +1002,54 @@ public class ApiScoreController {
 
                 // Lấy tên các cột trong file CSV
                 List<String> headerNames = parser.getHeaderNames();
-                System.out.println("CSV headers: " + headerNames);
+
+                for (CSVRecord record : parser) {
+                    String studentCode;
+                    try {
+                        studentCode = record.get("MSSV");
+                    } catch (IllegalArgumentException e1) {
+                        try {
+                            studentCode = record.get("Mã SV");
+                        } catch (IllegalArgumentException e2) {
+                            System.err.println("Không tìm thấy cột MSSV hoặc Mã SV trong CSV");
+                            continue;
+                        }
+                    }
+
+                    // Bỏ qua nếu không có MSSV
+                    if (studentCode == null || studentCode.isEmpty()) {
+                        continue;
+                    }
+
+                    // Lấy họ tên từ CSV
+                    String fullName = "";
+                    try {
+                        fullName = record.get("Họ tên");
+                    } catch (IllegalArgumentException e) {
+                        // Nếu không có cột Họ tên
+                    }
+
+                    // Kiểm tra sinh viên trong hệ thống
+                    Student studentInSystem = studentCodeMap.get(studentCode);
+                    if (studentInSystem == null) {
+                        Map<String, String> invalidStudent = new HashMap<>();
+                        invalidStudent.put("studentCode", studentCode);
+                        invalidStudent.put("fullName", fullName);
+                        invalidStudent.put("error", "Sinh viên không có trong danh sách lớp này");
+                        invalidStudents.add(invalidStudent);
+                    }
+                }
+
+                // Nếu có sinh viên không hợp lệ, trả về lỗi ngay
+                if (!invalidStudents.isEmpty()) {
+                    response.put("success", false);
+                    response.put("message", "File CSV chứa sinh viên không có trong danh sách lớp");
+                    response.put("invalidStudents", invalidStudents);
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
 
                 // Lấy các loại điểm được cấu hình trong hệ thống từ bảng classscoretypes
                 List<String> configuredScoreTypes = typeScoreService.getScoreTypesByClass(classId, subjectTeacherId, schoolYearId);
-                System.out.println("Configured score types: " + configuredScoreTypes);
-
-                // Lấy tất cả loại điểm để tham khảo
-                List<Typescore> allScoreTypes = typeScoreService.getAllScoreTypes();
 
                 // Kiểm tra xem có cột điểm nào trong CSV không có trong hệ thống không
                 List<String> missingScoreColumns = new ArrayList<>();

@@ -145,7 +145,7 @@ const Home = () => {
                       <FontAwesomeIcon icon={faSignInAlt} className="me-2" />
                       Đăng nhập
                     </Link>
-                    <Link to="/register" className="btn btn-outline-primary w-100">
+                    <Link to="/registerStudent" className="btn btn-outline-primary w-100">
                       <FontAwesomeIcon icon={faUserPlus} className="me-2" />
                       Đăng ký tài khoản
                     </Link>

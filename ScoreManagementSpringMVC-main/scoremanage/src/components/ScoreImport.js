@@ -26,6 +26,9 @@ const ScoreImport = () => {
   const [allClasses, setAllClasses] = useState([]);
   const [filteredClasses, setFilteredClasses] = useState([]);
   const [filteredSchoolYears, setFilteredSchoolYears] = useState([]);
+  const [invalidStudents, setInvalidStudents] = useState([]);
+  const [showMissingScoreTypesAlert, setShowMissingScoreTypesAlert] = useState(true);
+  const [showInvalidStudentsAlert, setShowInvalidStudentsAlert] = useState(true);
   // State cho thông báo
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -259,6 +262,9 @@ const ScoreImport = () => {
     setError('');
     setSuccess('');
     setMissingScoreTypes([]);
+    setInvalidStudents([]);
+    setShowMissingScoreTypesAlert(true);
+    setShowInvalidStudentsAlert(true);
   };
 
   const refreshUserToken = async () => {
@@ -296,6 +302,9 @@ const ScoreImport = () => {
       setError('');
       setSuccess('');
       setMissingScoreTypes([]);
+      setInvalidStudents([]);
+      setShowMissingScoreTypesAlert(true);
+      setShowInvalidStudentsAlert(true);
 
       if (csvPreview && csvPreview.length > 0) {
         const headers = csvPreview[0];
@@ -331,27 +340,34 @@ const ScoreImport = () => {
       } else {
         setError(response.data?.message || 'Có lỗi xảy ra khi import điểm');
 
+        // Xử lý trường hợp sinh viên không hợp lệ
+        if (response.data?.invalidStudents && response.data.invalidStudents.length > 0) {
+          setInvalidStudents(response.data.invalidStudents);
+        }
+
         // Nếu có các loại điểm chưa được cấu hình
         if (response.data?.missingScoreTypes) {
           setMissingScoreTypes(response.data.missingScoreTypes);
         }
       }
     } catch (err) {
-      console.error("Import error:", err);
+      console.error("Error importing scores:", err);
+      // Trường hợp lỗi từ API
+      if (err.response && err.response.data) {
+        setError(err.response.data.message || 'Có lỗi xảy ra khi import điểm');
 
-      if (err.response && err.response.status === 401) {
-        setError('Phiên làm việc đã hết hạn hoặc bạn không có quyền truy cập chức năng này');
+        // Xử lý các sinh viên không hợp lệ từ response error
+        if (err.response.data.invalidStudents && err.response.data.invalidStudents.length > 0) {
+          console.log("Invalid students from error:", err.response.data.invalidStudents);
+          setInvalidStudents(err.response.data.invalidStudents);
+        }
 
-        // Hiển thị nút đăng nhập lại thay vì tự động chuyển hướng
-      } else if (err.response && err.response.data && err.response.data.message) {
-        setError(`Lỗi: ${err.response.data.message}`);
-
-        // Xử lý lỗi thiếu loại điểm
+        // Xử lý thiếu loại điểm
         if (err.response.data.missingScoreTypes) {
           setMissingScoreTypes(err.response.data.missingScoreTypes);
         }
       } else {
-        setError(`Lỗi không xác định: ${err.message}`);
+        setError('Có lỗi xảy ra khi kết nối đến máy chủ');
       }
     } finally {
       setLoading(false);
@@ -398,8 +414,12 @@ const ScoreImport = () => {
       )}
 
       {/* Thông báo thiếu loại điểm */}
-      {missingScoreTypes.length > 0 && (
-        <Alert variant="warning">
+      {missingScoreTypes.length > 0 && showMissingScoreTypesAlert && (
+        <Alert
+          variant="warning"
+          dismissible
+          onClose={() => setShowMissingScoreTypesAlert(false)}
+        >
           <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
           <p>File CSV chứa các loại điểm chưa được cấu hình trong hệ thống:</p>
           <ul>
@@ -411,6 +431,40 @@ const ScoreImport = () => {
           <Button variant="primary" onClick={goToScoreTypeConfig}>
             Cấu hình loại điểm
           </Button>
+        </Alert>
+      )}
+
+      {invalidStudents.length > 0 && showInvalidStudentsAlert && (
+        <Alert
+          variant="warning"
+          dismissible
+          onClose={() => setShowInvalidStudentsAlert(false)}
+        >
+          <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
+          <p>File CSV chứa sinh viên không tồn tại trong danh sách lớp này:</p>
+          <div className="table-responsive">
+            <Table striped bordered hover size="sm">
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>MSSV</th>
+                  <th>Họ tên trong CSV</th>
+                  <th>Lỗi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invalidStudents.map((student, index) => (
+                  <tr key={index}>
+                    <td>{index + 1}</td>
+                    <td>{student.studentCode}</td>
+                    <td>{student.fullName}</td>
+                    <td>{student.error}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+          <p className="mt-2">Vui lòng kiểm tra lại file CSV hoặc danh sách sinh viên trong hệ thống.</p>
         </Alert>
       )}
 
@@ -485,7 +539,7 @@ const ScoreImport = () => {
                 </div>
               </div>
               <div className="row mb-3">
-                
+
                 <div className="col-md-12">
                   <Form.Group>
                     <Form.Label>File CSV</Form.Label>

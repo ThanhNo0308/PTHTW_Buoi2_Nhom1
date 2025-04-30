@@ -171,12 +171,6 @@ public class ScoreServiceImpl implements ScoreService {
             Subjectteacher subjectTeacher = subjectTeacherRepository.findByIdClassIdAndSchoolYearId(
                     subjectTeacherId, classId, schoolYearId);
 
-            // Log chi tiết để debug
-            System.out.println("Finding SubjectTeacher with params: "
-                    + "subjectTeacherId=" + subjectTeacherId
-                    + ", classId=" + classId
-                    + ", schoolYearId=" + schoolYearId);
-
             if (subjectTeacher == null) {
                 // Nếu không tìm thấy với 3 tiêu chí, thử tìm chỉ với ID
                 System.out.println("SubjectTeacher not found with all 3 params. Trying with ID only.");
@@ -246,16 +240,26 @@ public class ScoreServiceImpl implements ScoreService {
                                 continue;
                             }
 
-                            // Tạo hoặc cập nhật điểm
-                            Score score = new Score();
-                            score.setStudentID(student);
-                            score.setSubjectTeacherID(subjectTeacher);
-                            score.setScoreType(typeScore);
-                            score.setScoreValue(scoreValue);
-                            score.setIsDraft(true);
-                            score.setIsLocked(false);
-                            score.setSchoolYearId(schoolYear);
-                            scores.add(score);
+                            // Kiểm tra xem điểm đã tồn tại chưa
+                            Score existingScore = scoreRepo.getScoreByStudentSubjectSchoolYearAndType(
+                                    student.getId(), subjectTeacherId, schoolYearId, typeScore.getScoreType());
+
+                            if (existingScore != null) {
+                                // Nếu điểm đã tồn tại, cập nhật giá trị điểm
+                                existingScore.setScoreValue(scoreValue);
+                                scores.add(existingScore);
+                            } else {
+                                // Nếu điểm chưa tồn tại, tạo mới
+                                Score newScore = new Score();
+                                newScore.setStudentID(student);
+                                newScore.setSubjectTeacherID(subjectTeacher);
+                                newScore.setScoreType(typeScore);
+                                newScore.setScoreValue(scoreValue);
+                                newScore.setIsDraft(true);
+                                newScore.setIsLocked(false);
+                                newScore.setSchoolYearId(schoolYear);
+                                scores.add(newScore);
+                            }
 
                         } catch (NumberFormatException e) {
                             System.err.println("Giá trị không phải số (" + scoreValueStr + ") cho sinh viên " + studentCode);
@@ -266,7 +270,6 @@ public class ScoreServiceImpl implements ScoreService {
 
             // Lưu tất cả điểm
             return scoreRepo.saveScores(scores);
-
         } catch (Exception e) {
             System.err.println("Lỗi khi import điểm: " + e.getMessage());
             e.printStackTrace();

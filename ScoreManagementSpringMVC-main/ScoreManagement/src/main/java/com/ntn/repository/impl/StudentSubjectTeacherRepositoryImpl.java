@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.jpa.QueryHints;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
@@ -176,17 +177,17 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
 
         return session.createQuery(query).getResultList();
     }
-    
+
     @Override
     public List<Studentsubjectteacher> getBySchoolYearId(int schoolYearId) {
         Session session = this.factory.getObject().getCurrentSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Studentsubjectteacher> query = builder.createQuery(Studentsubjectteacher.class);
         Root<Studentsubjectteacher> root = query.from(Studentsubjectteacher.class);
-        
+
         // Join từ Studentsubjectteacher -> Subjectteacher -> SchoolYear
         Join<Studentsubjectteacher, Subjectteacher> subjectTeacherJoin = root.join("subjectTeacherId");
-        
+
         query.where(builder.equal(subjectTeacherJoin.get("schoolYearId").get("id"), schoolYearId));
         query.orderBy(builder.desc(root.get("id")));
 
@@ -380,6 +381,29 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
         q.setParameter("studentID", studentID);
         List<Studentsubjectteacher> listStudentsubjectteacher = q.getResultList();
         return listStudentsubjectteacher;
+    }
+
+    @Override
+    public List<Studentsubjectteacher> getEnrollmentsByStudentCode(String studentCode) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Studentsubjectteacher> query = builder.createQuery(Studentsubjectteacher.class);
+        Root<Studentsubjectteacher> root = query.from(Studentsubjectteacher.class);
+
+        // Join để lấy thông tin sinh viên
+        Join<Studentsubjectteacher, Student> studentJoin = root.join("studentId");
+
+        // Điều kiện lọc theo mã sinh viên
+        Predicate predicate = builder.equal(studentJoin.get("studentCode"), studentCode);
+
+        query.where(predicate);
+
+        // Fetch eagerly để tránh lazy loading exception
+        query.distinct(true);
+
+        return session.createQuery(query)
+                .setHint(QueryHints.HINT_FETCH_SIZE, 50)
+                .getResultList();
     }
 
 }
