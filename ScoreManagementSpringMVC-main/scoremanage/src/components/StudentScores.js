@@ -299,13 +299,6 @@ const StudentScores = () => {
                   Đang hiển thị điểm học kỳ: <strong>{currentSchoolYear.nameYear} {currentSchoolYear.semesterName}</strong>
                 </Alert>
               )}
-
-              <div className="d-flex justify-content-end">
-                <Button variant="outline-primary" size="sm">
-                  <FontAwesomeIcon icon={faFileDownload} className="me-2" />
-                  Xuất bảng điểm
-                </Button>
-              </div>
             </Card.Body>
           </Card>
         </Col>

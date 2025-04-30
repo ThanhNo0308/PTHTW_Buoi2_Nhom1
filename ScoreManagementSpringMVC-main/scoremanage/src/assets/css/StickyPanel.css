@@ -27,7 +27,7 @@
     text-align: center;
 }
 .panel-button:hover {
-    background-color: #ffc3ac; /* Màu nền khi hover */
+    background-color: #ffc3ac; 
 }
 .change-score{
     color: white;

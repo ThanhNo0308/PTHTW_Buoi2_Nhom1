@@ -11,10 +11,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-/**
- *
- * @author nguye
- */
 @Service
 public class ForumServiceImpl implements ForumService {
     
@@ -28,6 +24,16 @@ public class ForumServiceImpl implements ForumService {
     @Override
     public List<Forum> getForumBySubjectTeacher(int subjectTeacherId) {
         return this.forumRepo.getForumBySubjectTeacher(subjectTeacherId);
+    }
+    
+    @Override
+    public List<Forum> getForumByTeacher(int teacherId) {
+        return this.forumRepo.getForumByTeacher(teacherId);
+    }
+    
+    @Override
+    public List<Forum> getForumByStudent(int studentId) {
+        return this.forumRepo.getForumByStudent(studentId);
     }
 
     @Override

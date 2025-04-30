@@ -17,11 +17,12 @@ import StudentScores from "./components/StudentScores";
 import StudentSearch from "./components/StudentSearch";
 import ScoreImport from "./components/ScoreImport";
 
+import ForumList from "./components/ForumList";
+import ForumDetail from "./components/ForumDetail";
+import ForumCreate from "./components/ForumCreate";
+
 import MyUserReducer from "./reducers/MyUserReducer";
 import cookie from "react-cookies";
-import { SchoolYearProvider } from './reducers/SchoolYearContext';
-import { UniqueSubjectTeacherIdProvider } from "./reducers/UniqueSubjectTeacherIdContext";
-import { ListStudentsProvider } from "./reducers/ListStudentsContext";
 import FireBase from "./components/FireBase";
 import StudentDashboard from "./components/StudentDashboard";
 import TeacherDashboard from "./components/TeacherDashboard";
@@ -32,9 +33,7 @@ const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, cookie.load("user") || null);  
   return (<>
     <MyUserContext.Provider value={[user, dispatch]}>
-      <SchoolYearProvider>
-        <UniqueSubjectTeacherIdProvider>
-          <ListStudentsProvider>
+  
             <BrowserRouter>
               <Header className="header" />
               <Routes className="routes">
@@ -51,15 +50,16 @@ const App = () => {
                 <Route path="/teacher/student/:studentCode/scores" element={<div style={{ margin: '50px 150px' }}><StudentScores /></div>} />
                 <Route path="/teacher/students/search" element={<div style={{ margin: '50px 150px' }}><StudentSearch /></div>} />
                 <Route path="/teacher/scores/import" element={<div style={{ margin: '50px 150px' }}><ScoreImport /></div>} />
+                <Route path="/forums" element={<div style={{ margin: '50px 150px' }}><ForumList /></div>} />
+                <Route path="/forums/create" element={<div style={{ margin: '50px 150px' }}><ForumCreate /></div>} />
+                <Route path="/forums/:forumId" element={<div style={{ margin: '50px 150px' }}><ForumDetail /></div>} />
 
                 <Route path="/chatfirebase" element={<div style={{ margin: '50px 150px' }}><FireBase /></div>} />
 
               </Routes>
               <Footer className="footer" />
             </BrowserRouter>
-          </ListStudentsProvider>
-        </UniqueSubjectTeacherIdProvider>
-      </SchoolYearProvider>
+
 
     </MyUserContext.Provider>
   </>)

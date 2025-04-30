@@ -10,6 +10,7 @@ export const endpoints = {
   "profile": `${SERVER_CONTEXT}/api/profile`,
   "current-user": `${SERVER_CONTEXT}/api/current-user`,
   "teacher-classes": `${SERVER_CONTEXT}/api/teacher/classes`,
+  "teacher-subject-teachers": `${SERVER_CONTEXT}/api/subject-teachers`,
   "teacher-class-detail": `${SERVER_CONTEXT}/api/teacher/classes`,  // + /{classId}
   "teacher-class-scores": `${SERVER_CONTEXT}/api/teacher/classes`,  // + /{classId}/scores
   "teacher-save-scores": `${SERVER_CONTEXT}/api/teacher/classes`,
@@ -35,6 +36,13 @@ export const endpoints = {
   "scores-student-scores": `${SERVER_CONTEXT}/api/scores/students`, // + /{studentId}/scores?schoolYearId=...
   "scores-available-school-years": `${SERVER_CONTEXT}/api/scores/available-school-years`,
   "classes-by-subject": `${SERVER_CONTEXT}/api/scores/classes/by-subject`,
+
+  "forums": `${SERVER_CONTEXT}/api/forums`,
+  "forum-detail": `${SERVER_CONTEXT}/api/forums`,  // + /{forumId}
+  "forum-comments": `${SERVER_CONTEXT}/api/forums`, // + /{forumId}/comments
+  "forum-by-subject": `${SERVER_CONTEXT}/api/forums/by-subject-teacher`, // + /{subjectTeacherId}
+  "forum-teacher": `${SERVER_CONTEXT}/api/forums/teacher`,
+  "forum-student": `${SERVER_CONTEXT}/api/forums/student`,
 }
 
 // Cấu hình axios với token
@@ -96,19 +104,36 @@ export const userApis = {
   },
   // Cập nhật thông tin cá nhân
   updateProfile: (profileData) => {
-    return API.post(endpoints["profile"], profileData);
+    return API.post(endpoints["profile"], profileData, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
   },
   // Đổi mật khẩu
   changePassword: (passwordData) => {
     return API.post(`${endpoints["profile"]}/change-password`, passwordData);
   },
-  // Lấy thông tin chi tiết theo vai trò
-  getRoleSpecificInfo: (userId, role) => {
-    return API.get(`${endpoints["profile"]}/${userId}/${role}`);
-  },
   // Lấy thông tin người dùng hiện tại
   getCurrentUser: () => {
     return API.get(endpoints["current-user"]);
+  },
+
+  uploadAvatar: (userId, imageFile) => {
+    const formData = new FormData();
+    formData.append('id', userId);
+    formData.append('image', imageFile);
+    
+    // Log để debug
+    console.log("Uploading avatar for user ID:", userId);
+    console.log("File name:", imageFile.name);
+    
+    // Trả về promise axios với logging
+    return API.post(`${endpoints["profile"]}/upload-avatar`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
   }
 };
 
@@ -116,6 +141,11 @@ export const teacherClassApis = {
   // Lấy danh sách lớp học của giáo viên
   getTeacherClasses: (username) => {
     return API.get(`${endpoints["teacher-classes"]}?username=${username}`);
+  },
+
+  // Lấy thông tin phân công môn học
+  getTeacherSubjects: (username) => {
+    return API.get(`${endpoints["teacher-subject-teachers"]}?username=${username}`);
   },
 
   // Lấy thông tin chi tiết lớp học
@@ -311,6 +341,48 @@ export const scoreApis = {
   getClassesBySubject: (subjectId) => {
     return API.get(`${endpoints["classes-by-subject"]}?subjectId=${subjectId}`);
   },
+};
+
+export const forumApis = {
+  // Lấy tất cả diễn đàn
+  getAllForums: () => {
+    return API.get(endpoints["forums"]);
+  },
+  
+  // Lấy diễn đàn theo giáo viên (dành cho giáo viên đăng nhập)
+  getTeacherForums: () => {
+    return API.get(endpoints["forum-teacher"]);
+  },
+  
+  // Lấy diễn đàn theo sinh viên (dành cho sinh viên đăng nhập)
+  getStudentForums: () => {
+    return API.get(endpoints["forum-student"]);
+  },
+  
+  // Lấy diễn đàn theo môn học
+  getForumsBySubjectTeacher: (subjectTeacherId) => {
+    return API.get(`${endpoints["forum-by-subject"]}/${subjectTeacherId}`);
+  },
+  
+  // Lấy chi tiết diễn đàn và các bình luận
+  getForumDetail: (forumId) => {
+    return API.get(`${endpoints["forum-detail"]}/${forumId}`);
+  },
+  
+  // Thêm diễn đàn mới
+  addForum: (forumData) => {
+    return API.post(endpoints["forums"] + "/add", forumData);
+  },
+  
+  // Thêm bình luận mới
+  addComment: (forumId, commentData) => {
+    return API.post(`${endpoints["forum-comments"]}/${forumId}/comments`, commentData);
+  },
+  
+  // Xóa bình luận
+  deleteComment: (commentId) => {
+    return API.delete(`${endpoints["forums"]}/comments/${commentId}`);
+  }
 };
 
 export default axios.create({

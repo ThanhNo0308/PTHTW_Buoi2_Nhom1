@@ -12,6 +12,9 @@ public interface ForumRepository {
     List<Forum> getForums();
 
     List<Forum> getForumBySubjectTeacher(int subjectTeacherId);
+    
+    List<Forum> getForumByTeacher(int teacherId);
+    List<Forum> getForumByStudent(int studentId);
 
     boolean addForum(Forum forum);
 

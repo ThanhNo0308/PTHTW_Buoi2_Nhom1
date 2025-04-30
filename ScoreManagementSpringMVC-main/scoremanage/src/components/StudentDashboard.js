@@ -2,10 +2,13 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { MyUserContext } from "../App";
 import axios from 'axios';
-import { endpoints ,API} from '../configs/Apis';
-import { Alert, Spinner } from 'react-bootstrap';
+import { endpoints, API } from '../configs/Apis';
+import { Alert, Spinner, Col, Card, Button } from 'react-bootstrap';
 import "../assets/css/base.css";
 import "../assets/css/styles.css";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faComments, faCheckCircle, faExclamationCircle, faChartLine, faUsers, faUserEdit } from '@fortawesome/free-solid-svg-icons';
+
 
 const StudentDashboard = () => {
   const [user] = useContext(MyUserContext);
@@ -147,20 +150,27 @@ const StudentDashboard = () => {
           </div>
         </div>
 
-        <div className="col-md-6">
-          <div className="card mb-4 shadow-sm">
-            <div className="card-header bg-warning text-dark">
-              <i className="fas fa-comments me-2"></i>
-              Trao đổi & hỗ trợ
-            </div>
-            <div className="card-body">
-              <Link to="/chatfirebase" className="btn btn-warning btn-lg d-block mb-3">
-                <i className="fas fa-comments me-2"></i> Diễn đàn trao đổi
-              </Link>
-              <p>Tham gia trao đổi, đặt câu hỏi với giảng viên và các bạn khác.</p>
-            </div>
-          </div>
-        </div>
+        <Col md={4} className="mb-4">
+          <Card className="h-100 shadow dashboard-card">
+            <Card.Body>
+              <div className="d-flex align-items-center mb-3">
+                <div className="rounded-icon bg-info me-3">
+                  <FontAwesomeIcon icon={faComments} />
+                </div>
+                <h3 className="card-title mb-0">Diễn đàn học tập</h3>
+              </div>
+              <Card.Text>
+                Tham gia các diễn đàn học tập để thảo luận và đặt câu hỏi về các môn học.
+              </Card.Text>
+            </Card.Body>
+            <Card.Footer className="bg-transparent border-0 pb-3">
+              <Button as={Link} to="/forums" variant="outline-info" className="w-100">
+                <FontAwesomeIcon icon={faComments} className="me-2" />
+                Truy cập diễn đàn
+              </Button>
+            </Card.Footer>
+          </Card>
+        </Col>
       </div>
     </div>
   );

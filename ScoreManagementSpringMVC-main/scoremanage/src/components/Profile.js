@@ -1,17 +1,18 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { MyUserContext } from "../App";
-import { userApis } from "../configs/Apis";
+import { userApis, API } from "../configs/Apis";
 import { Alert } from 'react-bootstrap';
 import moment from 'moment';
 import "../assets/css/base.css";
 import "../assets/css/styles.css";
 
 const Profile = () => {
-  const [user] = useContext(MyUserContext);
+  const [user, dispatch] = useContext(MyUserContext);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
-  
+  const [userActive, setUserActive] = useState(user?.active || false);
+
   // Thông tin người dùng
   const [profileData, setProfileData] = useState({
     id: user?.id || "",
@@ -22,7 +23,7 @@ const Profile = () => {
     birthdate: user?.birthdate ? moment(user.birthdate).format("YYYY-MM-DD") : "",
     phone: user?.phone || "",
   });
-  
+
   // Thông tin đổi mật khẩu
   const [passwordData, setPasswordData] = useState({
     id: user?.id || "",
@@ -30,32 +31,54 @@ const Profile = () => {
     newPassword: "",
     confirmPassword: ""
   });
-  
+
   const [passwordErrors, setPasswordErrors] = useState({
     newPassword: false,
     confirmPassword: false
   });
-  
+
   const fileInputRef = useRef(null);
   const [roleSpecificInfo, setRoleSpecificInfo] = useState(null);
-  
+
   useEffect(() => {
-    // Load thông tin chi tiết theo vai trò
-    const loadRoleSpecificInfo = async () => {
+    const loadUserDetail = async () => {
       try {
         if (user) {
-          // API call để lấy thông tin chi tiết theo vai trò
-          const response = await userApis.getRoleSpecificInfo(user.id, user.role);
-          setRoleSpecificInfo(response.data);
+          const response = await userApis.getCurrentUser();
+          console.log("API Response:", response.data); // Thêm log để debug
+          // Thêm dòng này vào phương thức loadUserDetail sau khi nhận dữ liệu
+          if (response.data && response.data.user) {
+            const userData = response.data.user;
+            console.log("User active status:", userData.active, "Type:", typeof userData.active);
+
+            setUserActive(userData.active);
+            // Cập nhật state với dữ liệu từ API
+            setProfileData({
+              id: userData.id || user.id || "",
+              name: userData.name || user.name || "",
+              gender: userData.gender === 0 ? "Nam" : "Nữ",
+              hometown: userData.hometown || "",
+              identifyCard: userData.identifyCard || "",
+              birthdate: userData.birthdate ? moment(userData.birthdate).format("YYYY-MM-DD") : "",
+              phone: userData.phone || "",
+            });
+
+            // Thêm logic để cập nhật roleSpecificInfo
+            if (response.data.roleSpecificInfo) {
+              console.log("Role specific info:", response.data.roleSpecificInfo);
+              setRoleSpecificInfo(response.data.roleSpecificInfo);
+            }
+          }
         }
       } catch (err) {
-        console.error("Lỗi khi tải thông tin:", err);
+        console.error("Lỗi khi tải thông tin chi tiết người dùng:", err);
+        setError("Không thể tải thông tin chi tiết. Vui lòng thử lại sau.");
       }
     };
-    
-    loadRoleSpecificInfo();
+
+
+    loadUserDetail();
   }, [user]);
-  
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setProfileData({
@@ -63,14 +86,45 @@ const Profile = () => {
       [name]: value
     });
   };
-  
+
+  const isUserActive = (status) => {
+    console.log("Checking status:", status); // Thêm log để debug
+
+    // Xử lý trường hợp status là null hoặc undefined
+    if (status === null || status === undefined) {
+      return false;
+    }
+
+    // Xử lý trường hợp status là boolean
+    if (typeof status === 'boolean') {
+      return status;
+    }
+
+    // Xử lý trường hợp status là string
+    if (typeof status === 'string') {
+      // So với cả 'active' và 'Active' để chắc chắn
+      const normalizedStatus = status.trim().toLowerCase();
+      return normalizedStatus === 'active' || normalizedStatus === 'true';
+    }
+
+    return false; // Trường hợp không xác định được
+  };
+
+  const profileImgStyle = {
+    width: "150px",
+    height: "150px",
+    objectFit: "cover",
+    borderRadius: "50%",
+    border: "5px solid #e9ecef"
+  };
+
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData({
       ...passwordData,
       [name]: value
     });
-    
+
     // Kiểm tra định dạng mật khẩu mới
     if (name === 'newPassword') {
       const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
@@ -79,64 +133,112 @@ const Profile = () => {
         newPassword: value && !regex.test(value)
       });
     }
-    
+
     // Kiểm tra mật khẩu xác nhận
     if (name === 'confirmPassword' || name === 'newPassword') {
       const newPwd = name === 'newPassword' ? value : passwordData.newPassword;
       const confirmPwd = name === 'confirmPassword' ? value : passwordData.confirmPassword;
-      
+
       setPasswordErrors({
         ...passwordErrors,
         confirmPassword: confirmPwd && newPwd !== confirmPwd
       });
     }
   };
-  
+
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setSuccess("");
     setError("");
-    
+  
     try {
-      const formData = new FormData();
-      for (const key in profileData) {
-        formData.append(key, profileData[key]);
-      }
-      
+      // 1. Chỉ gửi thông tin người dùng dưới dạng JSON
+      const response = await userApis.updateProfile(profileData);
+      console.log("Profile update response:", response.data);
+  
+      // 2. Xử lý riêng việc upload ảnh nếu có
       if (fileInputRef.current.files.length > 0) {
-        formData.append('imageFile', fileInputRef.current.files[0]);
+        console.log("File selected:", fileInputRef.current.files[0].name);
+        
+        try {
+          const formData = new FormData();
+          formData.append('id', profileData.id);
+          formData.append('image', fileInputRef.current.files[0]);
+          
+          // Sử dụng hàm uploadAvatar đã được định nghĩa trong userApis thay vì axios trực tiếp
+          const avatarResponse = await userApis.uploadAvatar(
+            profileData.id, 
+            fileInputRef.current.files[0]
+          );
+          
+          console.log("Avatar upload response:", avatarResponse.data);
+          
+          if (avatarResponse.data && avatarResponse.data.imageUrl) {
+            // Cập nhật context user
+            dispatch({
+              type: "update",
+              payload: {
+                ...user,
+                image: avatarResponse.data.imageUrl
+              }
+            });
+          }
+        } catch (uploadErr) {
+          console.error("Error uploading avatar:", uploadErr);
+          setError("Không thể upload ảnh đại diện. Chi tiết: " + 
+            (uploadErr.response?.data?.message || uploadErr.message));
+          setLoading(false);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
       }
+  
+      // 3. Hiển thị thông báo thành công
+      setSuccess("Cập nhật thông tin thành công!");
       
-      const response = await userApis.updateProfile(formData);
-      if (response.data && response.data.status === "success") {
-        setSuccess("Cập nhật thông tin thành công!");
-      } else {
-        setError("Cập nhật thông tin không thành công!");
+      // 4. Cập nhật context user thay vì reload trang
+      dispatch({
+        type: "update",
+        payload: {
+          ...user,
+          name: profileData.name,
+          gender: profileData.gender === "Nam" ? 0 : 1,
+          hometown: profileData.hometown,
+          identifyCard: profileData.identifyCard,
+          birthdate: profileData.birthdate,
+          phone: profileData.phone
+        }
+      });
+      
+      // Tải lại thông tin user từ API để đảm bảo dữ liệu đồng bộ
+      const userResponse = await userApis.getCurrentUser();
+      if (userResponse.data && userResponse.data.user) {
+        setRoleSpecificInfo(userResponse.data.roleSpecificInfo);
       }
+  
     } catch (err) {
       console.error("Lỗi cập nhật:", err);
-      setError("Không thể cập nhật thông tin. Vui lòng thử lại sau.");
+      setError("Không thể cập nhật thông tin. Vui lòng thử lại sau. Chi tiết: " + 
+        (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
-      
-      // Scroll to the top to show the alert
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
-  
+
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (passwordErrors.newPassword || passwordErrors.confirmPassword) {
       setError("Vui lòng kiểm tra lại thông tin mật khẩu!");
       return;
     }
-    
+
     setLoading(true);
     setSuccess("");
     setError("");
-    
+
     try {
       const response = await userApis.changePassword(passwordData);
       if (response.data && response.data.status === "success") {
@@ -159,12 +261,12 @@ const Profile = () => {
       }
     } finally {
       setLoading(false);
-      
+
       // Scroll to the top to show the alert
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
-  
+
   const togglePasswordVisibility = (inputId) => {
     const input = document.getElementById(inputId);
     if (input.type === 'password') {
@@ -177,7 +279,7 @@ const Profile = () => {
       document.querySelector(`[data-target="${inputId}"] i`).classList.add('fa-eye');
     }
   };
-  
+
   if (!user) {
     return (
       <div className="container mt-4">
@@ -188,7 +290,7 @@ const Profile = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="container mt-4">
       <div className="row mb-4">
@@ -221,10 +323,11 @@ const Profile = () => {
             </div>
             <div className="card-body text-center">
               <div className="mb-4">
-                <img 
-                  src={user.image || "/images/default-avatar.jpg"} 
-                  className="profile-img mb-3" 
-                  alt="Profile" 
+                <img
+                  src={user.image || "/images/default-avatar.jpg"}
+                  style={profileImgStyle}
+                  className="mb-3"
+                  alt="Profile"
                 />
                 <h4>{user.name}</h4>
                 <p className="text-muted">
@@ -239,22 +342,22 @@ const Profile = () => {
 
                 <div className="mb-3">
                   <label htmlFor="name" className="form-label">Họ và tên</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    id="name" 
-                    name="name" 
-                    value={profileData.name} 
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="name"
+                    name="name"
+                    value={profileData.name}
                     onChange={handleProfileChange}
-                    required 
+                    required
                   />
                 </div>
 
                 <div className="mb-3">
                   <label htmlFor="gender" className="form-label">Giới tính</label>
-                  <select 
-                    className="form-select" 
-                    id="gender" 
+                  <select
+                    className="form-select"
+                    id="gender"
                     name="gender"
                     value={profileData.gender}
                     onChange={handleProfileChange}
@@ -266,10 +369,10 @@ const Profile = () => {
 
                 <div className="mb-3">
                   <label htmlFor="hometown" className="form-label">Quê quán</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    id="hometown" 
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="hometown"
                     name="hometown"
                     value={profileData.hometown}
                     onChange={handleProfileChange}
@@ -278,10 +381,10 @@ const Profile = () => {
 
                 <div className="mb-3">
                   <label htmlFor="identifyCard" className="form-label">CMND/CCCD</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    id="identifyCard" 
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="identifyCard"
                     name="identifyCard"
                     value={profileData.identifyCard}
                     onChange={handleProfileChange}
@@ -290,10 +393,10 @@ const Profile = () => {
 
                 <div className="mb-3">
                   <label htmlFor="birthdate" className="form-label">Ngày sinh</label>
-                  <input 
-                    type="date" 
-                    className="form-control" 
-                    id="birthdate" 
+                  <input
+                    type="date"
+                    className="form-control"
+                    id="birthdate"
                     name="birthdate"
                     value={profileData.birthdate}
                     onChange={handleProfileChange}
@@ -302,10 +405,10 @@ const Profile = () => {
 
                 <div className="mb-3">
                   <label htmlFor="phone" className="form-label">Số điện thoại</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    id="phone" 
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="phone"
                     name="phone"
                     value={profileData.phone}
                     onChange={handleProfileChange}
@@ -314,20 +417,20 @@ const Profile = () => {
 
                 <div className="mb-3">
                   <label htmlFor="imageFile" className="form-label">Ảnh đại diện</label>
-                  <input 
-                    type="file" 
-                    className="form-control" 
-                    id="imageFile" 
+                  <input
+                    type="file"
+                    className="form-control"
+                    id="imageFile"
                     name="imageFile"
                     ref={fileInputRef}
-                    accept="image/*" 
+                    accept="image/*"
                   />
                   <small className="form-text text-muted">Để trống nếu không muốn thay đổi ảnh đại diện.</small>
                 </div>
 
                 <div className="text-center">
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="btn btn-primary"
                     disabled={loading}
                   >
@@ -359,20 +462,26 @@ const Profile = () => {
                 <input type="hidden" name="id" value={passwordData.id} />
 
                 <div className="mb-3">
-                  <label htmlFor="currentPassword" className="form-label">Mật khẩu hiện tại <span className="text-danger">*</span></label>
+                  <label htmlFor="currentPassword" className="form-label">
+                    <i className="fas fa-lock me-2"></i>
+                    Mật khẩu hiện tại <span className="text-danger">*</span>
+                  </label>
                   <div className="input-group">
-                    <input 
-                      type="password" 
-                      className="form-control" 
-                      id="currentPassword" 
+                    <span className="input-group-text">
+                      <i className="fas fa-key"></i>
+                    </span>
+                    <input
+                      type="password"
+                      className="form-control"
+                      id="currentPassword"
                       name="currentPassword"
                       value={passwordData.currentPassword}
                       onChange={handlePasswordChange}
-                      required 
+                      required
                     />
-                    <button 
-                      className="btn btn-outline-secondary toggle-password" 
-                      type="button" 
+                    <button
+                      className="btn btn-outline-secondary toggle-password"
+                      type="button"
                       data-target="currentPassword"
                       onClick={() => togglePasswordVisibility("currentPassword")}
                     >
@@ -382,21 +491,27 @@ const Profile = () => {
                 </div>
 
                 <div className="mb-3">
-                  <label htmlFor="newPassword" className="form-label">Mật khẩu mới <span className="text-danger">*</span></label>
+                  <label htmlFor="newPassword" className="form-label">
+                    <i className="fas fa-key me-2"></i>
+                    Mật khẩu mới <span className="text-danger">*</span>
+                  </label>
                   <div className="input-group">
-                    <input 
-                      type="password" 
+                    <span className="input-group-text">
+                      <i className="fas fa-lock-open"></i>
+                    </span>
+                    <input
+                      type="password"
                       className={`form-control ${passwordErrors.newPassword ? 'is-invalid' : ''}`}
-                      id="newPassword" 
+                      id="newPassword"
                       name="newPassword"
                       value={passwordData.newPassword}
                       onChange={handlePasswordChange}
-                      required 
-                      minLength="6" 
+                      required
+                      minLength="6"
                     />
-                    <button 
-                      className="btn btn-outline-secondary toggle-password" 
-                      type="button" 
+                    <button
+                      className="btn btn-outline-secondary toggle-password"
+                      type="button"
                       data-target="newPassword"
                       onClick={() => togglePasswordVisibility("newPassword")}
                     >
@@ -411,20 +526,26 @@ const Profile = () => {
                 </div>
 
                 <div className="mb-3">
-                  <label htmlFor="confirmPassword" className="form-label">Xác nhận mật khẩu mới <span className="text-danger">*</span></label>
+                  <label htmlFor="confirmPassword" className="form-label">
+                    <i className="fas fa-check-circle me-2"></i>
+                    Xác nhận mật khẩu mới <span className="text-danger">*</span>
+                  </label>
                   <div className="input-group">
-                    <input 
-                      type="password" 
+                    <span className="input-group-text">
+                      <i className="fas fa-shield-alt"></i>
+                    </span>
+                    <input
+                      type="password"
                       className={`form-control ${passwordErrors.confirmPassword ? 'is-invalid' : ''}`}
-                      id="confirmPassword" 
+                      id="confirmPassword"
                       name="confirmPassword"
                       value={passwordData.confirmPassword}
                       onChange={handlePasswordChange}
-                      required 
+                      required
                     />
-                    <button 
-                      className="btn btn-outline-secondary toggle-password" 
-                      type="button" 
+                    <button
+                      className="btn btn-outline-secondary toggle-password"
+                      type="button"
                       data-target="confirmPassword"
                       onClick={() => togglePasswordVisibility("confirmPassword")}
                     >
@@ -439,9 +560,9 @@ const Profile = () => {
                 </div>
 
                 <div className="text-center">
-                  <button 
-                    type="submit" 
-                    className="btn btn-warning" 
+                  <button
+                    type="submit"
+                    className="btn btn-warning"
                     id="changePasswordBtn"
                     disabled={loading || passwordErrors.newPassword || passwordErrors.confirmPassword}
                   >
@@ -480,7 +601,7 @@ const Profile = () => {
               <div className="mb-3 row">
                 <label className="col-sm-4 col-form-label fw-bold">Trạng thái:</label>
                 <div className="col-sm-8">
-                  {user.active ? (
+                  {isUserActive(userActive) ? (
                     <span className="badge bg-success">Hoạt động</span>
                   ) : (
                     <span className="badge bg-danger">Bị khóa</span>
@@ -499,7 +620,7 @@ const Profile = () => {
             <div className="card shadow">
               <div className="card-header bg-info text-white">
                 <h5 className="card-title mb-0">
-                  <i className="fas fa-info-circle"></i> 
+                  <i className="fas fa-info-circle"></i>
                   {user.role === 'Student' && "Thông tin sinh viên"}
                   {user.role === 'Teacher' && "Thông tin giảng viên"}
                   {user.role === 'Admin' && "Thông tin quản trị viên"}
@@ -520,8 +641,8 @@ const Profile = () => {
                     <div className="col-md-4">
                       <label className="fw-bold">Ngành học:</label>
                       <p>
-                        {roleSpecificInfo.classId && roleSpecificInfo.classId.majorId 
-                          ? roleSpecificInfo.classId.majorId.majorName 
+                        {roleSpecificInfo.classId && roleSpecificInfo.classId.majorId
+                          ? roleSpecificInfo.classId.majorId.majorName
                           : 'Chưa có thông tin'}
                       </p>
                     </div>
@@ -538,8 +659,8 @@ const Profile = () => {
                     <div className="col-md-4">
                       <label className="fw-bold">Khoa:</label>
                       <p>
-                        {roleSpecificInfo.departmentId 
-                          ? roleSpecificInfo.departmentId.departmentName 
+                        {roleSpecificInfo.departmentId
+                          ? roleSpecificInfo.departmentId.departmentName
                           : 'Chưa phân khoa'}
                       </p>
                     </div>

@@ -4,14 +4,14 @@ import "../assets/css/styles.css";
 import logo from '../assets/images/logo.png';
 import cookie from "react-cookies";
 import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { MyUserContext } from '../App';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faHome, faChalkboardTeacher, faUserGraduate, faCogs, faChartBar, 
   faSignInAlt, faUserPlus, faUserCircle, faSignOutAlt, faUser,
   faSchool, faGraduationCap, faBuilding, faBook, faCalendarAlt, 
-  faTasks, faChartLine, faChartPie, faChartArea, faSearch, faFileImport, faClipboardList
+  faTasks, faChartLine, faChartPie, faChartArea, faSearch, faFileImport, faClipboardList, faComments
 } from '@fortawesome/free-solid-svg-icons';
 
 
@@ -126,6 +126,9 @@ const Header = () => {
                 <Nav.Link as={Link} to="/teacher/scores/import">
                   <FontAwesomeIcon icon={faFileImport} className="me-1" /> Nhập điểm
                 </Nav.Link>
+                <Nav.Link as={NavLink} to="/forums">
+                  <FontAwesomeIcon icon={faComments} className="me-1" />Diễn đàn
+                </Nav.Link>
               </Nav>
             )}
             
@@ -138,6 +141,7 @@ const Header = () => {
                 <Nav.Link as={Link} to="/student-scores">
                   <FontAwesomeIcon icon={faClipboardList} className="me-1" /> Điểm của tôi
                 </Nav.Link>
+                <Nav.Link as={NavLink} to="/forums" className="me-2">Diễn đàn</Nav.Link>
               </Nav>
             )}
             

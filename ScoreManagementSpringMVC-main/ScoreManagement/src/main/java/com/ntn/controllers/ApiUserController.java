@@ -11,6 +11,9 @@ import com.ntn.service.UserService;
 import com.ntn.utils.JwtUtils;
 
 import java.security.Principal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -200,7 +203,6 @@ public class ApiUserController {
      */
     @GetMapping("/current-user")
     public ResponseEntity<?> getCurrentUser(Principal principal) {
-        System.out.println("Principal received: " + (principal != null ? principal.getName() : "null"));
         if (principal == null) {
             return new ResponseEntity<>("Không có người dùng đăng nhập", HttpStatus.UNAUTHORIZED);
         }
@@ -219,6 +221,12 @@ public class ApiUserController {
         userMap.put("username", user.getUsername());
         userMap.put("image", user.getImage());
         userMap.put("role", user.getRole());
+        userMap.put("gender", user.getGender());
+        userMap.put("hometown", user.getHometown());
+        userMap.put("identifyCard", user.getIdentifyCard());
+        userMap.put("birthdate", user.getBirthdate());
+        userMap.put("phone", user.getPhone());
+        userMap.put("active", user.getActive());  // Thêm trường active
 
         response.put("user", userMap);
 
@@ -263,7 +271,7 @@ public class ApiUserController {
     /**
      * Cập nhật thông tin người dùng
      */
-    @PutMapping("/profile")
+    @PostMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody Map<String, Object> profileData) {
         Integer userId = (Integer) profileData.get("id");
         Map<String, Object> response = new HashMap<>();
@@ -295,13 +303,24 @@ public class ApiUserController {
                 String gender = (String) profileData.get("gender");
                 Short genderValue = null;
                 if ("Nam".equals(gender)) {
-                    genderValue = 1;
-                } else if ("Nữ".equals(gender)) {
                     genderValue = 0;
+                } else if ("Nữ".equals(gender)) {
+                    genderValue = 1;
                 } else {
                     genderValue = -1;
                 }
                 existingUser.setGender(genderValue);
+            }
+            if (profileData.get("birthdate") != null) {
+                String birthdateStr = (String) profileData.get("birthdate");
+                try {
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                    Date birthdate = dateFormat.parse(birthdateStr);
+                    existingUser.setBirthdate(birthdate);
+                } catch (ParseException e) {
+                    // Log lỗi nếu định dạng không hợp lệ
+                    System.err.println("Error parsing birthdate: " + e.getMessage());
+                }
             }
 
             boolean success = userService.updateUser(existingUser);
