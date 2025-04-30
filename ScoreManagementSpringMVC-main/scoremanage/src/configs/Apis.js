@@ -35,18 +35,6 @@ export const endpoints = {
   "scores-student-scores": `${SERVER_CONTEXT}/api/scores/students`, // + /{studentId}/scores?schoolYearId=...
   "scores-available-school-years": `${SERVER_CONTEXT}/api/scores/available-school-years`,
   "classes-by-subject": `${SERVER_CONTEXT}/api/scores/classes/by-subject`,
-
-
-  "register": `${SERVER_CONTEXT}/api/users/`,
-  "schoolyear": `${SERVER_CONTEXT}/api/schoolyear`,
-  "listsubject": `${SERVER_CONTEXT}/api/listsubject`,
-  "liststudents": `${SERVER_CONTEXT}/api/listsubject/liststudents`,
-  "listscore": `${SERVER_CONTEXT}/api/listscore`,
-  "savelistscore": `${SERVER_CONTEXT}/api/savelistscore`,
-  "listoldclass": `${SERVER_CONTEXT}/api/listoldclass`,
-  "listscoreofstudent": `${SERVER_CONTEXT}/api/listscoreofstudent`,
-  "student-info": `${SERVER_CONTEXT}/api/student/info`,
-  "teacher-info": `${SERVER_CONTEXT}/api/teacher/info`,
 }
 
 // Cấu hình axios với token

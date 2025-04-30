@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -560,6 +561,7 @@ public class ApiScoreController {
     }
 
     @GetMapping("/students/search")
+    @Transactional 
     public ResponseEntity<Map<String, Object>> searchStudents(
             @RequestParam(value = "query", required = false) String query,
             @RequestParam(value = "type", defaultValue = "name") String searchType) {
@@ -579,10 +581,19 @@ public class ApiScoreController {
                 }
             }
 
+            // Detach objects from the Hibernate session to avoid lazy-loading issues
+            for (Student student : students) {
+                if (student.getClassId() != null) {
+                    // Ensure class information is initialized to prevent lazy loading issues
+                    student.getClassId().getClassName(); // Force initialization
+                }
+            }
+
             response.put("success", true);
             response.put("students", students);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            e.printStackTrace();
             response.put("success", false);
             response.put("message", "Lỗi khi tìm kiếm sinh viên: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -603,8 +614,17 @@ public class ApiScoreController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
-            // Lấy danh sách lớp được phân công
-            List<Class> assignedClasses = classService.getClassesByTeacher(teacher.getId());
+            // Lấy danh sách phân công giảng dạy của giáo viên
+            List<Subjectteacher> teacherAssignments = subjectTeacherService.getSubjectTeachersByTeacherId(teacher.getId());
+
+            // Lấy danh sách lớp duy nhất từ các phân công (loại bỏ trùng lặp)
+            Set<Class> assignedClassesSet = new HashSet<>();
+            for (Subjectteacher assignment : teacherAssignments) {
+                if (assignment.getClassId() != null) {
+                    assignedClassesSet.add(assignment.getClassId());
+                }
+            }
+            List<Class> assignedClasses = new ArrayList<>(assignedClassesSet);
 
             // Lấy danh sách sinh viên từ các lớp được phân công
             Set<Student> allAssignedStudents = new HashSet<>();

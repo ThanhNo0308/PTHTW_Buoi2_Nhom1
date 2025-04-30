@@ -120,11 +120,6 @@ const TeacherDashboard = () => {
                 <i className="fas fa-search me-2"></i> Tìm kiếm sinh viên
               </Link>
               <p>Tìm kiếm thông tin sinh viên theo mã, tên hoặc lớp.</p>
-
-              <Link to="/exportscore" className="btn btn-secondary btn-lg d-block mb-3">
-                <i className="fas fa-file-export me-2"></i> Xuất báo cáo điểm
-              </Link>
-              <p>Xuất báo cáo điểm số theo lớp và môn học.</p>
             </div>
           </div>
         </div>
