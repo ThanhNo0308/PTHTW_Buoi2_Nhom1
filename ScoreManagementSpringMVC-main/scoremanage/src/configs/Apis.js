@@ -29,6 +29,7 @@ export const endpoints = {
   "scores-template": `${SERVER_CONTEXT}/api/scores/scores/template`,
   "scores-export-csv": `${SERVER_CONTEXT}/api/scores/classes`,  // + /{classId}/export-csv
   "scores-export-pdf": `${SERVER_CONTEXT}/api/scores/classes`,  // + /{classId}/export-pdf
+  "scores-students-assigned": `${SERVER_CONTEXT}/api/scores/students/assigned`,
   "scores-students-search": `${SERVER_CONTEXT}/api/scores/students/search`,
   "scores-student-detail": `${SERVER_CONTEXT}/api/scores/students`,  // + /{studentCode}/detail
   "scores-student-scores": `${SERVER_CONTEXT}/api/scores/students`, // + /{studentId}/scores?schoolYearId=...
@@ -273,20 +274,16 @@ export const scoreApis = {
   getScoreTemplate: () => {
     return API.get(endpoints["scores-template"]);
   },
-  
-  // Xuất điểm ra CSV
-  exportScoresToCsv: (classId, subjectTeacherId, schoolYearId) => {
-    return API.get(
-      `${endpoints["scores-export-csv"]}/${classId}/export-csv?` +
-      `subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}`
-    );
-  },
-  
   // Xuất điểm ra PDF
   exportScoresToPdf: (classId, subjectTeacherId, schoolYearId) => {
     return API.get(
-      `${endpoints["scores-export-pdf"]}/${classId}/export-pdf?` +
-      `subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}`
+      `${endpoints["scores-export-pdf"]}/${classId}/export-pdf?subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}`
+    );
+  },
+  // Xuất điểm ra CSV
+  exportScoresToCsv: (classId, subjectTeacherId, schoolYearId) => {
+    return API.get(
+      `${endpoints["scores-export-csv"]}/${classId}/export-csv?subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}`
     );
   },
   
@@ -295,6 +292,11 @@ export const scoreApis = {
     return API.get(
       `${endpoints["scores-students-search"]}?query=${encodeURIComponent(query)}&type=${type}`
     );
+  },
+
+  // Lấy danh sách sinh viên được phân công
+  getAssignedStudents: () => {
+    return API.get(`${endpoints["scores-students-assigned"]}`);
   },
   
   // Xem chi tiết sinh viên

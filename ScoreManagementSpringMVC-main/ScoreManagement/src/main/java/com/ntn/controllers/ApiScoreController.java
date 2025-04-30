@@ -589,6 +589,61 @@ public class ApiScoreController {
         }
     }
 
+    @GetMapping("/students/assigned")
+    public ResponseEntity<Map<String, Object>> getAssignedStudents(Authentication authentication) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            String username = authentication.getName();
+            Teacher teacher = teacherService.getTeacherByUsername(username);
+
+            if (teacher == null) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy thông tin giảng viên");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            // Lấy danh sách lớp được phân công
+            List<Class> assignedClasses = classService.getClassesByTeacher(teacher.getId());
+
+            // Lấy danh sách sinh viên từ các lớp được phân công
+            Set<Student> allAssignedStudents = new HashSet<>();
+            for (Class cls : assignedClasses) {
+                List<Student> studentsInClass = studentService.getStudentByClassId(cls.getId());
+                allAssignedStudents.addAll(studentsInClass);
+            }
+
+            List<Student> assignedStudentsList = new ArrayList<>(allAssignedStudents);
+
+            // Sắp xếp sinh viên theo tên lớp, sau đó theo họ và tên
+            Collections.sort(assignedStudentsList, (s1, s2) -> {
+                int classCompare = s1.getClassId().getClassName().compareTo(s2.getClassId().getClassName());
+                if (classCompare != 0) {
+                    return classCompare;
+                }
+
+                int lastNameCompare = s1.getLastName().compareTo(s2.getLastName());
+                if (lastNameCompare != 0) {
+                    return lastNameCompare;
+                }
+
+                return s1.getFirstName().compareTo(s2.getFirstName());
+            });
+
+            response.put("success", true);
+            response.put("students", assignedStudentsList);
+            response.put("classCount", assignedClasses.size());
+            response.put("studentCount", assignedStudentsList.size());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Lỗi khi lấy danh sách sinh viên: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
     @GetMapping("/classes/by-subject")
     public ResponseEntity<Map<String, Object>> getClassesBySubject(
             @RequestParam("subjectId") Integer subjectId) {
@@ -822,7 +877,6 @@ public class ApiScoreController {
                         .filter(sy -> enrolledSchoolYearIds.contains(sy.getId()))
                         .collect(Collectors.toList());
 
-
                 List<Score> scores;
                 Schoolyear currentSchoolYear;
 
@@ -835,7 +889,7 @@ public class ApiScoreController {
                     scores = scoreService.getSubjectScoresByStudentCodeAndSchoolYear(studentCode, currentSchoolYearId);
                     currentSchoolYear = schoolYearService.getSchoolYearById(currentSchoolYearId);
                 }
-                
+
                 response.put("enrolledSubjects", enrolledSubjects);
                 response.put("schoolYears", filteredSchoolYears);
                 response.put("scores", scores);

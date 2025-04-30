@@ -70,23 +70,52 @@ public class ApiTeacherClassController {
             Set<Class> assignedClasses = new HashSet<>();
             List<Subjectteacher> teacherAssignments = subjectTeacherService.getSubjectTeachersByTeacherId(teacher.getId());
 
+            // Lưu các học kỳ được phân công theo lớp
+            Map<Integer, Set<Schoolyear>> classSchoolYears = new HashMap<>();
+
             for (Subjectteacher assignment : teacherAssignments) {
                 if (assignment.getClassId() != null) {
                     assignedClasses.add(assignment.getClassId());
+
+                    // Lưu thông tin học kỳ được phân công
+                    int classId = assignment.getClassId().getId();
+                    Schoolyear schoolYear = assignment.getSchoolYearId();
+
+                    if (schoolYear != null) {
+                        if (!classSchoolYears.containsKey(classId)) {
+                            classSchoolYears.put(classId, new HashSet<>());
+                        }
+                        classSchoolYears.get(classId).add(schoolYear);
+                    }
                 }
             }
 
-            List<Class> classes = new ArrayList<>(assignedClasses);
+            // Tạo danh sách lớp với thông tin bổ sung
+            List<Map<String, Object>> classesWithDetails = new ArrayList<>();
+            for (Class cls : assignedClasses) {
+                Map<String, Object> classDetails = new HashMap<>();
+                classDetails.put("id", cls.getId());
+                classDetails.put("className", cls.getClassName());
+                classDetails.put("majorId", cls.getMajorId());
+
+                // Thêm danh sách học kỳ được phân công
+                List<Schoolyear> schoolYears = classSchoolYears.containsKey(cls.getId())
+                        ? new ArrayList<>(classSchoolYears.get(cls.getId())) : new ArrayList<>();
+                classDetails.put("assignedSchoolYears", schoolYears);
+
+                classesWithDetails.add(classDetails);
+            }
+
             Map<Integer, Integer> studentCounts = new HashMap<>();
 
             // Tính số sinh viên cho mỗi lớp
-            for (Class cls : classes) {
+            for (Class cls : assignedClasses) {
                 int count = studentService.countStudentsByClassId(cls.getId());
                 studentCounts.put(cls.getId(), count);
             }
 
             Map<String, Object> response = new HashMap<>();
-            response.put("classes", classes);
+            response.put("classes", classesWithDetails);
             response.put("studentCounts", studentCounts);
 
             return ResponseEntity.ok(response);
@@ -165,7 +194,7 @@ public class ApiTeacherClassController {
             @RequestParam String username) {
         try {
             Teacher teacher = teacherService.getTeacherByUsername(username);
-            
+
             if (teacher == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Không tìm thấy thông tin giáo viên"));
@@ -174,21 +203,21 @@ public class ApiTeacherClassController {
             // Lấy thông tin lớp, giáo viên, môn học và năm học
             Class classroom = classService.getClassById(classId);
             Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
-            
+
             if (subjectTeacher == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Không tìm thấy thông tin phân công giảng dạy"));
             }
-            
+
             Subject subject = subjectTeacher.getSubjectId();
             Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
-            
+
             // Kiểm tra quyền truy cập
-            if (!subjectTeacher.getTeacherId().getId().equals(teacher.getId()) || 
-                subjectTeacher.getClassId() == null || 
-                !subjectTeacher.getClassId().getId().equals(classId) ||
-                subjectTeacher.getSchoolYearId() == null || 
-                !subjectTeacher.getSchoolYearId().getId().equals(schoolYearId)) {
+            if (!subjectTeacher.getTeacherId().getId().equals(teacher.getId())
+                    || subjectTeacher.getClassId() == null
+                    || !subjectTeacher.getClassId().getId().equals(classId)
+                    || subjectTeacher.getSchoolYearId() == null
+                    || !subjectTeacher.getSchoolYearId().getId().equals(schoolYearId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of("error", "Không có quyền truy cập lớp học này"));
             }
@@ -278,7 +307,7 @@ public class ApiTeacherClassController {
             @RequestParam String username) {
         try {
             Teacher teacher = teacherService.getTeacherByUsername(username);
-            
+
             if (teacher == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Không tìm thấy thông tin giáo viên"));
@@ -290,25 +319,25 @@ public class ApiTeacherClassController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of("error", "Không có quyền cập nhật điểm cho lớp này"));
             }
-            
+
             // Xử lý dữ liệu điểm từ request
             Map<String, Object> scores = (Map<String, Object>) requestData.get("scores");
             List<Score> scoresToSave = new ArrayList<>();
-            
+
             for (String studentIdStr : scores.keySet()) {
                 int studentId = Integer.parseInt(studentIdStr);
                 Map<String, Object> studentScores = (Map<String, Object>) scores.get(studentIdStr);
-                
+
                 for (String scoreType : studentScores.keySet()) {
                     Map<String, Object> scoreData = (Map<String, Object>) studentScores.get(scoreType);
                     String scoreValue = (String) scoreData.get("value");
                     String scoreIdStr = (String) scoreData.get("id");
-                    
+
                     // Bỏ qua nếu không có giá trị điểm
                     if (scoreValue == null || scoreValue.trim().isEmpty()) {
                         continue;
                     }
-                    
+
                     Score score;
                     if (scoreIdStr != null && !scoreIdStr.trim().isEmpty()) {
                         // Cập nhật điểm đã tồn tại
@@ -330,7 +359,7 @@ public class ApiTeacherClassController {
                         score.setSubjectTeacherID(subjectTeacher);
                         score.setSchoolYearId(schoolYearService.getSchoolYearById(schoolYearId));
                     }
-                    
+
                     // Thiết lập loại điểm
                     com.ntn.pojo.Typescore type = typeScoreService.getScoreTypeByName(scoreType);
                     if (type == null) {
@@ -338,13 +367,13 @@ public class ApiTeacherClassController {
                         typeScoreService.addScoreType(type);
                     }
                     score.setScoreType(type);
-                    
+
                     // Thiết lập giá trị điểm
                     try {
                         float value = Float.parseFloat(scoreValue);
                         if (value >= 0 && value <= 10) {
                             score.setScoreValue(value);
-                            
+
                             // Thiết lập trạng thái draft/final
                             boolean isFinalSave = "final".equals(saveMode);
                             if (isFinalSave) {
@@ -354,7 +383,7 @@ public class ApiTeacherClassController {
                                 score.setIsLocked(false);
                                 score.setIsDraft(true);
                             }
-                            
+
                             scoresToSave.add(score);
                         } else {
                             return ResponseEntity.badRequest()
@@ -366,15 +395,15 @@ public class ApiTeacherClassController {
                     }
                 }
             }
-            
+
             if (scoresToSave.isEmpty()) {
                 return ResponseEntity.ok(Map.of("message", "Không có điểm nào được cập nhật"));
             }
-            
+
             boolean success = scoreService.saveScores(scoresToSave);
-            
+
             if (success) {
-                String message = "final".equals(saveMode) 
+                String message = "final".equals(saveMode)
                         ? "Lưu điểm chính thức thành công!"
                         : "Lưu điểm nháp thành công!";
                 return ResponseEntity.ok(Map.of("message", message));

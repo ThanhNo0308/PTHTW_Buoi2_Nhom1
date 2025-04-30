@@ -4,14 +4,19 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.PageSize;
+import com.itextpdf.text.Element;
 import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.pdf.BaseFont;
+import java.text.DecimalFormat;
+import com.itextpdf.text.Phrase;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.ntn.pojo.ListScoreDTO;
 import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Score;
+import com.ntn.pojo.Class;
 import com.ntn.pojo.Classscoretypes;
 import com.ntn.pojo.ScoreDTO;
 import com.ntn.pojo.Student;
@@ -311,21 +316,140 @@ public class ScoreServiceImpl implements ScoreService {
                 subjectTeacherId, classId, schoolYearId);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try (CSVPrinter printer = new CSVPrinter(
-                new java.io.OutputStreamWriter(out, StandardCharsets.UTF_8),
-                CSVFormat.DEFAULT.withHeader("MSSV", "Họ tên", "Giữa kỳ", "Cuối kỳ", "Tổng kết"))) {
 
-            // Group scores by student
-            for (Score score : scores) {
-                Student student = score.getStudentID();
-                printer.printRecord(
-                        student.getStudentCode(),
-                        student.getFirstName() + " " + student.getLastName(),
-                        getScoreByType(scores, student, "Giữa kỳ"),
-                        getScoreByType(scores, student, "Cuối kỳ"),
-                        calculateFinalScore(scores, student)
-                );
+        try {
+            // Lấy thông tin chi tiết
+            Subjectteacher subjectTeacher = subjectTeacherRepository.getSubJectTeacherById(subjectTeacherId);
+            Class classInfo = classService.getClassById(classId);
+            Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
+
+            // Lấy danh sách các loại điểm được cấu hình
+            List<String> scoreTypes = typeScoreService.getScoreTypesByClass(classId, subjectTeacherId, schoolYearId);
+
+            // Đảm bảo có "Giữa kỳ" và "Cuối kỳ" trong danh sách
+            if (!scoreTypes.contains("Giữa kỳ")) {
+                scoreTypes.add("Giữa kỳ");
             }
+            if (!scoreTypes.contains("Cuối kỳ")) {
+                scoreTypes.add("Cuối kỳ");
+            }
+
+            // Sắp xếp để "Giữa kỳ" và "Cuối kỳ" luôn ở cuối
+            scoreTypes = scoreTypes.stream()
+                    .filter(type -> !type.equals("Giữa kỳ") && !type.equals("Cuối kỳ"))
+                    .collect(Collectors.toCollection(ArrayList::new));
+            scoreTypes.add("Giữa kỳ");
+            scoreTypes.add("Cuối kỳ");
+
+            // Format số thập phân
+            DecimalFormat df = new DecimalFormat();
+            df.setMaximumFractionDigits(2); // Tối đa 2 chữ số thập phân
+            df.setMinimumFractionDigits(0); // Không cần số 0 thừa
+            df.setGroupingUsed(false);
+
+            // Tạo danh sách các tiêu đề
+            List<String> headers = new ArrayList<>();
+            headers.add("STT");
+            headers.add("MSSV");
+            headers.add("Họ tên");
+            headers.addAll(scoreTypes);
+            headers.add("Điểm TB");
+
+            // Tạo CSVPrinter với tiêu đề động
+            CSVPrinter printer = new CSVPrinter(
+                    new java.io.OutputStreamWriter(out, StandardCharsets.UTF_8),
+                    CSVFormat.DEFAULT.withHeader(headers.toArray(new String[0]))
+            );
+
+            // Thêm thông tin về lớp, môn học, năm học...
+            printer.printComment("Trường: Trường Đại học MilkyWay");
+
+            // Lấy thông tin hệ đào tạo từ Major thông qua Class
+            String trainingTypeName = "Chưa xác định";
+            if (classInfo != null && classInfo.getMajorId() != null
+                    && classInfo.getMajorId().getTrainingTypeId() != null) {
+                trainingTypeName = classInfo.getMajorId().getTrainingTypeId().getTrainingTypeName();
+            }
+
+            printer.printComment("Hệ đào tạo: " + trainingTypeName);
+
+            if (classInfo != null && classInfo.getMajorId() != null) {
+                printer.printComment("Ngành: " + classInfo.getMajorId().getMajorName());
+            }
+
+            if (classInfo != null) {
+                printer.printComment("Lớp: " + classInfo.getClassName());
+            }
+
+            if (subjectTeacher != null && subjectTeacher.getSubjectId() != null) {
+                printer.printComment("Môn học: " + subjectTeacher.getSubjectId().getSubjectName());
+            }
+
+            if (schoolYear != null) {
+                printer.printComment("Năm học/Học kỳ: " + schoolYear.getNameYear() + " " + schoolYear.getSemesterName());
+            }
+
+            if (subjectTeacher != null && subjectTeacher.getTeacherId() != null) {
+                printer.printComment("Giảng viên: " + subjectTeacher.getTeacherId().getTeacherName());
+            }
+
+            // Nhóm điểm theo sinh viên
+            Map<Student, List<Score>> scoresByStudent = scores.stream()
+                    .collect(Collectors.groupingBy(Score::getStudentID));
+
+            // In dữ liệu sinh viên
+            int index = 1;
+            for (Map.Entry<Student, List<Score>> entry : scoresByStudent.entrySet()) {
+                Student student = entry.getKey();
+                List<Score> studentScores = entry.getValue();
+
+                // Tạo danh sách các giá trị cho hàng này
+                List<String> rowValues = new ArrayList<>();
+                rowValues.add(String.valueOf(index++)); // STT
+                rowValues.add(student.getStudentCode()); // MSSV
+                rowValues.add(student.getLastName() + " " + student.getFirstName()); // Họ tên
+
+                // Điểm theo từng loại
+                Map<String, Float> studentScoresByType = new HashMap<>();
+                for (Score score : studentScores) {
+                    if (score.getScoreType() != null && score.getScoreValue() != null) {
+                        studentScoresByType.put(score.getScoreType().getScoreType(), score.getScoreValue());
+                    }
+                }
+
+                // Thêm điểm của các loại vào hàng
+                double totalWeightedScore = 0;
+                double totalWeight = 0;
+
+                for (String scoreType : scoreTypes) {
+                    Float scoreValue = studentScoresByType.get(scoreType);
+                    String displayValue = scoreValue != null ? df.format(scoreValue) : "-";
+                    rowValues.add(displayValue);
+
+                    // Tính điểm trung bình
+                    if (scoreValue != null) {
+                        Float weight = getScoreWeight(student.getClassId().getId(),
+                                subjectTeacherId, schoolYearId, scoreType);
+                        if (weight != null) {
+                            totalWeightedScore += scoreValue * weight;
+                            totalWeight += weight;
+                        }
+                    }
+                }
+
+                // Thêm điểm trung bình vào hàng
+                String avgScore = "-";
+                if (totalWeight > 0) {
+                    avgScore = df.format(totalWeightedScore / totalWeight);
+                }
+                rowValues.add(avgScore);
+
+                // In hàng vào CSV
+                printer.printRecord(rowValues);
+            }
+
+            printer.flush();
+            printer.close();
         } catch (IOException e) {
             throw new Exception("Không thể tạo file CSV: " + e.getMessage());
         }
@@ -341,27 +465,102 @@ public class ScoreServiceImpl implements ScoreService {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         try {
-            Document document = new Document(PageSize.A4);
-            PdfWriter.getInstance(document, out);
-
+            // Thiết lập document với kích thước và margin phù hợp
+            Document document = new Document(PageSize.A4, 36, 36, 54, 36);
+            PdfWriter writer = PdfWriter.getInstance(document, out);
             document.open();
 
-            // Tiêu đề
-            Subjectteacher st = subjectTeacherRepository.getSubJectTeacherById(subjectTeacherId);
-            document.add(new Paragraph("BẢNG ĐIỂM"));
-            document.add(new Paragraph("Môn học: " + st.getSubjectId().getSubjectName()));
-            document.add(new Paragraph("Giảng viên: " + st.getTeacherId().getTeacherName()));
-            document.add(new Paragraph("\n"));
+            // Cấu hình font hỗ trợ tiếng Việt
+            BaseFont unicodeFont = BaseFont.createFont(
+                    "c:\\windows\\fonts\\arial.ttf",
+                    BaseFont.IDENTITY_H,
+                    BaseFont.EMBEDDED
+            );
 
-            // Tạo bảng điểm
-            PdfPTable table = new PdfPTable(5); // 5 cột
+            Font titleFont = new Font(unicodeFont, 14, Font.BOLD);
+            Font headerFont = new Font(unicodeFont, 12, Font.BOLD);
+            Font normalFont = new Font(unicodeFont, 10, Font.NORMAL);
+            Font smallFont = new Font(unicodeFont, 9, Font.NORMAL);
+
+            // Lấy thông tin chi tiết
+            Subjectteacher subjectTeacher = subjectTeacherRepository.getSubJectTeacherById(subjectTeacherId);
+            Class classInfo = classService.getClassById(classId);
+            Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
+
+            // Lấy danh sách các loại điểm được cấu hình
+            List<String> scoreTypes = typeScoreService.getScoreTypesByClass(classId, subjectTeacherId, schoolYearId);
+
+            // Đảm bảo có "Giữa kỳ" và "Cuối kỳ" trong danh sách
+            if (!scoreTypes.contains("Giữa kỳ")) {
+                scoreTypes.add("Giữa kỳ");
+            }
+            if (!scoreTypes.contains("Cuối kỳ")) {
+                scoreTypes.add("Cuối kỳ");
+            }
+
+            // Sắp xếp để "Giữa kỳ" và "Cuối kỳ" luôn ở cuối
+            scoreTypes = scoreTypes.stream()
+                    .filter(type -> !type.equals("Giữa kỳ") && !type.equals("Cuối kỳ"))
+                    .collect(Collectors.toCollection(ArrayList::new));
+            scoreTypes.add("Giữa kỳ");
+            scoreTypes.add("Cuối kỳ");
+
+            // Thêm tiêu đề
+            Paragraph title = new Paragraph("BẢNG ĐIỂM", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(10);
+            document.add(title);
+
+            // Thêm thông tin chi tiết
+            PdfPTable infoTable = new PdfPTable(2);
+            infoTable.setWidthPercentage(100);
+            infoTable.setWidths(new float[]{1, 3});
+
+            // Lấy thông tin hệ đào tạo từ Major thông qua Class
+            String trainingTypeName = "Chưa xác định";
+            if (classInfo != null && classInfo.getMajorId() != null
+                    && classInfo.getMajorId().getTrainingTypeId() != null) {
+                trainingTypeName = classInfo.getMajorId().getTrainingTypeId().getTrainingTypeName();
+            }
+
+            String major = classInfo != null && classInfo.getMajorId() != null
+                    ? classInfo.getMajorId().getMajorName() : "Chưa có thông tin";
+
+            addInfoRow(infoTable, "Hệ đào tạo:", trainingTypeName, normalFont);
+            addInfoRow(infoTable, "Ngành:", major, normalFont);
+            addInfoRow(infoTable, "Lớp:", classInfo != null ? classInfo.getClassName() : "N/A", normalFont);
+            addInfoRow(infoTable, "Môn học:", subjectTeacher != null && subjectTeacher.getSubjectId() != null
+                    ? subjectTeacher.getSubjectId().getSubjectName() : "N/A", normalFont);
+            addInfoRow(infoTable, "Năm học/Học kỳ:", schoolYear != null ? schoolYear.getNameYear() + " " + schoolYear.getSemesterName() : "N/A", normalFont);
+            addInfoRow(infoTable, "Giảng viên:", subjectTeacher != null && subjectTeacher.getTeacherId() != null
+                    ? subjectTeacher.getTeacherId().getTeacherName() : "N/A", normalFont);
+
+            infoTable.setSpacingAfter(15);
+            document.add(infoTable);
+
+            // Tạo bảng điểm với số cột động
+            // 3 cột cố định + số loại điểm + 1 cột điểm TB
+            PdfPTable table = new PdfPTable(3 + scoreTypes.size() + 1);
             table.setWidthPercentage(100);
 
-            // Thêm header
-            addTableHeader(table);
+            // Thiết lập độ rộng cột
+            float[] columnWidths = new float[3 + scoreTypes.size() + 1];
+            columnWidths[0] = 1.0f; // STT
+            columnWidths[1] = 2.5f; // MSSV
+            columnWidths[2] = 4.5f; // Họ tên
 
-            // Thêm dữ liệu
-            addTableData(table, scores);
+            for (int i = 0; i < scoreTypes.size(); i++) {
+                columnWidths[3 + i] = 2.0f; // Các cột điểm
+            }
+            columnWidths[columnWidths.length - 1] = 2.0f; // Cột Điểm TB
+
+            table.setWidths(columnWidths);
+
+            // Thêm header
+            addTableHeader(table, scoreTypes, headerFont);
+
+            // Thêm dữ liệu - Pass subjectTeacherId and schoolYearId to the method
+            addTableData(table, scores, scoreTypes, normalFont, subjectTeacherId, schoolYearId);
 
             document.add(table);
             document.close();
@@ -373,48 +572,146 @@ public class ScoreServiceImpl implements ScoreService {
         return out.toByteArray();
     }
 
-    private void addTableHeader(PdfPTable table) {
-        PdfPCell cell = new PdfPCell();
-        cell.setPadding(5);
+    private void addInfoRow(PdfPTable table, String label, String value, Font font) {
+        PdfPCell labelCell = new PdfPCell(new Phrase(label, font));
+        labelCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        labelCell.setBorderWidth(0);
+        labelCell.setPaddingBottom(5);
 
-        cell.setPhrase(new Paragraph("MSSV"));
-        table.addCell(cell);
+        PdfPCell valueCell = new PdfPCell(new Phrase(value, font));
+        valueCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        valueCell.setBorderWidth(0);
+        valueCell.setPaddingBottom(5);
 
-        cell.setPhrase(new Paragraph("Họ tên"));
-        table.addCell(cell);
-
-        cell.setPhrase(new Paragraph("Giữa kỳ"));
-        table.addCell(cell);
-
-        cell.setPhrase(new Paragraph("Cuối kỳ"));
-        table.addCell(cell);
-
-        cell.setPhrase(new Paragraph("Tổng kết"));
-        table.addCell(cell);
+        table.addCell(labelCell);
+        table.addCell(valueCell);
     }
 
-    private void addTableData(PdfPTable table, List<Score> scores) {
-        // Group scores by student
-        scores.stream()
-                .map(Score::getStudentID)
-                .distinct()
-                .forEach(student -> {
-                    table.addCell(student.getStudentCode());
-                    table.addCell(student.getFirstName() + " " + student.getLastName());
-                    table.addCell(String.valueOf(getScoreByType(scores, student, "Giữa kỳ")));
-                    table.addCell(String.valueOf(getScoreByType(scores, student, "Cuối kỳ")));
-                    table.addCell(String.valueOf(calculateFinalScore(scores, student)));
-                });
+    private void addTableHeader(PdfPTable table, List<String> scoreTypes, Font font) {
+        // Tạo cell mẫu có style chung
+        PdfPCell headerCell = new PdfPCell();
+        headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        headerCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        headerCell.setPadding(5);
+        headerCell.setBackgroundColor(new BaseColor(220, 220, 220));
+
+        // Các cột cơ bản
+        headerCell.setPhrase(new Phrase("STT", font));
+        table.addCell(headerCell);
+
+        headerCell.setPhrase(new Phrase("MSSV", font));
+        table.addCell(headerCell);
+
+        headerCell.setPhrase(new Phrase("Họ tên", font));
+        table.addCell(headerCell);
+
+        // Các cột điểm động theo cấu hình
+        for (String scoreType : scoreTypes) {
+            headerCell.setPhrase(new Phrase(scoreType, font));
+            table.addCell(headerCell);
+        }
+
+        // Cột điểm trung bình
+        headerCell.setPhrase(new Phrase("Điểm TB", font));
+        table.addCell(headerCell);
     }
 
-    private double getScoreByType(List<Score> scores, Student student, String scoreType) {
-        return scores.stream()
-                .filter(s -> s.getStudentID().getId().equals(student.getId())
-                && s.getScoreType() != null
-                && scoreType.equals(s.getScoreType().getScoreType()))
-                .findFirst()
-                .map(s -> s.getScoreValue() != null ? s.getScoreValue().doubleValue() : 0.0)
-                .orElse(0.0);
+    private String formatScore(Float score) {
+        if (score == null) {
+            return "-";
+        }
+
+        if (score == Math.floor(score)) {
+            // Nếu là số nguyên, không hiển thị phần thập phân
+            return Integer.toString(score.intValue());
+        } else {
+            // Sử dụng DecimalFormat để loại bỏ số 0 không cần thiết ở cuối
+            DecimalFormat df = new DecimalFormat();
+            df.setMaximumFractionDigits(2);
+            df.setMinimumFractionDigits(0);
+            df.setGroupingUsed(false);
+            return df.format(score);
+        }
+    }
+
+    private void addTableData(PdfPTable table, List<Score> scores, List<String> scoreTypes, Font font,
+            Integer subjectTeacherId, Integer schoolYearId) {
+        // Nhóm điểm theo sinh viên
+        Map<Student, List<Score>> scoresByStudent = scores.stream()
+                .collect(Collectors.groupingBy(Score::getStudentID));
+
+        // Format số thập phân
+        DecimalFormat df = new DecimalFormat();
+        df.setMaximumFractionDigits(2); // Tối đa 2 chữ số thập phân
+        df.setMinimumFractionDigits(0); // Không cần số 0 thừa
+        df.setGroupingUsed(false);
+
+        int index = 1;
+        for (Map.Entry<Student, List<Score>> entry : scoresByStudent.entrySet()) {
+            Student student = entry.getKey();
+            List<Score> studentScores = entry.getValue();
+
+            // Cell STT - căn giữa
+            PdfPCell cell = new PdfPCell(new Phrase(String.valueOf(index++), font));
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            table.addCell(cell);
+
+            // Cell MSSV - căn giữa
+            cell = new PdfPCell(new Phrase(student.getStudentCode(), font));
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            table.addCell(cell);
+
+            // Cell Họ tên - căn trái
+            cell = new PdfPCell(new Phrase(student.getLastName() + " " + student.getFirstName(), font));
+            cell.setHorizontalAlignment(Element.ALIGN_LEFT);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            table.addCell(cell);
+
+            // Điểm theo từng loại
+            Map<String, Float> studentScoresByType = new HashMap<>();
+            for (Score score : studentScores) {
+                if (score.getScoreType() != null && score.getScoreValue() != null) {
+                    studentScoresByType.put(score.getScoreType().getScoreType(), score.getScoreValue());
+                }
+            }
+
+            // Thêm điểm của các loại vào bảng
+            double totalWeightedScore = 0;
+            double totalWeight = 0;
+
+            for (String scoreType : scoreTypes) {
+                Float scoreValue = studentScoresByType.get(scoreType);
+                String displayValue = formatScore(scoreValue);
+
+                // Nếu có điểm và có trọng số, tính vào điểm trung bình
+                if (scoreValue != null) {
+                    // Fix: Use the passed subjectTeacherId and schoolYearId parameters
+                    Float weight = getScoreWeight(student.getClassId().getId(),
+                            subjectTeacherId, schoolYearId, scoreType);
+                    if (weight != null) {
+                        totalWeightedScore += scoreValue * weight;
+                        totalWeight += weight;
+                    }
+                }
+
+                // Cell điểm - căn giữa
+                cell = new PdfPCell(new Phrase(displayValue, font));
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                table.addCell(cell);
+            }
+
+            // Tính và thêm điểm trung bình
+            String avgScore = totalWeight > 0 ? formatScore((float)(totalWeightedScore / totalWeight)) : "-";
+
+            // Cell điểm TB - căn giữa
+            cell = new PdfPCell(new Phrase(avgScore, font));
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            table.addCell(cell);
+        }
     }
 
     // Phương thức tính điểm trung bình trong ScoreService
@@ -441,16 +738,7 @@ public class ScoreServiceImpl implements ScoreService {
         return totalWeight > 0 ? totalWeightedScore / totalWeight : null;
     }
 
-    private double calculateFinalScore(List<Score> scores, Student student) {
-        double midTerm = getScoreByType(scores, student, "Giữa kỳ");
-        double finalTerm = getScoreByType(scores, student, "Cuối kỳ");
-
-        // Tính điểm tổng kết (ví dụ: giữa kỳ 30%, cuối kỳ 70%)
-        return (midTerm * 0.3) + (finalTerm * 0.7);
-    }
-
     @Override
-    @Transactional
     public boolean lockScores(int subjectTeacherId, int classId, int schoolYearId) {
         List<Score> scores = this.scoreRepo.getScoresBySubjectTeacherIdAndClassIdAndSchoolYearId(
                 subjectTeacherId, classId, schoolYearId);

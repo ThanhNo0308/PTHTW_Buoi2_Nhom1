@@ -19,8 +19,9 @@ const TeacherClassesList = () => {
             try {
                 setLoading(true);
                 const response = await teacherClassApis.getTeacherClasses(user.username);
-                
+
                 if (response.data) {
+                    console.log("API response:", response.data); // For debugging
                     setClasses(response.data.classes || []);
                     setStudentCounts(response.data.studentCounts || {});
                 }
@@ -80,16 +81,39 @@ const TeacherClassesList = () => {
                                 </Card.Header>
                                 <Card.Body>
                                     <Card.Text>
+                                        <strong>Hệ đào tạo:</strong> {classroom.majorId?.trainingTypeId
+                                            ? classroom.majorId.trainingTypeId.trainingTypeName
+                                            : 'Chưa có thông tin'}
+                                    </Card.Text>
+                                    <Card.Text>
                                         <strong>Ngành:</strong> {classroom.majorId ? classroom.majorId.majorName : 'Chưa có thông tin'}
+                                    </Card.Text>
+                                    <Card.Text className="d-flex align-items-center">
+                                        <strong>Năm học - Học kỳ:</strong>
+                                        {classroom.assignedSchoolYears && classroom.assignedSchoolYears.length > 0
+                                            ? (
+                                                <span className="ms-2 d-inline-flex flex-nowrap overflow-auto" style={{ maxWidth: '75%' }}>
+                                                    {classroom.assignedSchoolYears.map(year => (
+                                                        <Badge
+                                                            bg="secondary"
+                                                            className="me-1"
+                                                            key={year.id}
+                                                        >
+                                                            {year.nameYear} {year.semesterName}
+                                                        </Badge>
+                                                    ))}
+                                                </span>
+                                            )
+                                            : ' Chưa có thông tin'}
                                     </Card.Text>
                                     <Card.Text>
                                         <strong>Số sinh viên:</strong>{' '}
                                         <Badge bg="info">{studentCounts[classroom.id] || 0}</Badge>
                                     </Card.Text>
                                     <div className="d-grid gap-2">
-                                        <Button 
-                                            variant="primary" 
-                                            as={Link} 
+                                        <Button
+                                            variant="primary"
+                                            as={Link}
                                             to={`/teacher/classes/${classroom.id}`}
                                         >
                                             <i className="fas fa-info-circle me-2"></i> Chi tiết

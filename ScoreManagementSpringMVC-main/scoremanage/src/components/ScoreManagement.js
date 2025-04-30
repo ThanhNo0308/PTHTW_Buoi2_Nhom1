@@ -4,7 +4,7 @@ import { Container, Card, Form, Table, Button, Modal, Alert, Spinner } from 'rea
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faArrowLeft, faPlus, faCog, faLock, faUnlock, faSave, faEdit,
-  faExclamationCircle, faCheckCircle, faTimes
+  faExclamationCircle, faCheckCircle, faTimes, faFilePdf, faFileCsv, faFileExport
 } from '@fortawesome/free-solid-svg-icons';
 import { scoreApis, teacherClassApis } from '../configs/Apis';
 import { MyUserContext } from '../App';
@@ -40,6 +40,7 @@ const ScoreManagement = () => {
   const [selectedScoreType, setSelectedScoreType] = useState("");
   const [scoreTypesList, setScoreTypesList] = useState([]);
   const [tempWeights, setTempWeights] = useState({});
+  const [exportLoading, setExportLoading] = useState(false);
 
   // Maximum score types
   const MAX_SCORE_TYPES = 5;
@@ -72,9 +73,9 @@ const ScoreManagement = () => {
       setError("");
 
       console.log("Loading data with params:", {
-        classId, 
-        subjectTeacherId, 
-        schoolYearId, 
+        classId,
+        subjectTeacherId,
+        schoolYearId,
         username: user.username
       });
 
@@ -85,7 +86,7 @@ const ScoreManagement = () => {
         setError("Không nhận được dữ liệu từ máy chủ");
         return;
       }
-      
+
       if (classResponse.data && classResponse.data.classroom) {
         setClassroom(classResponse.data.classroom);
         setStudents(classResponse.data.students || []);
@@ -571,6 +572,93 @@ const ScoreManagement = () => {
     }
   };
 
+  // Thêm hàm xuất PDF - đặt trước return statement trong component ScoreManagement
+  const handleExportPDF = async () => {
+    try {
+      setExportLoading(true);
+
+      const response = await scoreApis.exportScoresToPdf(
+        classId,
+        subjectTeacherId,
+        schoolYearId
+      );
+
+      if (response.data && response.data.success && response.data.fileContent) {
+        // Tạo blob từ Base64
+        const byteCharacters = atob(response.data.fileContent);
+        const byteNumbers = new Array(byteCharacters.length);
+
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+        // Tạo URL và link tải xuống
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', response.data.fileName || 'scores.pdf');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setSuccess("Xuất bảng điểm PDF thành công");
+      } else {
+        setError(response.data?.message || "Không thể xuất bảng điểm PDF");
+      }
+    } catch (err) {
+      console.error("Error exporting PDF:", err);
+      setError(`Lỗi khi xuất PDF: ${err.message}`);
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      setExportLoading(true);
+
+      const response = await scoreApis.exportScoresToCsv(
+        classId,
+        subjectTeacherId,
+        schoolYearId
+      );
+
+      if (response.data && response.data.success && response.data.fileContent) {
+        // Tạo blob từ Base64
+        const byteCharacters = atob(response.data.fileContent);
+        const byteNumbers = new Array(byteCharacters.length);
+
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'text/csv;charset=utf-8;' });
+
+        // Tạo URL và link tải xuống
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', response.data.fileName || 'scores.csv');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setSuccess("Xuất bảng điểm CSV thành công");
+      } else {
+        setError(response.data?.message || "Không thể xuất bảng điểm CSV");
+      }
+    } catch (err) {
+      console.error("Error exporting CSV:", err);
+      setError(`Lỗi khi xuất CSV: ${err.message}`);
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '300px' }}>
@@ -591,6 +679,13 @@ const ScoreManagement = () => {
           <FontAwesomeIcon icon={faArrowLeft} className="me-2" /> Quay lại
         </Button>
       </div>
+
+      {exportLoading && (
+        <div className="position-fixed top-50 start-50 translate-middle bg-white p-4 rounded shadow text-center" style={{ zIndex: 9999 }}>
+          <Spinner animation="border" variant="primary" />
+          <p className="mt-2 mb-0">Đang xuất bảng điểm...</p>
+        </div>
+      )}
 
       {error && (
         <Alert variant="danger" dismissible onClose={() => setError("")}>
@@ -633,13 +728,13 @@ const ScoreManagement = () => {
             </Button>
           </div>
 
-          <div className="table-responsive">
+          <div className="table-responsive text-center">
             <Table bordered hover>
               <thead className="table-light">
                 <tr>
                   <th>STT</th>
-                  <th>Mã SV</th>
-                  <th>Họ và tên</th>
+                  <th>MSSV</th>
+                  <th>Họ tên</th>
                   {scoreTypes.map((type) => (
                     <th key={type}>
                       {type} ({(scoreWeights[type] * 100).toFixed(0)}%)
@@ -665,7 +760,7 @@ const ScoreManagement = () => {
                     <tr key={student.id}>
                       <td>{index + 1}</td>
                       <td>{student.studentCode}</td>
-                      <td>{student.lastName} {student.firstName} </td>
+                      <td className="text-start">{student.lastName} {student.firstName} </td>
                       {scoreTypes.map((type) => (
                         <td key={`${student.id}-${type}`}>
                           <Form.Control
@@ -730,9 +825,23 @@ const ScoreManagement = () => {
             </Button>
             <Button
               variant="primary"
+              className="me-2"
               onClick={() => saveScores('final')}
             >
               <FontAwesomeIcon icon={faSave} className="me-2" /> Lưu chính thức
+            </Button>
+            <Button
+              variant="success"
+              className="me-2"
+              onClick={handleExportPDF}
+            >
+              <FontAwesomeIcon icon={faFilePdf} className="me-2" /> Xuất PDF
+            </Button>
+            <Button
+              variant="warning"
+              onClick={handleExportCSV}
+            >
+              <FontAwesomeIcon icon={faFileCsv} className="me-2" /> Xuất CSV
             </Button>
           </div>
         </Card.Body>
