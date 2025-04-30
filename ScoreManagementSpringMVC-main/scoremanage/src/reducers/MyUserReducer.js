@@ -10,6 +10,7 @@ const MyUserReducer = (currentState, action) => {
             return null;
         case "update":
             const updatedUser = {...currentState, ...action.payload};
+            cookie.remove("user");
             cookie.save("user", updatedUser, { path: "/" });
             console.log("User context updated:", updatedUser);
             return updatedUser;

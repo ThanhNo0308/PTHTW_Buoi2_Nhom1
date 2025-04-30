@@ -1,23 +1,29 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { MyUserContext } from "../App";
-import { userApis, API } from "../configs/Apis";
+import { userApis, API, endpoints } from "../configs/Apis";
 import { Alert } from 'react-bootstrap';
 import moment from 'moment';
 import "../assets/css/base.css";
 import "../assets/css/styles.css";
+import {
+  faUserCircle, faCheckCircle, faExclamationCircle, faIdCard,
+  faSave, faKey, faInfoCircle, faLock, faLockOpen, faEye, faEyeSlash, faShieldAlt, faUserLock
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const Profile = () => {
   const [user, dispatch] = useContext(MyUserContext);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
-  const [userActive, setUserActive] = useState(user?.active || false);
-
+  const [userActive, setUserActive] = useState(true);
+  const [justUpdated, setJustUpdated] = useState(false);
+  const justUpdatedRef = useRef(false);
   // Thông tin người dùng
   const [profileData, setProfileData] = useState({
     id: user?.id || "",
     name: user?.name || "",
-    gender: user?.gender === 0 ? "Nữ" : "Nam",
+    gender: user?.gender === 0 ? "Nam" : "Nữ",
     hometown: user?.hometown || "",
     identifyCard: user?.identifyCard || "",
     birthdate: user?.birthdate ? moment(user.birthdate).format("YYYY-MM-DD") : "",
@@ -43,30 +49,78 @@ const Profile = () => {
   useEffect(() => {
     const loadUserDetail = async () => {
       try {
+        if (justUpdatedRef.current) {
+          justUpdatedRef.current = false;
+          return;
+        }
         if (user) {
-          const response = await userApis.getCurrentUser();
-          console.log("API Response:", response.data); // Thêm log để debug
-          // Thêm dòng này vào phương thức loadUserDetail sau khi nhận dữ liệu
-          if (response.data && response.data.user) {
-            const userData = response.data.user;
-            console.log("User active status:", userData.active, "Type:", typeof userData.active);
+          let response;
 
-            setUserActive(userData.active);
-            // Cập nhật state với dữ liệu từ API
-            setProfileData({
-              id: userData.id || user.id || "",
-              name: userData.name || user.name || "",
-              gender: userData.gender === 0 ? "Nam" : "Nữ",
-              hometown: userData.hometown || "",
-              identifyCard: userData.identifyCard || "",
-              birthdate: userData.birthdate ? moment(userData.birthdate).format("YYYY-MM-DD") : "",
-              phone: userData.phone || "",
-            });
+          // Sử dụng API phù hợp với từng vai trò
+          if (user.role === 'Student') {
+            // Dùng API student-current cho sinh viên
+            response = await API.get(endpoints["student-current"]);
+            console.log("Student API Response:", response.data);
 
-            // Thêm logic để cập nhật roleSpecificInfo
-            if (response.data.roleSpecificInfo) {
-              console.log("Role specific info:", response.data.roleSpecificInfo);
-              setRoleSpecificInfo(response.data.roleSpecificInfo);
+            if (response.data && response.data.student) {
+              // Lưu thông tin sinh viên vào roleSpecificInfo
+              const studentData = response.data.student || {};
+              setRoleSpecificInfo(studentData);
+            
+              // Cập nhật trạng thái người dùng
+              setUserActive("Active");  // Đặt trạng thái rõ ràng là "Active"
+            
+              const userData = response.data.user || {};
+            
+              let formattedBirthdate = "";
+              // Ưu tiên lấy từ studentData thay vì userData
+              if (studentData.birthdate) {
+                formattedBirthdate = moment(parseInt(studentData.birthdate)).format("YYYY-MM-DD");
+              } else if (userData.birthdate) {
+                formattedBirthdate = moment(userData.birthdate).format("YYYY-MM-DD");
+              } else if (user.birthdate) {
+                formattedBirthdate = moment(user.birthdate).format("YYYY-MM-DD");
+              }
+            
+              console.log("Birthdate from API (student):", studentData.birthdate);
+              console.log("Formatted birthdate:", formattedBirthdate);
+            
+              // Cập nhật thông tin cơ bản
+              setProfileData({
+                id: userData.id || user.id || "",
+                name: userData.name || user.name || "",
+                gender: (studentData.gender === 0 || user.gender === 0) ? "Nam" : "Nữ", 
+                hometown: studentData.hometown || user.hometown || "",
+                identifyCard: studentData.identifyCard || user.identifyCard || "",
+                birthdate: formattedBirthdate,
+                phone: studentData.phone || user.phone || "",
+              });
+            }
+          } else {
+            // Các vai trò khác vẫn dùng getCurrentUser
+            response = await userApis.getCurrentUser();
+            console.log("API Response:", response.data);
+
+            if (response.data && response.data.user) {
+              const userData = response.data.user;
+              setUserActive(userData.active);
+
+              // Cập nhật state với dữ liệu từ API
+              setProfileData({
+                id: userData.id || user.id || "",
+                name: userData.name || user.name || "",
+                gender: userData.gender === 0 ? "Nam" : "Nữ",
+                hometown: userData.hometown || "",
+                identifyCard: userData.identifyCard || "",
+                birthdate: userData.birthdate ? moment(userData.birthdate).format("YYYY-MM-DD") : "",
+                phone: userData.phone || "",
+              });
+
+              // Thêm logic để cập nhật roleSpecificInfo
+              if (response.data.roleSpecificInfo) {
+                console.log("Role specific info:", response.data.roleSpecificInfo);
+                setRoleSpecificInfo(response.data.roleSpecificInfo);
+              }
             }
           }
         }
@@ -75,7 +129,6 @@ const Profile = () => {
         setError("Không thể tải thông tin chi tiết. Vui lòng thử lại sau.");
       }
     };
-
 
     loadUserDetail();
   }, [user]);
@@ -88,26 +141,27 @@ const Profile = () => {
   };
 
   const isUserActive = (status) => {
-    console.log("Checking status:", status); // Thêm log để debug
+    console.log("Checking status:", status);
 
-    // Xử lý trường hợp status là null hoặc undefined
-    if (status === null || status === undefined) {
-      return false;
+    // Luôn trả về true nếu trạng thái là "Active"
+    if (status === "Active") {
+      return true;
     }
 
-    // Xử lý trường hợp status là boolean
+    if (status === null || status === undefined) {
+      return true;  // Default to active if undefined
+    }
+
     if (typeof status === 'boolean') {
       return status;
     }
 
-    // Xử lý trường hợp status là string
     if (typeof status === 'string') {
-      // So với cả 'active' và 'Active' để chắc chắn
       const normalizedStatus = status.trim().toLowerCase();
       return normalizedStatus === 'active' || normalizedStatus === 'true';
     }
 
-    return false; // Trường hợp không xác định được
+    return true;  // Default to active
   };
 
   const profileImgStyle = {
@@ -151,53 +205,45 @@ const Profile = () => {
     setLoading(true);
     setSuccess("");
     setError("");
-  
+
     try {
-      // 1. Chỉ gửi thông tin người dùng dưới dạng JSON
-      const response = await userApis.updateProfile(profileData);
-      console.log("Profile update response:", response.data);
-  
-      // 2. Xử lý riêng việc upload ảnh nếu có
+      let newImageUrl = null;
+
+      // 1. Xử lý upload ảnh trước nếu có
       if (fileInputRef.current.files.length > 0) {
         console.log("File selected:", fileInputRef.current.files[0].name);
-        
+
         try {
-          const formData = new FormData();
-          formData.append('id', profileData.id);
-          formData.append('image', fileInputRef.current.files[0]);
-          
-          // Sử dụng hàm uploadAvatar đã được định nghĩa trong userApis thay vì axios trực tiếp
           const avatarResponse = await userApis.uploadAvatar(
-            profileData.id, 
+            profileData.id,
             fileInputRef.current.files[0]
           );
-          
+
           console.log("Avatar upload response:", avatarResponse.data);
-          
+
           if (avatarResponse.data && avatarResponse.data.imageUrl) {
-            // Cập nhật context user
-            dispatch({
-              type: "update",
-              payload: {
-                ...user,
-                image: avatarResponse.data.imageUrl
-              }
-            });
+            // Lưu URL mới để cập nhật một lần duy nhất
+            newImageUrl = avatarResponse.data.imageUrl;
+
+            // Cập nhật ảnh hiển thị ngay lập tức
+            const profileImg = document.querySelector("img[alt='Profile']");
+            if (profileImg) {
+              profileImg.src = `${newImageUrl}?t=${new Date().getTime()}`; // Thêm timestamp tránh cache
+            }
           }
         } catch (uploadErr) {
           console.error("Error uploading avatar:", uploadErr);
-          setError("Không thể upload ảnh đại diện. Chi tiết: " + 
+          setError("Không thể upload ảnh đại diện. Chi tiết: " +
             (uploadErr.response?.data?.message || uploadErr.message));
           setLoading(false);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
           return;
         }
       }
-  
-      // 3. Hiển thị thông báo thành công
-      setSuccess("Cập nhật thông tin thành công!");
-      
-      // 4. Cập nhật context user thay vì reload trang
+
+      // 2. Cập nhật thông tin người dùng sau khi upload ảnh
+      const response = await userApis.updateProfile(profileData);
+
+      // 3. Cập nhật context user một lần duy nhất với tất cả thông tin
       dispatch({
         type: "update",
         payload: {
@@ -206,21 +252,26 @@ const Profile = () => {
           gender: profileData.gender === "Nam" ? 0 : 1,
           hometown: profileData.hometown,
           identifyCard: profileData.identifyCard,
-          birthdate: profileData.birthdate,
-          phone: profileData.phone
+          birthdate: profileData.birthdate, // Đảm bảo định dạng đúng
+          phone: profileData.phone,
+          image: newImageUrl || user.image
         }
       });
       
-      // Tải lại thông tin user từ API để đảm bảo dữ liệu đồng bộ
-      const userResponse = await userApis.getCurrentUser();
-      if (userResponse.data && userResponse.data.user) {
-        setRoleSpecificInfo(userResponse.data.roleSpecificInfo);
-      }
-  
+      // Đánh dấu là vừa cập nhật để tránh gọi API lại
+      justUpdatedRef.current = true;
+
+      setProfileData({
+        ...profileData,
+        birthdate: profileData.birthdate  // Đảm bảo giữ nguyên giá trị mới
+      });
+
+      // 4. Thông báo thành công
+      setSuccess("Cập nhật thông tin thành công!");
+
     } catch (err) {
       console.error("Lỗi cập nhật:", err);
-      setError("Không thể cập nhật thông tin. Vui lòng thử lại sau. Chi tiết: " + 
-        (err.response?.data?.message || err.message));
+      setError("Không thể cập nhật thông tin. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -284,7 +335,7 @@ const Profile = () => {
     return (
       <div className="container mt-4">
         <Alert variant="warning">
-          <i className="fas fa-exclamation-triangle me-2"></i>
+          <FontAwesomeIcon icon={faExclamationCircle} className="me-2" />
           Bạn cần đăng nhập để xem thông tin cá nhân.
         </Alert>
       </div>
@@ -296,7 +347,7 @@ const Profile = () => {
       <div className="row mb-4">
         <div className="col-lg-12">
           <h2 className="mb-3">
-            <i className="fas fa-user-circle"></i> Thông tin cá nhân
+            <FontAwesomeIcon icon={faUserCircle} className="me-2" /> Thông tin cá nhân
           </h2>
         </div>
       </div>
@@ -304,13 +355,13 @@ const Profile = () => {
       {/* Thông báo */}
       {success && (
         <Alert variant="success" dismissible onClose={() => setSuccess("")}>
-          <i className="fas fa-check-circle"></i> {success}
+          <FontAwesomeIcon icon={faCheckCircle} className="me-2" /> {success}
         </Alert>
       )}
 
       {error && (
         <Alert variant="danger" dismissible onClose={() => setError("")}>
-          <i className="fas fa-exclamation-circle"></i> {error}
+          <FontAwesomeIcon icon={faExclamationCircle} className="me-2" /> {error}
         </Alert>
       )}
 
@@ -319,7 +370,7 @@ const Profile = () => {
         <div className="col-lg-6 mb-4">
           <div className="card shadow h-100">
             <div className="profile-header p-3">
-              <h5 className="card-title mb-0"><i className="fas fa-id-card"></i> Thông tin người dùng</h5>
+              <h5 className="card-title mb-0"><FontAwesomeIcon icon={faIdCard} className="me-2" /> Thông tin người dùng</h5>
             </div>
             <div className="card-body text-center">
               <div className="mb-4">
@@ -437,7 +488,7 @@ const Profile = () => {
                     {loading ? (
                       <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                     ) : (
-                      <i className="fas fa-save me-2"></i>
+                      <FontAwesomeIcon icon={faSave} className="me-2" />
                     )}
                     Lưu thông tin
                   </button>
@@ -451,11 +502,11 @@ const Profile = () => {
         <div className="col-lg-6 mb-4">
           <div className="card shadow h-50">
             <div className="profile-header p-3">
-              <h5 className="card-title mb-0"><i className="fas fa-key"></i> Đổi mật khẩu</h5>
+              <h5 className="card-title mb-0"><FontAwesomeIcon icon={faKey} className="me-2" /> Đổi mật khẩu</h5>
             </div>
             <div className="card-body">
               <div className="alert alert-info">
-                <i className="fas fa-info-circle"></i> Mật khẩu phải có ít nhất 6 ký tự và bao gồm chữ cái và số.
+                <FontAwesomeIcon icon={faInfoCircle} className="me-2" /> Mật khẩu phải có ít nhất 6 ký tự và bao gồm chữ cái và số.
               </div>
 
               <form id="passwordForm" onSubmit={handlePasswordSubmit}>
@@ -463,12 +514,12 @@ const Profile = () => {
 
                 <div className="mb-3">
                   <label htmlFor="currentPassword" className="form-label">
-                    <i className="fas fa-lock me-2"></i>
+                    <FontAwesomeIcon icon={faLock} className="me-2" />
                     Mật khẩu hiện tại <span className="text-danger">*</span>
                   </label>
                   <div className="input-group">
                     <span className="input-group-text">
-                      <i className="fas fa-key"></i>
+                      <FontAwesomeIcon icon={faKey} className="me-2" />
                     </span>
                     <input
                       type="password"
@@ -485,19 +536,19 @@ const Profile = () => {
                       data-target="currentPassword"
                       onClick={() => togglePasswordVisibility("currentPassword")}
                     >
-                      <i className="fas fa-eye"></i>
+                      <FontAwesomeIcon icon={faEye} className="me-2" />
                     </button>
                   </div>
                 </div>
 
                 <div className="mb-3">
                   <label htmlFor="newPassword" className="form-label">
-                    <i className="fas fa-key me-2"></i>
+                    <FontAwesomeIcon icon={faKey} className="me-2" />
                     Mật khẩu mới <span className="text-danger">*</span>
                   </label>
                   <div className="input-group">
                     <span className="input-group-text">
-                      <i className="fas fa-lock-open"></i>
+                      <FontAwesomeIcon icon={faLockOpen} className="me-2" />
                     </span>
                     <input
                       type="password"
@@ -515,7 +566,7 @@ const Profile = () => {
                       data-target="newPassword"
                       onClick={() => togglePasswordVisibility("newPassword")}
                     >
-                      <i className="fas fa-eye"></i>
+                      <FontAwesomeIcon icon={faEye} className="me-2" />
                     </button>
                     {passwordErrors.newPassword && (
                       <div className="invalid-feedback">
@@ -527,12 +578,12 @@ const Profile = () => {
 
                 <div className="mb-3">
                   <label htmlFor="confirmPassword" className="form-label">
-                    <i className="fas fa-check-circle me-2"></i>
+                    <FontAwesomeIcon icon={faCheckCircle} className="me-2" />
                     Xác nhận mật khẩu mới <span className="text-danger">*</span>
                   </label>
                   <div className="input-group">
                     <span className="input-group-text">
-                      <i className="fas fa-shield-alt"></i>
+                      <FontAwesomeIcon icon={faShieldAlt} className="me-2" />
                     </span>
                     <input
                       type="password"
@@ -549,7 +600,7 @@ const Profile = () => {
                       data-target="confirmPassword"
                       onClick={() => togglePasswordVisibility("confirmPassword")}
                     >
-                      <i className="fas fa-eye"></i>
+                      <FontAwesomeIcon icon={faEye} className="me-2" />
                     </button>
                     {passwordErrors.confirmPassword && (
                       <div className="invalid-feedback">
@@ -569,7 +620,7 @@ const Profile = () => {
                     {loading ? (
                       <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                     ) : (
-                      <i className="fas fa-key me-2"></i>
+                      <FontAwesomeIcon icon={faKey} className="me-2" />
                     )}
                     Đổi mật khẩu
                   </button>
@@ -581,7 +632,7 @@ const Profile = () => {
           {/* Thông tin tài khoản */}
           <div className="card shadow mt-4">
             <div className="card-header bg-secondary text-white">
-              <h5 className="card-title mb-0"><i className="fas fa-user-lock"></i> Thông tin tài khoản</h5>
+              <h5 className="card-title mb-0"><FontAwesomeIcon icon={faUserLock} className="me-2" /> Thông tin tài khoản</h5>
             </div>
             <div className="card-body">
               <div className="mb-3 row">
@@ -610,71 +661,72 @@ const Profile = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Thông tin chi tiết theo vai trò */}
-      {roleSpecificInfo && (
-        <div className="row mt-2">
-          <div className="col-lg-12">
-            <div className="card shadow">
+          {/* Thông tin sinh viên (nếu vai trò là sinh viên) */}
+          {user.role === 'Student' && roleSpecificInfo && (
+            <div className="card shadow mt-4">
               <div className="card-header bg-info text-white">
                 <h5 className="card-title mb-0">
-                  <i className="fas fa-info-circle"></i>
-                  {user.role === 'Student' && "Thông tin sinh viên"}
-                  {user.role === 'Teacher' && "Thông tin giảng viên"}
-                  {user.role === 'Admin' && "Thông tin quản trị viên"}
+                  <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+                  Thông tin sinh viên
                 </h5>
               </div>
               <div className="card-body">
-                {/* Thông tin sinh viên */}
-                {user.role === 'Student' && roleSpecificInfo && (
-                  <div className="row mb-3">
-                    <div className="col-md-4">
-                      <label className="fw-bold">Mã sinh viên:</label>
-                      <p>{roleSpecificInfo.id}</p>
-                    </div>
-                    <div className="col-md-4">
-                      <label className="fw-bold">Lớp:</label>
-                      <p>{roleSpecificInfo.classId ? roleSpecificInfo.classId.className : 'Chưa phân lớp'}</p>
-                    </div>
-                    <div className="col-md-4">
-                      <label className="fw-bold">Ngành học:</label>
-                      <p>
-                        {roleSpecificInfo.classId && roleSpecificInfo.classId.majorId
-                          ? roleSpecificInfo.classId.majorId.majorName
-                          : 'Chưa có thông tin'}
-                      </p>
-                    </div>
+                <div className="row mb-3">
+                  <div className="col-md-4">
+                    <label className="fw-bold">Mã sinh viên:</label>
+                    <p>{roleSpecificInfo.studentCode || roleSpecificInfo.id || "-"}</p>
                   </div>
-                )}
-
-                {/* Thông tin giảng viên */}
-                {user.role === 'Teacher' && roleSpecificInfo && (
-                  <div className="row mb-3">
-                    <div className="col-md-4">
-                      <label className="fw-bold">Mã giảng viên:</label>
-                      <p>{roleSpecificInfo.id}</p>
-                    </div>
-                    <div className="col-md-4">
-                      <label className="fw-bold">Khoa:</label>
-                      <p>
-                        {roleSpecificInfo.departmentId
-                          ? roleSpecificInfo.departmentId.departmentName
-                          : 'Chưa phân khoa'}
-                      </p>
-                    </div>
-                    <div className="col-md-4">
-                      <label className="fw-bold">Chức vụ:</label>
-                      <p>{roleSpecificInfo.position || 'Giảng viên'}</p>
-                    </div>
+                  <div className="col-md-4">
+                    <label className="fw-bold">Lớp:</label>
+                    <p>{roleSpecificInfo.classId?.className || 'Chưa phân lớp'}</p>
                   </div>
-                )}
+                  <div className="col-md-4">
+                    <label className="fw-bold">Ngành học:</label>
+                    <p>{roleSpecificInfo.classId?.majorId?.majorName || 'Chưa có thông tin'}</p>
+                  </div>
+                  <div className="col-md-4">
+                    <label className="fw-bold">Khoa:</label>
+                    <p>{roleSpecificInfo.classId?.majorId?.departmentId?.departmentName || 'Chưa có thông tin'}</p>
+                  </div>
+                  <div className="col-md-4">
+                    <label className="fw-bold">Hệ đào tạo:</label>
+                    <p>{roleSpecificInfo.classId?.majorId?.trainingTypeId?.trainingTypeName || 'Chưa có thông tin'}</p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Thông tin giảng viên (nếu vai trò là giảng viên) */}
+          {user.role === 'Teacher' && roleSpecificInfo && (
+            <div className="card shadow mt-4">
+              <div className="card-header bg-info text-white">
+                <h5 className="card-title mb-0">
+                  <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+                  Thông tin giảng viên
+                </h5>
+              </div>
+              <div className="card-body">
+                <div className="row mb-3">
+                  <div className="col-md-4">
+                    <label className="fw-bold">Mã giảng viên:</label>
+                    <p>{roleSpecificInfo.id}</p>
+                  </div>
+                  <div className="col-md-4">
+                    <label className="fw-bold">Khoa:</label>
+                    <p>{roleSpecificInfo.departmentId ? roleSpecificInfo.departmentId.departmentName : 'Chưa phân khoa'}</p>
+                  </div>
+                  <div className="col-md-4">
+                    <label className="fw-bold">Chức vụ:</label>
+                    <p>{roleSpecificInfo.position || 'Giảng viên'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

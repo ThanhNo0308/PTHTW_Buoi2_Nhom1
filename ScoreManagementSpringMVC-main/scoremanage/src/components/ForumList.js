@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Container, Card, Row, Col, Button, Alert, Spinner, Badge, Form } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { forumApis, teacherClassApis } from '../configs/Apis';
+import { forumApis, teacherClassApis, studentApis } from '../configs/Apis';
 import { MyUserContext } from '../App';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faComments, faPlus, faSearch, faExclamationTriangle, faCommentDots } from '@fortawesome/free-solid-svg-icons';
@@ -16,8 +16,17 @@ const ForumList = () => {
   const [selectedSubject, setSelectedSubject] = useState("");
 
   useEffect(() => {
-    loadForums();
-    loadSubjectTeachers();
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    if (user) {
+      loadForums();
+      loadSubjectTeachers();
+    }
   }, [user]);
 
   const loadForums = async () => {
@@ -26,21 +35,30 @@ const ForumList = () => {
       setError("");
 
       let response;
+      if (!user) {
+        return;
+      }
+
+      console.log("Loading forums for user role:", user.role);
+
       if (user.role === 'Teacher') {
         response = await forumApis.getTeacherForums();
       } else if (user.role === 'Student') {
         response = await forumApis.getStudentForums();
+        console.log("Student forums API response:", response.data);
       } else {
         response = await forumApis.getAllForums();
       }
 
       if (response.data.success) {
+        console.log("Forums loaded:", response.data.forums.length);
         setForums(response.data.forums);
       } else {
         setError(response.data.error || "Không thể tải danh sách diễn đàn");
       }
     } catch (err) {
       console.error("Error loading forums:", err);
+      console.error("Error details:", err.response?.data);
       setError("Lỗi khi tải danh sách diễn đàn: " + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
@@ -49,22 +67,45 @@ const ForumList = () => {
 
   const loadSubjectTeachers = async () => {
     try {
-      // Nếu không phải giảng viên thì không cần lấy danh sách môn học
-      if (user.role !== 'Teacher') {
-        return;
+      if (!user) return;
+
+      // Tạo biến để lưu danh sách môn học/lớp
+      let subjects = [];
+
+      if (user.role === 'Teacher') {
+        // Logic hiện tại cho giáo viên
+        const response = await teacherClassApis.getTeacherSubjects(user.username);
+
+        if (response.data && response.data.success) {
+          subjects = response.data.subjectTeachers || [];
+        }
+      }
+      else if (user.role === 'Student') {
+        // Logic mới cho sinh viên
+        // Lấy danh sách môn học đã đăng ký
+        const response = await studentApis.getEnrolledSubjects();
+
+        if (response.data) {
+          // Chuyển đổi dữ liệu từ API thành cùng định dạng
+          subjects = (response.data.subjects || []).map(subject => ({
+            id: subject.subjectId,
+            name: `${subject.subjectName} - ${subject.teacherName || 'Chưa có giảng viên'}`
+          }));
+        }
       }
 
-      // Sử dụng API mới để lấy danh sách phân công môn học
-      const response = await teacherClassApis.getTeacherSubjects(user.username);
+      setSubjectTeachers(subjects.map(st => {
+        // Nếu đã ở định dạng chuẩn
+        if (st.id && st.name) return st;
 
-      if (response.data && response.data.success) {
-        const subjects = response.data.subjectTeachers || [];
+        // Nếu là dữ liệu raw từ API
+        return {
+          id: st.id || st.subjectId,
+          name: st.name || `${st.subjectId?.subjectName || 'Không có tên'} - ${st.classId?.className || 'Chưa phân lớp'}`
+        };
+      }));
 
-        setSubjectTeachers(subjects.map(st => ({
-          id: st.id,
-          name: `${st.subjectId?.subjectName || 'Không có tên'} - ${st.classId?.className || 'Chưa phân lớp'}`
-        })));
-      }
+      console.log("Loaded subject teachers:", subjects);
     } catch (err) {
       console.error("Error loading subject teachers:", err);
     }
@@ -125,10 +166,12 @@ const ForumList = () => {
           <FontAwesomeIcon icon={faComments} className="me-2" />
           Diễn đàn trao đổi học tập
         </h2>
-        <Button variant="success" as={Link} to="/forums/create">
-          <FontAwesomeIcon icon={faPlus} className="me-2" />
-          Tạo diễn đàn mới
-        </Button>
+        {user && user.role !== 'Student' && (  // Thêm kiểm tra user ở đây
+          <Button variant="success" as={Link} to="/forums/create">
+            <FontAwesomeIcon icon={faPlus} className="me-2" />
+            Tạo diễn đàn mới
+          </Button>
+        )}
       </div>
 
       {error && (

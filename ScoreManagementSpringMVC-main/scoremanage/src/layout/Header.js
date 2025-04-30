@@ -138,10 +138,18 @@ const Header = () => {
                 <Nav.Link as={Link} to="/student/dashboard">
                   <FontAwesomeIcon icon={faHome} className="me-1" /> Trang chủ
                 </Nav.Link>
-                <Nav.Link as={Link} to="/student-scores">
+                <Nav.Link as={Link} to="/student/scores">
                   <FontAwesomeIcon icon={faClipboardList} className="me-1" /> Điểm của tôi
                 </Nav.Link>
-                <Nav.Link as={NavLink} to="/forums" className="me-2">Diễn đàn</Nav.Link>
+                <Nav.Link as={Link} to="/student/class-info">
+                  <FontAwesomeIcon icon={faBuilding} className="me-1" /> Thông tin lớp học
+                </Nav.Link>
+                <Nav.Link as={Link} to="/student/subjects">
+                  <FontAwesomeIcon icon={faBook} className="me-1" /> Môn học đã đăng ký
+                </Nav.Link>
+                <Nav.Link as={NavLink} to="/forums">
+                  <FontAwesomeIcon icon={faComments} className="me-1" />Diễn đàn
+                </Nav.Link>
               </Nav>
             )}
             

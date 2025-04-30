@@ -3,12 +3,14 @@ import { Link, Navigate } from 'react-router-dom';
 import { MyUserContext } from "../App";
 import axios from 'axios';
 import { endpoints, API } from '../configs/Apis';
-import { Alert, Spinner, Col, Card, Button } from 'react-bootstrap';
+import { Alert, Spinner, Col, Card, Button, Row } from 'react-bootstrap';
 import "../assets/css/base.css";
 import "../assets/css/styles.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faComments, faCheckCircle, faExclamationCircle, faChartLine, faUsers, faUserEdit } from '@fortawesome/free-solid-svg-icons';
-
+import {
+  faComments, faCheckCircle, faExclamationCircle,
+  faChartLine, faUsers, faUserEdit, faBook, faGraduationCap
+} from '@fortawesome/free-solid-svg-icons';
 
 const StudentDashboard = () => {
   const [user] = useContext(MyUserContext);
@@ -22,10 +24,13 @@ const StudentDashboard = () => {
     const loadStudentInfo = async () => {
       try {
         setLoading(true);
-        const res = await API.get(endpoints["current-user"]);
+        // Gọi API student current thay vì current-user để lấy đầy đủ thông tin sinh viên
+        const res = await API.get(endpoints["student-current"]);
 
-        if (res.data) {
-          setStudent(res.data);
+        if (res.data && res.data.student) {
+          // Lưu thông tin sinh viên từ API trả về
+          setStudent(res.data.student);
+
           // Nếu có query param success, hiển thị thông báo
           const urlParams = new URLSearchParams(window.location.search);
           if (urlParams.get('success')) {
@@ -43,7 +48,6 @@ const StudentDashboard = () => {
     loadStudentInfo();
   }, [user]);
 
-  // Di chuyển điều kiện vào đây để React Hooks được gọi theo đúng trình tự
   if (!user) {
     return <Navigate to="/login" />;
   }
@@ -58,120 +62,149 @@ const StudentDashboard = () => {
     );
   }
 
-  const userName = user?.name || user?.username || "Sinh viên";
-
   return (
     <div className="container mt-4">
       <h1 className="mb-4">Chào mừng, {user.name || user.username}!</h1>
 
       {successMessage && (
         <Alert variant="success" dismissible onClose={() => setSuccessMessage("")}>
-          <i className="fas fa-check-circle me-2"></i> {successMessage}
+          <FontAwesomeIcon icon={faCheckCircle} className="me-2" /> {successMessage}
         </Alert>
       )}
 
       {error && (
         <Alert variant="danger" dismissible onClose={() => setError("")}>
-          <i className="fas fa-exclamation-circle me-2"></i> {error}
+          <FontAwesomeIcon icon={faExclamationCircle} className="me-2" /> {error}
         </Alert>
       )}
 
-      <div className="row mt-4">
-        <div className="col-md-6">
-          <div className="card mb-4 shadow-sm">
-            <div className="card-header bg-primary text-white">
-              <i className="fas fa-graduation-cap me-2"></i>
+      <Row className="mt-4">
+        <Col md={6} lg={4} className="mb-4">
+          <Card className="h-100 shadow-sm">
+            <Card.Header className="bg-primary text-white">
+              <FontAwesomeIcon icon={faChartLine} className="me-2" />
               Điểm số
-            </div>
-            <div className="card-body">
-              <Link to="/listscoreofstudent" className="btn btn-primary btn-lg d-block mb-3">
-                <i className="fas fa-chart-line me-2"></i> Xem điểm của tôi
-              </Link>
-              <p>Xem bảng điểm của tất cả các môn học của bạn.</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-6">
-          <div className="card mb-4 shadow-sm">
-            <div className="card-header bg-info text-white">
-              <i className="fas fa-users me-2"></i>
-              Lớp học
-            </div>
-            <div className="card-body">
-              <Link to="/listoldclass" className="btn btn-info btn-lg d-block mb-3 text-white">
-                <i className="fas fa-users me-2"></i> Thông tin lớp
-              </Link>
-              <p>Xem thông tin về lớp học và danh sách các bạn cùng lớp.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="row">
-        <div className="col-md-6">
-          <div className="card mb-4 shadow-sm">
-            <div className="card-header bg-success text-white">
-              <i className="fas fa-user me-2"></i>
-              Thông tin cá nhân
-            </div>
-            <div className="card-body">
-              <h5>Thông tin sinh viên</h5>
-              {student ? (
-                <table className="table">
-                  <tbody>
-                    <tr>
-                      <th style={{ width: "40%" }}>Mã sinh viên:</th>
-                      <td>{student.id || "-"}</td>
-                    </tr>
-                    <tr>
-                      <th>Họ và tên:</th>
-                      <td>{student.name || "-"}</td>
-                    </tr>
-                    <tr>
-                      <th>Email:</th>
-                      <td>{student.email || "-"}</td>
-                    </tr>
-                    <tr>
-                      <th>Vai trò:</th>
-                      <td><span className="badge bg-primary">{student.role || "-"}</span></td>
-                    </tr>
-                  </tbody>
-                </table>
-              ) : (
-                <p className="text-center">Không có thông tin</p>
-              )}
-              <div className="text-center">
-                <Link to="/profile" className="btn btn-success">
-                  <i className="fas fa-user-edit me-2"></i> Cập nhật thông tin
+            </Card.Header>
+            <Card.Body className="d-flex flex-column">
+              <p>Xem bảng điểm của tất cả các môn học và theo dõi kết quả học tập.</p>
+              <div className="mt-auto">
+                <Link to="/student/scores" className="btn btn-primary w-100">
+                  <FontAwesomeIcon icon={faChartLine} className="me-2" /> Xem điểm của tôi
                 </Link>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <Col md={4} className="mb-4">
-          <Card className="h-100 shadow dashboard-card">
-            <Card.Body>
-              <div className="d-flex align-items-center mb-3">
-                <div className="rounded-icon bg-info me-3">
-                  <FontAwesomeIcon icon={faComments} />
-                </div>
-                <h3 className="card-title mb-0">Diễn đàn học tập</h3>
-              </div>
-              <Card.Text>
-                Tham gia các diễn đàn học tập để thảo luận và đặt câu hỏi về các môn học.
-              </Card.Text>
             </Card.Body>
-            <Card.Footer className="bg-transparent border-0 pb-3">
-              <Button as={Link} to="/forums" variant="outline-info" className="w-100">
-                <FontAwesomeIcon icon={faComments} className="me-2" />
-                Truy cập diễn đàn
-              </Button>
-            </Card.Footer>
           </Card>
         </Col>
-      </div>
+
+        <Col md={6} lg={4} className="mb-4">
+          <Card className="h-100 shadow-sm">
+            <Card.Header className="bg-info text-white">
+              <FontAwesomeIcon icon={faUsers} className="me-2" />
+              Lớp học
+            </Card.Header>
+            <Card.Body className="d-flex flex-column">
+              <p>Xem thông tin về lớp học và danh sách các bạn cùng lớp.</p>
+              <div className="mt-auto">
+                <Link to="/student/class-info" className="btn btn-info w-100 text-white">
+                  <FontAwesomeIcon icon={faUsers} className="me-2" /> Thông tin lớp
+                </Link>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+
+        <Col md={6} lg={4} className="mb-4">
+          <Card className="h-100 shadow-sm">
+            <Card.Header className="bg-success text-white">
+              <FontAwesomeIcon icon={faBook} className="me-2" />
+              Môn học
+            </Card.Header>
+            <Card.Body className="d-flex flex-column">
+              <p>Xem danh sách môn học bạn đã đăng ký trong học kỳ hiện tại và trước đây.</p>
+              <div className="mt-auto">
+                <Link to="/student/subjects" className="btn btn-success w-100">
+                  <FontAwesomeIcon icon={faBook} className="me-2" /> Môn học đã đăng ký
+                </Link>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      <Row className="mt-2">
+        <Col md={6} className="mb-4">
+          <Card className="h-100 shadow-sm">
+            <Card.Header className="bg-warning text-dark">
+              <FontAwesomeIcon icon={faUserEdit} className="me-2" />
+              Thông tin cá nhân
+            </Card.Header>
+            <Card.Body>
+              {student ? (
+                <>
+                  <div className="text-center mb-3">
+                    <img
+                      src={student?.image || user?.image || "/images/default-avatar.jpg"}
+                      alt="Avatar"
+                      className="rounded-circle"
+                      style={{ width: "100px", height: "100px", objectFit: "cover" }}
+                    />
+                    <h5 className="mt-2">{student?.lastName || user?.name} {student?.firstName} </h5>
+                    <span className="badge bg-primary mb-3">{user?.role}</span>
+                  </div>
+                  <table className="table">
+                    <tbody>
+                      <tr>
+                        <th style={{ width: "40%" }}>MSSV:</th>
+                        <td>{student?.studentCode || "-"}</td>
+                      </tr>
+                      <tr>
+                        <th>Email:</th>
+                        <td>{student?.email || user?.email || "-"}</td>
+                      </tr>
+                      <tr>
+                        <th>Giới tính:</th>
+                        <td>{student?.gender === 0 || user?.gender === 0 ? "Nam" : "Nữ"}</td>
+                      </tr>
+                      <tr>
+                        <th>Lớp:</th>
+                        <td>{student?.classId?.className || "-"}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div className="text-center mt-3">
+                    <Link to="/profile" className="btn btn-warning">
+                      <FontAwesomeIcon icon={faUserEdit} className="me-2" /> Cập nhật thông tin
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center">
+                  <Spinner animation="border" size="sm" className="me-2" />
+                  Đang tải thông tin...
+                </div>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+
+        <Col md={6} className="mb-4">
+          <Card className="h-100 shadow-sm">
+            <Card.Header className="bg-info text-white">
+              <FontAwesomeIcon icon={faComments} className="me-2" />
+              Diễn đàn học tập
+            </Card.Header>
+            <Card.Body className="d-flex flex-column">
+              <p>Tham gia các diễn đàn học tập để xem thảo luận và đặt câu hỏi về các môn học. Trao đổi kiến thức và học hỏi từ giảng viên và bạn học.</p>
+              <div className="mt-auto">
+                <Link to="/forums" className="btn btn-info w-100 text-white">
+                  <FontAwesomeIcon icon={faComments} className="me-2" />
+                  Truy cập diễn đàn
+                </Link>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

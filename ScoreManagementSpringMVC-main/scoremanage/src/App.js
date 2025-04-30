@@ -21,6 +21,10 @@ import ForumList from "./components/ForumList";
 import ForumDetail from "./components/ForumDetail";
 import ForumCreate from "./components/ForumCreate";
 
+import StudentScoresList from "./components/StudentScoresList";
+import StudentClassInfo from "./components/StudentClassInfo";
+import StudentSubjects from "./components/StudentSubjects";
+
 import MyUserReducer from "./reducers/MyUserReducer";
 import cookie from "react-cookies";
 import FireBase from "./components/FireBase";
@@ -30,35 +34,39 @@ export const MyUserContext = createContext();
 
 
 const App = () => {
-  const [user, dispatch] = useReducer(MyUserReducer, cookie.load("user") || null);  
+  const [user, dispatch] = useReducer(MyUserReducer, cookie.load("user") || null);
   return (<>
     <MyUserContext.Provider value={[user, dispatch]}>
-  
-            <BrowserRouter>
-              <Header className="header" />
-              <Routes className="routes">
-                <Route path="/" element={<Home />} />
-                <Route path="/registerstudent" element={<div style={{ margin: '50px 200px 50px 200px' }}><RegisterStudent /></div>} />
-                <Route path="/login" element={<div style={{ margin: '100px' }}><Login /></div>} />
-                <Route path="/profile" element={<div style={{ margin: '100px' }}><Profile /></div>} />
-                <Route path="/student/dashboard" element={<div style={{ margin: '50px 150px' }}><StudentDashboard /></div>} />
-                <Route path="/teacher/dashboard" element={<div style={{ margin: '50px 150px' }}><TeacherDashboard /></div>} />
-                <Route path="/teacher/classes" element={<div style={{ margin: '50px 150px' }}><TeacherClassesList /></div>} />
-                <Route path="/teacher/classes/:classId" element={<div style={{ margin: '50px 150px' }}><TeacherClassDetail /></div>} />
-                <Route path="/teacher/classes/:classId/scores" element={<div style={{ margin: '50px 150px' }}><ScoreManagement /></div>} />
-                <Route path="/teacher/student/:studentCode/detail" element={<div style={{ margin: '50px 150px' }}><StudentDetail /></div>} />
-                <Route path="/teacher/student/:studentCode/scores" element={<div style={{ margin: '50px 150px' }}><StudentScores /></div>} />
-                <Route path="/teacher/students/search" element={<div style={{ margin: '50px 150px' }}><StudentSearch /></div>} />
-                <Route path="/teacher/scores/import" element={<div style={{ margin: '50px 150px' }}><ScoreImport /></div>} />
-                <Route path="/forums" element={<div style={{ margin: '50px 150px' }}><ForumList /></div>} />
-                <Route path="/forums/create" element={<div style={{ margin: '50px 150px' }}><ForumCreate /></div>} />
-                <Route path="/forums/:forumId" element={<div style={{ margin: '50px 150px' }}><ForumDetail /></div>} />
 
-                <Route path="/chatfirebase" element={<div style={{ margin: '50px 150px' }}><FireBase /></div>} />
+      <BrowserRouter>
+        <Header className="header" />
+        <Routes className="routes">
+          <Route path="/" element={<Home />} />
+          <Route path="/registerstudent" element={<div style={{ margin: '50px 200px 50px 200px' }}><RegisterStudent /></div>} />
+          <Route path="/login" element={<div style={{ margin: '100px' }}><Login /></div>} />
+          <Route path="/profile" element={<div style={{ margin: '100px' }}><Profile /></div>} />
+          <Route path="/student/dashboard" element={<div style={{ margin: '50px 150px' }}><StudentDashboard /></div>} />
+          <Route path="/student/scores" element={<div style={{ margin: '50px 150px' }}><StudentScoresList /></div>} />
+          <Route path="/student/class-info" element={<div style={{ margin: '50px 150px' }}><StudentClassInfo /></div>} />
+          <Route path="/student/subjects" element={<div style={{ margin: '50px 150px' }}><StudentSubjects /></div>} />
 
-              </Routes>
-              <Footer className="footer" />
-            </BrowserRouter>
+          <Route path="/teacher/dashboard" element={<div style={{ margin: '50px 150px' }}><TeacherDashboard /></div>} />
+          <Route path="/teacher/classes" element={<div style={{ margin: '50px 150px' }}><TeacherClassesList /></div>} />
+          <Route path="/teacher/classes/:classId" element={<div style={{ margin: '50px 150px' }}><TeacherClassDetail /></div>} />
+          <Route path="/teacher/classes/:classId/scores" element={<div style={{ margin: '50px 150px' }}><ScoreManagement /></div>} />
+          <Route path="/teacher/student/:studentCode/detail" element={<div style={{ margin: '50px 150px' }}><StudentDetail /></div>} />
+          <Route path="/teacher/student/:studentCode/scores" element={<div style={{ margin: '50px 150px' }}><StudentScores /></div>} />
+          <Route path="/teacher/students/search" element={<div style={{ margin: '50px 150px' }}><StudentSearch /></div>} />
+          <Route path="/teacher/scores/import" element={<div style={{ margin: '50px 150px' }}><ScoreImport /></div>} />
+          <Route path="/forums" element={<div style={{ margin: '50px 150px' }}><ForumList /></div>} />
+          <Route path="/forums/create" element={<div style={{ margin: '50px 150px' }}><ForumCreate /></div>} />
+          <Route path="/forums/:forumId" element={<div style={{ margin: '50px 150px' }}><ForumDetail /></div>} />
+
+          <Route path="/chatfirebase" element={<div style={{ margin: '50px 150px' }}><FireBase /></div>} />
+
+        </Routes>
+        <Footer className="footer" />
+      </BrowserRouter>
 
 
     </MyUserContext.Provider>

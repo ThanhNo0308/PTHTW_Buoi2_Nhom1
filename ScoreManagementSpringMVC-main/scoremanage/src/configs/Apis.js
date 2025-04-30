@@ -43,6 +43,11 @@ export const endpoints = {
   "forum-by-subject": `${SERVER_CONTEXT}/api/forums/by-subject-teacher`, // + /{subjectTeacherId}
   "forum-teacher": `${SERVER_CONTEXT}/api/forums/teacher`,
   "forum-student": `${SERVER_CONTEXT}/api/forums/student`,
+
+  "student-current": `${SERVER_CONTEXT}/api/student/current-student`,
+  "student-scores": `${SERVER_CONTEXT}/api/student/scores`,
+  "student-class-info": `${SERVER_CONTEXT}/api/student/class-info`,
+  "student-subjects": `${SERVER_CONTEXT}/api/student/subjects`,
 }
 
 // Cấu hình axios với token
@@ -124,14 +129,13 @@ export const userApis = {
     formData.append('id', userId);
     formData.append('image', imageFile);
     
-    // Log để debug
     console.log("Uploading avatar for user ID:", userId);
     console.log("File name:", imageFile.name);
     
-    // Trả về promise axios với logging
-    return API.post(`${endpoints["profile"]}/upload-avatar`, formData, {
+    // Quan trọng: Không thiết lập Content-Type, để browser tự xử lý boundary
+    return axios.post(`${SERVER}${endpoints["profile"]}/upload-avatar`, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
+        'Authorization': `Bearer ${cookie.load("user")?.token}`
       }
     });
   }
@@ -382,6 +386,35 @@ export const forumApis = {
   // Xóa bình luận
   deleteComment: (commentId) => {
     return API.delete(`${endpoints["forums"]}/comments/${commentId}`);
+  }
+};
+
+export const studentApis = {
+  getCurrentStudent: () => {
+    return API.get(endpoints["current-student"]);
+  },
+
+  // Lấy điểm của sinh viên đăng nhập
+  getStudentScores: (schoolYearId = null) => {
+    let url = endpoints["student-scores"];
+    if (schoolYearId) {
+      url += `?schoolYearId=${schoolYearId}`;
+    }
+    return API.get(url);
+  },
+
+  // Lấy thông tin lớp và danh sách sinh viên trong lớp
+  getClassInfo: () => {
+    return API.get(endpoints["student-class-info"]);
+  },
+
+  // Lấy thông tin môn học đã đăng ký
+  getEnrolledSubjects: (schoolYearId = null) => {
+    let url = endpoints["student-subjects"];
+    if (schoolYearId) {
+      url += `?schoolYearId=${schoolYearId}`;
+    }
+    return API.get(url);
   }
 };
 
