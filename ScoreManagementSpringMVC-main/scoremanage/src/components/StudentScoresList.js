@@ -79,10 +79,15 @@ const StudentScoresList = () => {
 
                     // Sort score types - ensure midterm and final are first
                     const sortedTypes = Array.from(types).sort((a, b) => {
-                        if (a === 'Giữa kỳ') return -1;
-                        if (b === 'Giữa kỳ') return 1;
-                        if (a === 'Cuối kỳ') return -1;
-                        if (b === 'Cuối kỳ') return 1;
+                        // Cuối kỳ luôn đứng cuối cùng
+                        if (a === 'Cuối kỳ') return 1;
+                        if (b === 'Cuối kỳ') return -1;
+
+                        // Giữa kỳ đứng trước Cuối kỳ nhưng sau các loại điểm khác
+                        if (a === 'Giữa kỳ') return 1;
+                        if (b === 'Giữa kỳ') return -1;
+
+                        // Các loại điểm khác sắp xếp theo alphabet
                         return a.localeCompare(b);
                     });
 
@@ -108,48 +113,97 @@ const StudentScoresList = () => {
     const groupScoresBySubject = () => {
         const groupedScores = {};
 
-        // Check if scores is a valid array
-        if (!Array.isArray(scores) || scores.length === 0) {
-            return [];
-        }
-
-        // Group scores by subject
-        scores.forEach(score => {
-            // Validate required data exists
-            if (!score || !score.subjectTeacherID || !score.subjectTeacherID.subjectId) {
-                console.error("Missing required properties in score object:", score);
-                return;
-            }
-
-            const subjectId = score.subjectTeacherID.subjectId.id;
-            const subjectName = score.subjectTeacherID.subjectId.subjectName || 'Không có tên';
-            const credits = score.subjectTeacherID.subjectId.credits || 0;
-
-            // Create subject entry if it doesn't exist
-            if (!groupedScores[subjectId]) {
-                groupedScores[subjectId] = {
-                    subjectId,
-                    subjectName,
-                    credits,
+        // Đầu tiên, thêm tất cả môn học đã đăng ký (chưa có điểm)
+        if (currentSchoolYear && enrolledSubjects[currentSchoolYear.id]) {
+            enrolledSubjects[currentSchoolYear.id].forEach(subject => {
+                groupedScores[subject.id] = {
+                    subjectId: subject.id,
+                    subjectName: subject.name,
+                    credits: subject.credits || 0,
                     scores: {}
                 };
-            }
+            });
+        }
 
-            // Add score for this subject
-            if (score.scoreType && score.scoreType.scoreType) {
-                groupedScores[subjectId].scores[score.scoreType.scoreType] = score.scoreValue;
-            }
-        });
+        // Sau đó, thêm điểm cho các môn học (nếu có)
+        if (Array.isArray(scores) && scores.length > 0) {
+            scores.forEach(score => {
+                // Validate required data exists
+                if (!score || !score.subjectTeacherID || !score.subjectTeacherID.subjectId) {
+                    console.error("Missing required properties in score object:", score);
+                    return;
+                }
+
+                const subjectId = score.subjectTeacherID.subjectId.id;
+                const subjectName = score.subjectTeacherID.subjectId.subjectName || 'Không có tên';
+                const credits = score.subjectTeacherID.subjectId.credits || 0;
+
+                // (trường hợp môn học có điểm nhưng không nằm trong enrolledSubjects)
+                if (!groupedScores[subjectId]) {
+                    groupedScores[subjectId] = {
+                        subjectId,
+                        subjectName,
+                        credits,
+                        scores: {}
+                    };
+                }
+
+                // Add score for this subject
+                if (score.scoreType && score.scoreType.scoreType) {
+                    groupedScores[subjectId].scores[score.scoreType.scoreType] = score.scoreValue;
+                }
+            });
+        }
 
         return Object.values(groupedScores);
     };
 
     // Calculate average for a subject based on its scores
-    const calculateSubjectAverage = (subjectId) => {
+    const calculateSubjectAverage = (subjectId, subject) => {
+        // Kiểm tra xem môn học có đủ cả điểm giữa kỳ và cuối kỳ không
+        if (!subject.scores ||
+            subject.scores['Giữa kỳ'] === undefined ||
+            subject.scores['Cuối kỳ'] === undefined) {
+            return '-';
+        }
+
         return subjectAverages[subjectId] ? subjectAverages[subjectId].toFixed(2) : '-';
     };
 
+
+
+    const hasRequiredScores = (subject) => {
+        return (
+            subject.scores &&
+            subject.scores['Giữa kỳ'] !== undefined &&
+            subject.scores['Cuối kỳ'] !== undefined
+        );
+    };
     const groupedSubjects = groupScoresBySubject();
+
+    const calculateFilteredSemesterAverage = () => {
+        // Lọc các môn có đủ điểm giữa kỳ và cuối kỳ
+        const validSubjects = groupedSubjects.filter(subject =>
+            hasRequiredScores(subject)
+        );
+
+        // Tính điểm trung bình học kỳ từ các môn hợp lệ
+        let totalWeightedScore = 0;
+        let totalCredits = 0;
+
+        validSubjects.forEach(subject => {
+            const subjectAvg = subjectAverages[subject.subjectId];
+            if (subjectAvg && subject.credits) {
+                totalWeightedScore += subjectAvg * subject.credits;
+                totalCredits += subject.credits;
+            }
+        });
+
+        return totalCredits > 0 ? totalWeightedScore / totalCredits : 0;
+    };
+
+    const filteredSemesterAverage = calculateFilteredSemesterAverage();
+
 
     if (loading) {
         return (
@@ -189,7 +243,7 @@ const StudentScoresList = () => {
                                 {semesterAverage > 0 && (
                                     <Badge bg="light" text="dark">
                                         <FontAwesomeIcon icon={faCalculator} className="me-1" />
-                                        Điểm TB học kỳ: <span className="text-primary fw-bold">{semesterAverage.toFixed(2)}</span>
+                                        Điểm TB học kỳ: <span className="text-primary fw-bold">{filteredSemesterAverage.toFixed(2)}</span>
                                     </Badge>
                                 )}
                             </Card.Title>
@@ -254,8 +308,8 @@ const StudentScoresList = () => {
                                 </thead>
                                 <tbody>
                                     {groupedSubjects.map((subject, index) => {
-                                        const avgScore = calculateSubjectAverage(subject.subjectId);
-                                        const isPassed = avgScore !== '-' && parseFloat(avgScore) >= 5.0;
+                                        const avgScore = calculateSubjectAverage(subject.subjectId, subject);
+                                        const isPassed = avgScore !== '-' && parseFloat(avgScore) >= 4.0;
 
                                         return (
                                             <tr key={subject.subjectId}>
@@ -270,11 +324,11 @@ const StudentScoresList = () => {
                                                     </td>
                                                 ))}
 
-                                                <td className={avgScore !== '-' ? 'fw-bold' : ''}>
-                                                    {avgScore}
+                                                <td className={hasRequiredScores(subject) && avgScore !== '-' ? 'fw-bold' : ''}>
+                                                    {hasRequiredScores(subject) ? avgScore : '-'}
                                                 </td>
                                                 <td>
-                                                    {avgScore !== '-' && (
+                                                    {hasRequiredScores(subject) && avgScore !== '-' && (
                                                         <Badge bg={isPassed ? 'success' : 'danger'}>
                                                             {isPassed ? 'Đạt' : 'Không đạt'}
                                                         </Badge>
@@ -287,11 +341,11 @@ const StudentScoresList = () => {
                                 <tfoot className="table-secondary">
                                     <tr>
                                         <th colSpan={3 + scoreTypes.length} className="text-end">Điểm trung bình học kỳ:</th>
-                                        <th>{semesterAverage ? semesterAverage.toFixed(2) : '-'}</th>
+                                        <th>{filteredSemesterAverage > 0 ? filteredSemesterAverage.toFixed(2) : '-'}</th>
                                         <th>
-                                            {semesterAverage >= 5.0 ? (
+                                            {filteredSemesterAverage >= 5.0 ? (
                                                 <Badge bg="success">Đạt</Badge>
-                                            ) : semesterAverage > 0 ? (
+                                            ) : filteredSemesterAverage > 0 ? (
                                                 <Badge bg="danger">Không đạt</Badge>
                                             ) : null}
                                         </th>
