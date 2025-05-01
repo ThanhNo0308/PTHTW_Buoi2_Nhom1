@@ -15,6 +15,7 @@ const StudentSubjects = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [enrolledSchoolYears, setEnrolledSchoolYears] = useState([]);
 
   useEffect(() => {
     if (!user) {
@@ -37,12 +38,43 @@ const StudentSubjects = () => {
 
         if (response.data) {
           setSubjects(response.data.subjects || []);
-          setSchoolYears(response.data.schoolYears || []);
+
+          // Nhận tất cả học kỳ từ API
+          const allSchoolYears = response.data.schoolYears || [];
+          setSchoolYears(allSchoolYears);
+
           setCurrentSchoolYear(response.data.schoolYear);
-          
+
           if (!selectedSchoolYear && response.data.schoolYear) {
             setSelectedSchoolYear(response.data.schoolYear.id);
           }
+
+          // Lọc các học kỳ có môn học được đăng ký
+          // Lưu ID của học kỳ có môn học được đăng ký
+          const enrolledYearIds = new Set();
+
+          // Lặp qua danh sách tất cả học kỳ và kiểm tra các môn học
+          allSchoolYears.forEach(schoolYear => {
+            // Kiểm tra nếu học kỳ hiện tại là học kỳ đang được xem
+            if (response.data.schoolYear && schoolYear.id === response.data.schoolYear.id) {
+              // Nếu có môn học, thêm vào danh sách học kỳ đã đăng ký
+              if (response.data.subjects && response.data.subjects.length > 0) {
+                enrolledYearIds.add(schoolYear.id);
+              }
+            } else {
+              // Cần gọi API riêng để kiểm tra các học kỳ khác có môn học không
+              // Hoặc lưu thông tin này từ backend
+              // Trong trường hợp này, chỉ đánh dấu học kỳ hiện tại đã đăng ký
+            }
+          });
+
+          // Lọc học kỳ đã đăng ký
+          const filteredSchoolYears = allSchoolYears.filter(
+            schoolYear => enrolledYearIds.has(schoolYear.id)
+          );
+
+          // Lưu trữ danh sách ID học kỳ đã đăng ký môn học
+          setEnrolledSchoolYears(filteredSchoolYears);
         }
       } catch (err) {
         console.error("Error loading subjects:", err);
@@ -78,7 +110,7 @@ const StudentSubjects = () => {
         <FontAwesomeIcon icon={faBook} className="me-2" />
         Môn học đã đăng ký
       </h2>
-      
+
       {error && (
         <Alert variant="danger">
           <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
@@ -102,14 +134,14 @@ const StudentSubjects = () => {
             <option value="">Chọn học kỳ</option>
             {schoolYears.map(schoolYear => (
               <option key={schoolYear.id} value={schoolYear.id}>
-                {schoolYear.year} - {schoolYear.semesterName}
+                {schoolYear.nameYear} - {schoolYear.semesterName}
               </option>
             ))}
           </Form.Select>
-          
+
           {currentSchoolYear && (
             <div className="alert alert-info">
-              Đang xem môn học học kỳ: <strong>{currentSchoolYear.year} - {currentSchoolYear.semesterName}</strong>
+              Đang xem môn học học kỳ: <strong>{currentSchoolYear.nameYear} - {currentSchoolYear.semesterName}</strong>
             </div>
           )}
         </Card.Body>
@@ -129,7 +161,7 @@ const StudentSubjects = () => {
                 <FontAwesomeIcon icon={faCreditCard} className="me-2" />
                 Tổng số tín chỉ đăng ký: <strong>{totalCredits}</strong>
               </div>
-              
+
               <Table striped bordered hover responsive>
                 <thead>
                   <tr className="bg-light">

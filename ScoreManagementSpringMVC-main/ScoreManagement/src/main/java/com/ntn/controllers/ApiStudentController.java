@@ -128,11 +128,11 @@ public class ApiStudentController {
 
             // Lấy tất cả học kỳ
             List<Schoolyear> allSchoolYears = schoolYearService.getAllSchoolYears();
-            
+
             // Lấy danh sách đăng ký môn học của sinh viên
-            List<Studentsubjectteacher> enrollments = 
-                    studentSubjectTeacherService.getEnrollmentsByStudentCode(student.getStudentCode());
-            
+            List<Studentsubjectteacher> enrollments
+                    = studentSubjectTeacherService.getEnrollmentsByStudentCode(student.getStudentCode());
+
             // Tạo set để lưu trữ các học kỳ đã đăng ký
             Set<Integer> enrolledSchoolYearIds = new HashSet<>();
             Map<Integer, List<Map<String, Object>>> enrolledSubjects = new HashMap<>();
@@ -198,10 +198,10 @@ public class ApiStudentController {
                 for (Map.Entry<Integer, List<Score>> entry : scoresBySubject.entrySet()) {
                     int subjectId = entry.getKey();
                     List<Score> subjectScores = entry.getValue();
-                    
+
                     double subjectTotalWeightedScore = 0;
                     double subjectTotalWeight = 0;
-                    
+
                     for (Score score : subjectScores) {
                         if (score.getScoreValue() != null && score.getScoreType() != null) {
                             Float weight = scoreService.getScoreWeight(
@@ -210,25 +210,25 @@ public class ApiStudentController {
                                     currentSchoolYear.getId(),
                                     score.getScoreType().getScoreType()
                             );
-                            
+
                             if (weight != null) {
                                 subjectTotalWeightedScore += score.getScoreValue() * weight;
                                 subjectTotalWeight += weight;
                             }
                         }
                     }
-                    
+
                     double subjectAverage = 0;
                     if (subjectTotalWeight > 0) {
                         subjectAverage = subjectTotalWeightedScore / subjectTotalWeight;
                     }
-                    
+
                     int credits = subjectScores.get(0).getSubjectTeacherID().getSubjectId().getCredits();
                     subjectAverages.put(subjectId, subjectAverage);
                     totalScore += subjectAverage * credits;
                     totalCredits += credits;
                 }
-                
+
                 double semesterAverage = totalCredits > 0 ? totalScore / totalCredits : 0;
                 response.put("subjectAverages", subjectAverages);
                 response.put("semesterAverage", semesterAverage);
@@ -299,17 +299,20 @@ public class ApiStudentController {
         Map<String, Object> response = new HashMap<>();
 
         try {
+            // Kiểm tra đăng nhập
             if (principal == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Bạn cần đăng nhập để sử dụng chức năng này"));
             }
 
+            // Kiểm tra quyền
             User user = userService.getUserByUn(principal.getName());
             if (user == null || !"Student".equals(user.getRole().name())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of("error", "Bạn không có quyền truy cập tính năng này"));
             }
 
+            // Lấy thông tin sinh viên
             List<Student> students = studentService.getStudentbyEmail(user.getEmail());
             Student student = students != null && !students.isEmpty() ? students.get(0) : null;
 
@@ -319,35 +322,69 @@ public class ApiStudentController {
             }
 
             // Lấy danh sách đăng ký môn học của sinh viên
-            List<Studentsubjectteacher> enrollments = 
-                    studentSubjectTeacherService.getEnrollmentsByStudentCode(student.getStudentCode());
-            
-            List<Map<String, Object>> subjects = new ArrayList<>();
-            
-            // Lọc theo học kỳ nếu có
-            int filterSchoolYearId = schoolYearId != null ? schoolYearId : schoolYearService.getCurrentSchoolYearId();
-            
+            List<Studentsubjectteacher> enrollments
+                    = studentSubjectTeacherService.getEnrollmentsByStudentCode(student.getStudentCode());
+
+            // Tạo Set để lưu trữ các học kỳ đã đăng ký
+            Set<Integer> enrolledSchoolYearIds = new HashSet<>();
+
+            // Thu thập tất cả id học kỳ mà sinh viên có đăng ký môn
             for (Studentsubjectteacher enrollment : enrollments) {
-                if (enrollment.getSubjectTeacherId() != null 
+                if (enrollment.getSubjectTeacherId() != null
+                        && enrollment.getSubjectTeacherId().getSchoolYearId() != null) {
+                    enrolledSchoolYearIds.add(enrollment.getSubjectTeacherId().getSchoolYearId().getId());
+                }
+            }
+
+            // Lấy tất cả học kỳ từ hệ thống
+            List<Schoolyear> allSchoolYears = schoolYearService.getAllSchoolYears();
+
+            // Lọc ra chỉ những học kỳ mà sinh viên có đăng ký
+            List<Schoolyear> filteredSchoolYears = allSchoolYears.stream()
+                    .filter(sy -> enrolledSchoolYearIds.contains(sy.getId()))
+                    .collect(Collectors.toList());
+
+            // Xác định học kỳ hiện tại để lọc môn học
+            int currentSchoolYearId;
+            if (schoolYearId != null) {
+                // Nếu có chọn học kỳ cụ thể
+                currentSchoolYearId = schoolYearId;
+            } else if (!filteredSchoolYears.isEmpty()) {
+                // Nếu không chọn học kỳ nào và có học kỳ đã đăng ký, lấy học kỳ đầu tiên
+                currentSchoolYearId = filteredSchoolYears.get(0).getId();
+            } else {
+                // Nếu không có học kỳ nào đã đăng ký, lấy học kỳ hiện tại của hệ thống
+                currentSchoolYearId = schoolYearService.getCurrentSchoolYearId();
+            }
+
+            // Lấy thông tin học kỳ hiện tại
+            Schoolyear currentSchoolYear = schoolYearService.getSchoolYearById(currentSchoolYearId);
+
+            // Thu thập thông tin môn học của học kỳ đã chọn
+            List<Map<String, Object>> subjects = new ArrayList<>();
+            for (Studentsubjectteacher enrollment : enrollments) {
+                if (enrollment.getSubjectTeacherId() != null
                         && enrollment.getSubjectTeacherId().getSchoolYearId() != null
-                        && enrollment.getSubjectTeacherId().getSchoolYearId().getId() == filterSchoolYearId) {
-                    
+                        && enrollment.getSubjectTeacherId().getSchoolYearId().getId() == currentSchoolYearId) {
+
                     Map<String, Object> subjectInfo = new HashMap<>();
                     subjectInfo.put("subjectId", enrollment.getSubjectTeacherId().getSubjectId().getId());
                     subjectInfo.put("subjectName", enrollment.getSubjectTeacherId().getSubjectId().getSubjectName());
                     subjectInfo.put("credits", enrollment.getSubjectTeacherId().getSubjectId().getCredits());
                     subjectInfo.put("teacherName", enrollment.getSubjectTeacherId().getTeacherId().getTeacherName());
                     subjectInfo.put("teacherId", enrollment.getSubjectTeacherId().getTeacherId().getId());
-                    
+
                     subjects.add(subjectInfo);
                 }
             }
-            
+
+            // Đưa dữ liệu vào response
             response.put("subjects", subjects);
-            response.put("schoolYear", schoolYearService.getSchoolYearById(filterSchoolYearId));
-            response.put("schoolYears", schoolYearService.getAllSchoolYears());
-            
+            response.put("schoolYear", currentSchoolYear);
+            response.put("schoolYears", filteredSchoolYears); // Chỉ trả về các học kỳ đã đăng ký
+
             return ResponseEntity.ok(response);
+
         } catch (Exception e) {
             e.printStackTrace();
             response.put("error", "Lỗi hệ thống: " + e.getMessage());
