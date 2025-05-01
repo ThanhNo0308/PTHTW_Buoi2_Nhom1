@@ -30,7 +30,7 @@ import MyUserReducer from "./reducers/MyUserReducer";
 import {SchoolYearProvider} from "./reducers/SchoolYearContext";
 import {UniqueSubjectTeacherIdProvider} from "./reducers/UniqueSubjectTeacherIdContext";
 import cookie from "react-cookies";
-import FireBase from "./components/FireBase";
+import ChatPage from "./components/ChatPage";
 import StudentDashboard from "./components/StudentDashboard";
 import TeacherDashboard from "./components/TeacherDashboard";
 export const MyUserContext = createContext();
@@ -67,7 +67,7 @@ const App = () => {
               <Route path="/forums/:forumId" element={<div style={{ margin: '50px 150px' }}><ForumDetail /></div>} />
               <Route path="/forums/edit/:forumId" element={<ForumEdit />} />
 
-              <Route path="/chatfirebase" element={<div style={{ margin: '50px 150px' }}><FireBase /></div>} />
+              <Route path="/chat" element={<div style={{ margin: '50px 150px' }}><ChatPage /></div>} />
 
             </Routes>
             <Footer className="footer" />

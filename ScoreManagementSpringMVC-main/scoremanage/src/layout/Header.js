@@ -7,17 +7,17 @@ import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
 import { Link, NavLink } from 'react-router-dom';
 import { MyUserContext } from '../App';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faHome, faChalkboardTeacher, faUserGraduate, faCogs, faChartBar, 
+import {
+  faHome, faChalkboardTeacher, faUserGraduate, faCogs, faChartBar,
   faSignInAlt, faUserPlus, faUserCircle, faSignOutAlt, faUser,
-  faSchool, faGraduationCap, faBuilding, faBook, faCalendarAlt, 
+  faSchool, faGraduationCap, faBuilding, faBook, faCalendarAlt,
   faTasks, faChartLine, faChartPie, faChartArea, faSearch, faFileImport, faClipboardList, faComments
 } from '@fortawesome/free-solid-svg-icons';
 
 
 const Header = () => {
   const [user, dispatch] = useContext(MyUserContext);
-  
+
   const logout = () => {
     cookie.remove("user", { path: '/' });
     dispatch({
@@ -31,12 +31,12 @@ const Header = () => {
         <Container>
           <div className="header_nav_title d-flex align-items-center">
             <Link to="/" className="navbar-brand d-flex align-items-center">
-              <img 
-                src={logo} 
-                alt="Logo" 
-                width="70" 
-                height="54" 
-                className="d-inline-block align-text-top me-2" 
+              <img
+                src={logo}
+                alt="Logo"
+                width="70"
+                height="54"
+                className="d-inline-block align-text-top me-2"
               />
               <div className="brand-text">
                 <span className="fw-bold">Trường Đại học</span>
@@ -53,7 +53,7 @@ const Header = () => {
                 </Nav.Link>
               )}
             </Nav>
-            
+
             {/* Admin Navigation */}
             {user && user.role === 'Admin' && (
               <Nav className="mr-auto">
@@ -66,9 +66,9 @@ const Header = () => {
                 <Nav.Link as={Link} to="/admin/students">
                   <FontAwesomeIcon icon={faUserGraduate} className="me-1" /> Sinh viên
                 </Nav.Link>
-                
-                <NavDropdown 
-                  title={<><FontAwesomeIcon icon={faCogs} className="me-1" /> Quản lý học tập</>} 
+
+                <NavDropdown
+                  title={<><FontAwesomeIcon icon={faCogs} className="me-1" /> Quản lý học tập</>}
                   id="navbarDropdown1"
                 >
                   <NavDropdown.Item as={Link} to="/admin/classes">
@@ -90,9 +90,9 @@ const Header = () => {
                     <FontAwesomeIcon icon={faTasks} className="me-2" /> Phân công giảng dạy
                   </NavDropdown.Item>
                 </NavDropdown>
-                
-                <NavDropdown 
-                  title={<><FontAwesomeIcon icon={faChartBar} className="me-1" /> Thống kê</>} 
+
+                <NavDropdown
+                  title={<><FontAwesomeIcon icon={faChartBar} className="me-1" /> Thống kê</>}
                   id="statisticsDropdown"
                 >
                   <NavDropdown.Item as={Link} to="/admin/statistics/class">
@@ -110,7 +110,7 @@ const Header = () => {
                 </NavDropdown>
               </Nav>
             )}
-            
+
             {/* Teacher Navigation */}
             {user && user.role === 'Teacher' && (
               <Nav className="mr-auto">
@@ -129,9 +129,14 @@ const Header = () => {
                 <Nav.Link as={NavLink} to="/forums">
                   <FontAwesomeIcon icon={faComments} className="me-1" />Diễn đàn
                 </Nav.Link>
+                {user && (
+                  <Nav.Link as={NavLink} to="/chat" className="nav-link">
+                    <FontAwesomeIcon icon={faComments} className="me-1" /> Tin nhắn
+                  </Nav.Link>
+                )}
               </Nav>
             )}
-            
+
             {/* Student Navigation */}
             {user && user.role === 'Student' && (
               <Nav className="mr-auto">
@@ -150,9 +155,14 @@ const Header = () => {
                 <Nav.Link as={NavLink} to="/forums">
                   <FontAwesomeIcon icon={faComments} className="me-1" />Diễn đàn
                 </Nav.Link>
+                {user && (
+                  <Nav.Link as={NavLink} to="/chat" className="nav-link">
+                    <FontAwesomeIcon icon={faComments} className="me-1" /> Tin nhắn
+                  </Nav.Link>
+                )}
               </Nav>
             )}
-            
+
             {/* Authentication Links */}
             <Nav className="ms-auto">
               {!user ? (
@@ -165,14 +175,14 @@ const Header = () => {
                   </Nav.Link>
                 </>
               ) : (
-                <NavDropdown 
+                <NavDropdown
                   title={
                     <div className="d-flex align-items-center">
                       <FontAwesomeIcon icon={faUserCircle} className="me-2" />
                       <span>{user.name}</span>
                     </div>
-                  } 
-                  id="userDropdown" 
+                  }
+                  id="userDropdown"
                   align="end"
                 >
                   <NavDropdown.Item as={Link} to="/profile">

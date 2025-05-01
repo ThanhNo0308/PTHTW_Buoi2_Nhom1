@@ -1,0 +1,162 @@
+import React, { useEffect, useState } from 'react';
+import { ListGroup, Form, InputGroup, Spinner } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch, faUserCircle, faCircle } from '@fortawesome/free-solid-svg-icons';
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { db } from '../configs/FirebaseConfig'; 
+
+const ContactList = ({ contacts, selectedContact, onSelectContact, currentUser, loading }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredContacts, setFilteredContacts] = useState([]);
+  const [onlineUsers, setOnlineUsers] = useState({});
+
+  // Lọc danh sách liên hệ khi search term thay đổi
+  useEffect(() => {
+    if (!contacts) return;
+    
+    const filtered = contacts.filter(contact => {
+      return (
+        contact.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (contact.studentCode && contact.studentCode.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    });
+    
+    setFilteredContacts(filtered);
+  }, [contacts, searchTerm]);
+
+  // Theo dõi trạng thái online của người dùng
+  useEffect(() => {
+    const onlineStatusRef = collection(db, 'online_status');
+    
+    const unsubscribe = onSnapshot(query(onlineStatusRef), (snapshot) => {
+      const onlineStatusData = {};
+      snapshot.docs.forEach(doc => {
+        onlineStatusData[doc.id] = doc.data().online || false;
+      });
+      setOnlineUsers(onlineStatusData);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Theo dõi tin nhắn chưa đọc
+  useEffect(() => {
+    if (!currentUser || !contacts.length) return;
+
+    console.log("Current User ID:", currentUser.id);
+  console.log("Contacts:", contacts.map(c => c.id));
+
+    // Tạo một listener cho mỗi cuộc trò chuyện để đếm tin nhắn chưa đọc
+    const unsubscribes = contacts.map(contact => {
+      const chatId = getChatId(currentUser.id, contact.id);
+      const messagesRef = collection(db, 'chats', chatId, 'messages');
+      
+      return onSnapshot(
+        query(messagesRef, where('read', '==', false), where('senderId', '==', contact.id)),
+        (snapshot) => {
+          const unreadCount = snapshot.docs.length;
+          
+          // Cập nhật lại contacts với số tin nhắn chưa đọc mới
+          setFilteredContacts(prev => {
+            return prev.map(c => {
+              if (c.id === contact.id) {
+                return { ...c, unreadCount };
+              }
+              return c;
+            });
+          });
+        }
+      );
+    });
+
+    // Cleanup listeners
+    return () => {
+      unsubscribes.forEach(unsub => unsub());
+    };
+  }, [contacts, currentUser]);
+
+  // Tạo ID cuộc trò chuyện từ ID của 2 người dùng
+  const getChatId = (uid1, uid2) => {
+    return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center h-100">
+        <Spinner animation="border" variant="primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="contacts-wrapper">
+      <div className="search-box p-2">
+        <InputGroup>
+          <InputGroup.Text id="search-addon">
+            <FontAwesomeIcon icon={faSearch} />
+          </InputGroup.Text>
+          <Form.Control
+            type="text"
+            placeholder="Tìm kiếm..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </InputGroup>
+      </div>
+      
+      <ListGroup className="contacts-list">
+        {filteredContacts.length > 0 ? (
+          filteredContacts.map(contact => (
+            <ListGroup.Item
+              key={contact.id}
+              className={`contact-item d-flex align-items-center ${selectedContact?.id === contact.id ? 'active' : ''}`}
+              action
+              onClick={() => onSelectContact(contact)}
+            >
+              <div className="contact-avatar-container me-2 position-relative">
+                {contact.image ? (
+                  <img 
+                    src={contact.image} 
+                    alt={contact.name} 
+                    className="contact-avatar rounded-circle"
+                  />
+                ) : (
+                  <FontAwesomeIcon 
+                    icon={faUserCircle} 
+                    size="2x" 
+                    className="contact-avatar-icon" 
+                  />
+                )}
+                <span className={`online-indicator ${onlineUsers[contact.id] ? 'online' : 'offline'}`}>
+                  <FontAwesomeIcon icon={faCircle} size="xs" />
+                </span>
+              </div>
+              <div className="contact-info flex-grow-1">
+                <div className="d-flex justify-content-between align-items-center">
+                  <h6 className="contact-name mb-0">{contact.name}</h6>
+                  {contact.unreadCount > 0 && (
+                    <span className="unread-badge badge rounded-pill bg-primary">{contact.unreadCount}</span>
+                  )}
+                </div>
+                <p className="contact-status small mb-0">
+                  {contact.studentCode 
+                    ? `MSSV: ${contact.studentCode}` 
+                    : (contact.teacherCode ? `GV: ${contact.teacherCode}` : '')
+                  }
+                </p>
+              </div>
+            </ListGroup.Item>
+          ))
+        ) : (
+          <div className="text-center p-3 text-muted">
+            {searchTerm 
+              ? 'Không tìm thấy liên hệ phù hợp' 
+              : 'Không có liên hệ nào'}
+          </div>
+        )}
+      </ListGroup>
+    </div>
+  );
+};
+
+export default ContactList;
