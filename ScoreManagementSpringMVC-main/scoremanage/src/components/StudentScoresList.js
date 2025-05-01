@@ -31,6 +31,15 @@ const StudentScoresList = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const scoreTableStyles = {
+        unconfiguredScoreCell: {
+            backgroundColor: '#f8f9fa',  // Màu nền nhạt
+            color: 'black',            // Màu chữ nhạt
+            fontStyle: 'italic',         // Chữ nghiêng
+            position: 'relative'         // Để có thể thêm dấu hiệu nếu cần
+        }
+    };
+
     useEffect(() => {
         if (!user) {
             navigate('/login');
@@ -179,6 +188,18 @@ const StudentScoresList = () => {
             subject.scores['Cuối kỳ'] !== undefined
         );
     };
+
+    const isScoreTypeConfigured = (subject, scoreType) => {
+        // Nếu đã có điểm của loại này thì coi như đã cấu hình
+        if (subject.scores[scoreType] !== undefined) return true;
+
+        // Giữa kỳ và Cuối kỳ luôn được coi là có cấu hình
+        if (scoreType === 'Giữa kỳ' || scoreType === 'Cuối kỳ') return true;
+
+        // Kiểm tra xem môn học này có điểm nào khác không
+        // Nếu có ít nhất một điểm khác, thì loại điểm này không được cấu hình
+        return Object.keys(subject.scores).length === 0;
+    };
     const groupedSubjects = groupScoresBySubject();
 
     const calculateFilteredSemesterAverage = () => {
@@ -300,7 +321,7 @@ const StudentScoresList = () => {
                                         <th>Số tín chỉ</th>
                                         {/* Dynamic columns for each score type */}
                                         {scoreTypes.map(type => (
-                                            <th key={type}>Điểm {type}</th>
+                                            <th key={type}>{type}</th>
                                         ))}
                                         <th>Điểm TB</th>
                                         <th>Kết quả</th>
@@ -319,8 +340,13 @@ const StudentScoresList = () => {
 
                                                 {/* Display scores for each type */}
                                                 {scoreTypes.map(type => (
-                                                    <td key={`${subject.subjectId}-${type}`}>
-                                                        {subject.scores[type] !== undefined ? subject.scores[type].toFixed(1) : '-'}
+                                                    <td
+                                                        key={`${subject.subjectId}-${type}`}
+                                                        // Thêm lớp CSS và thuộc tính title cho các ô không cấu hình
+                                                        className={isScoreTypeConfigured(subject, type) ? '' : 'unconfigured-score-cell'}
+                                                        title={isScoreTypeConfigured(subject, type) ? '' : 'Loại điểm này không được cấu hình cho môn học'}
+                                                    >
+                                                        {subject.scores[type] !== undefined ? subject.scores[type].toFixed(1) : '—'}
                                                     </td>
                                                 ))}
 
@@ -358,6 +384,12 @@ const StudentScoresList = () => {
                             <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
                             Không có dữ liệu điểm nào được tìm thấy. Hãy chọn học kỳ khác hoặc liên hệ với giáo viên để biết thêm thông tin.
                         </Alert>
+                    )}
+                    {groupedSubjects.length > 0 && (
+                        <div className="mt-2 text-muted small">
+                            <span className="d-inline-block px-2 py-1 me-2" style={scoreTableStyles.unconfiguredScoreCell}>—</span>
+                            <span>Chưa có điểm hoặc Loại điểm không được cấu hình cho môn học này</span>
+                        </div>
                     )}
                 </Card.Body>
             </Card>
