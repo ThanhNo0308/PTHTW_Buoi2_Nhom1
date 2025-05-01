@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { forumApis, teacherClassApis, studentApis } from '../configs/Apis';
 import { MyUserContext } from '../App';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faComments, faPlus, faSearch, faExclamationTriangle, faCommentDots } from '@fortawesome/free-solid-svg-icons';
+import { faComments, faPlus, faSearch, faExclamationTriangle, faCommentDots, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 const ForumList = () => {
   const [user] = useContext(MyUserContext);
@@ -24,8 +24,13 @@ const ForumList = () => {
 
   useEffect(() => {
     if (user) {
-      loadForums();
-      loadSubjectTeachers();
+      // Chỉ tải diễn đàn sau khi đã lấy được danh sách môn học
+      const loadData = async () => {
+        await loadSubjectTeachers();
+        loadForums();
+      };
+
+      loadData();
     }
   }, [user]);
 
@@ -34,31 +39,54 @@ const ForumList = () => {
       setLoading(true);
       setError("");
 
-      let response;
-      if (!user) {
-        return;
-      }
+      if (!user) return;
 
       console.log("Loading forums for user role:", user.role);
 
+      let response;
       if (user.role === 'Teacher') {
         response = await forumApis.getTeacherForums();
-      } else if (user.role === 'Student') {
-        response = await forumApis.getStudentForums();
-        console.log("Student forums API response:", response.data);
       } else {
+        // Sinh viên xem tất cả diễn đàn
         response = await forumApis.getAllForums();
+        console.log("Forums response for student:", response);
       }
 
-      if (response.data.success) {
-        console.log("Forums loaded:", response.data.forums.length);
-        setForums(response.data.forums);
+      if (response.data && response.data.success) {
+        let forumsToShow = response.data.forums || [];
+
+        // Lọc diễn đàn cho sinh viên dựa trên môn học đã đăng ký
+        if (user.role === 'Student') {
+          console.log("Filtering forums for student with subjects:", subjectTeachers);
+
+          if (subjectTeachers.length === 0) {
+            // Nếu chưa có dữ liệu môn học, tải lại
+            const subjects = await loadSubjectTeachers();
+            const subjectIds = subjects.map(subject => subject.id);
+
+            forumsToShow = forumsToShow.filter(forum => {
+              const forumSubjectId = forum.subjectTeacherId?.id;
+              return subjectIds.includes(forumSubjectId);
+            });
+          } else {
+            // Sử dụng danh sách môn học đã có
+            const subjectIds = subjectTeachers.map(subject => subject.id);
+
+            forumsToShow = forumsToShow.filter(forum => {
+              const forumSubjectId = forum.subjectTeacherId?.id;
+              return subjectIds.includes(forumSubjectId);
+            });
+          }
+
+          console.log(`Filtered to ${forumsToShow.length} forums for student`);
+        }
+
+        setForums(forumsToShow);
       } else {
-        setError(response.data.error || "Không thể tải danh sách diễn đàn");
+        setError(response.data?.error || "Không thể tải danh sách diễn đàn");
       }
     } catch (err) {
       console.error("Error loading forums:", err);
-      console.error("Error details:", err.response?.data);
       setError("Lỗi khi tải danh sách diễn đàn: " + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
@@ -67,7 +95,7 @@ const ForumList = () => {
 
   const loadSubjectTeachers = async () => {
     try {
-      if (!user) return;
+      if (!user) return [];
 
       // Tạo biến để lưu danh sách môn học/lớp
       let subjects = [];
@@ -94,7 +122,7 @@ const ForumList = () => {
         }
       }
 
-      setSubjectTeachers(subjects.map(st => {
+      const formattedSubjects = subjects.map(st => {
         // Nếu đã ở định dạng chuẩn
         if (st.id && st.name) return st;
 
@@ -103,11 +131,15 @@ const ForumList = () => {
           id: st.id || st.subjectId,
           name: st.name || `${st.subjectId?.subjectName || 'Không có tên'} - ${st.classId?.className || 'Chưa phân lớp'}`
         };
-      }));
+      });
 
-      console.log("Loaded subject teachers:", subjects);
+      console.log("Loaded subject teachers:", formattedSubjects);
+      setSubjectTeachers(formattedSubjects);
+
+      return formattedSubjects;
     } catch (err) {
       console.error("Error loading subject teachers:", err);
+      return [];
     }
   };
 
@@ -148,6 +180,52 @@ const ForumList = () => {
       minute: '2-digit'
     };
     return new Date(dateString).toLocaleDateString('vi-VN', options);
+  };
+
+  const deleteForum = async (forumId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa diễn đàn này?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await forumApis.deleteForum({ forumId });
+
+      if (response.data.success) {
+        // Xóa diễn đàn khỏi state forums để cập nhật UI ngay lập tức
+        setForums(forums.filter(f => f.id !== forumId));
+        alert('Xóa diễn đàn thành công!');
+      } else {
+        setError(response.data.error || 'Không thể xóa diễn đàn');
+      }
+    } catch (err) {
+      console.error("Error deleting forum:", err);
+      setError("Lỗi khi xóa diễn đàn: " + (err.response?.data?.error || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const canEditForum = (forum) => {
+    if (!user) return false;
+
+    // Admin có thể chỉnh sửa mọi diễn đàn
+    if (user.role === 'Admin') return true;
+
+    // Giảng viên có thể chỉnh sửa diễn đàn của mình hoặc diễn đàn của môn học mình dạy
+    if (user.role === 'Teacher') {
+      // Người tạo diễn đàn
+      if (forum.userId && user.id === forum.userId.id) return true;
+
+      // Nếu là giảng viên phụ trách môn học của diễn đàn
+      if (forum.subjectTeacherId &&
+        forum.subjectTeacherId.teacherId &&
+        forum.subjectTeacherId.teacherId.email === user.email) {
+        return true;
+      }
+    }
+
+    return false;
   };
 
   if (loading) {
@@ -211,7 +289,11 @@ const ForumList = () => {
       {forums.length === 0 ? (
         <Alert variant="info">
           <FontAwesomeIcon icon={faCommentDots} className="me-2" />
-          Không có diễn đàn nào hiện tại. Hãy tạo diễn đàn mới!
+          {user.role === 'Student' ? (
+            <>Không có diễn đàn nào cho các môn học bạn đã đăng ký.</>
+          ) : (
+            <>Không có diễn đàn nào hiện tại. Hãy tạo diễn đàn mới!</>
+          )}
         </Alert>
       ) : (
         <Row xs={1} md={2} className="g-4">
@@ -230,29 +312,58 @@ const ForumList = () => {
                   </div>
                 </Card.Header>
                 <Card.Body>
-                  <div className="mb-3 text-muted">
-                    <div className="row">
-                      <div className="col-md-6">
-                        <p className="mb-1"><strong>Khoa:</strong> {forum.subjectTeacherId?.classId?.majorId?.departmentId?.departmentName || "Không có thông tin"}</p>
-                        <p className="mb-1"><strong>Hệ đào tạo:</strong> {forum.subjectTeacherId?.classId?.majorId?.trainingTypeId?.trainingTypeName || "Không có thông tin"}</p>
-                        <p className="mb-1"><strong>Lớp:</strong> {forum.subjectTeacherId?.classId?.className || "Không có thông tin"}</p>
-                        <p className="mb-1"><strong>Người tạo:</strong> {forum.userId?.name || forum.userId?.username || "Không xác định"}</p>
+                  <div className="mb-3">
+                    {/* Tiêu đề diễn đàn */}
+                    <h5>{forum.title}</h5>
+                    <div className="text-muted small">
+                      <div className="row">
+                        <div className="col-md-6">
+                          <p className="mb-1"><strong>Khoa:</strong> {forum.subjectTeacherId?.classId?.majorId?.departmentId?.departmentName || "Không có thông tin"}</p>
+                          <p className="mb-1"><strong>Hệ đào tạo:</strong> {forum.subjectTeacherId?.classId?.majorId?.trainingTypeId?.trainingTypeName || "Không có thông tin"}</p>
+                          <p className="mb-1"><strong>Lớp:</strong> {forum.subjectTeacherId?.classId?.className || "Không có thông tin"}</p>
+                          <p className="mb-1"><strong>Người tạo:</strong> {forum.userId?.name || forum.userId?.username || "Không xác định"}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
                   <Card.Subtitle className="mb-3 text-muted">{forum.description}</Card.Subtitle>
                   <Card.Text>{forum.content}</Card.Text>
                 </Card.Body>
-                <Card.Footer className="text-center">
-                  <Button
-                    variant="primary"
-                    as={Link}
-                    to={`/forums/${forum.id}`}
-                    className="w-100"
-                  >
-                    <FontAwesomeIcon icon={faCommentDots} className="me-2" />
-                    Xem thảo luận
-                  </Button>
+                <Card.Footer>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <Button
+                      variant="primary"
+                      as={Link}
+                      to={`/forums/${forum.id}`}
+                    >
+                      <FontAwesomeIcon icon={faCommentDots} className="me-2" />
+                      Xem thảo luận
+                    </Button>
+
+                    {/* Hiển thị các nút sửa/xóa nếu user có quyền */}
+                    {canEditForum(forum) && (
+                      <div>
+                        <Button
+                          variant="warning"
+                          as={Link}
+                          to={`/forums/edit/${forum.id}`}
+                          className="me-2"
+                          size="sm"
+                        >
+                          <FontAwesomeIcon icon={faEdit} className="me-1" />
+                          Sửa
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => deleteForum(forum.id)}
+                        >
+                          <FontAwesomeIcon icon={faTrash} className="me-1" />
+                          Xóa
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </Card.Footer>
               </Card>
             </Col>

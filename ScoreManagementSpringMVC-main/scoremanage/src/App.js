@@ -20,6 +20,7 @@ import ScoreImport from "./components/ScoreImport";
 import ForumList from "./components/ForumList";
 import ForumDetail from "./components/ForumDetail";
 import ForumCreate from "./components/ForumCreate";
+import ForumEdit from "./components/ForumEdit";
 
 import StudentScoresList from "./components/StudentScoresList";
 import StudentClassInfo from "./components/StudentClassInfo";
@@ -61,6 +62,7 @@ const App = () => {
           <Route path="/forums" element={<div style={{ margin: '50px 150px' }}><ForumList /></div>} />
           <Route path="/forums/create" element={<div style={{ margin: '50px 150px' }}><ForumCreate /></div>} />
           <Route path="/forums/:forumId" element={<div style={{ margin: '50px 150px' }}><ForumDetail /></div>} />
+          <Route path="/forums/edit/:forumId" element={<ForumEdit />} />
 
           <Route path="/chatfirebase" element={<div style={{ margin: '50px 150px' }}><FireBase /></div>} />
 

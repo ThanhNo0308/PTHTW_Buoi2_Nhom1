@@ -128,10 +128,10 @@ export const userApis = {
     const formData = new FormData();
     formData.append('id', userId);
     formData.append('image', imageFile);
-    
+
     console.log("Uploading avatar for user ID:", userId);
     console.log("File name:", imageFile.name);
-    
+
     // Quan trọng: Không thiết lập Content-Type, để browser tự xử lý boundary
     return axios.post(`${SERVER}${endpoints["profile"]}/upload-avatar`, formData, {
       headers: {
@@ -273,17 +273,17 @@ export const scoreApis = {
   getImportScoresFormData: () => {
     return API.get(endpoints["scores-import-form"]);
   },
-  
+
   // Import điểm từ file CSV
   importScores: (file, subjectTeacherId, classId, schoolYearId) => {
-    console.log("Sending import with:", {subjectTeacherId, classId, schoolYearId});
-    
+    console.log("Sending import with:", { subjectTeacherId, classId, schoolYearId });
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('subjectTeacherId', subjectTeacherId);
     formData.append('classId', classId);
     formData.append('schoolYearId', schoolYearId);
-  
+
     return axios.post(`${SERVER}${SERVER_CONTEXT}/api/scores/import-scores`, formData, {
       headers: {
         'Authorization': `Bearer ${cookie.load("user")?.token}`,
@@ -291,7 +291,7 @@ export const scoreApis = {
       }
     });
   },
-  
+
   // Tải file mẫu nhập điểm
   getScoreTemplate: () => {
     return API.get(endpoints["scores-template"]);
@@ -308,7 +308,7 @@ export const scoreApis = {
       `${endpoints["scores-export-csv"]}/${classId}/export-csv?subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}`
     );
   },
-  
+
   // Tìm kiếm sinh viên
   searchStudents: (query, type = 'name') => {
     return API.get(
@@ -320,12 +320,12 @@ export const scoreApis = {
   getAssignedStudents: () => {
     return API.get(`${endpoints["scores-students-assigned"]}`);
   },
-  
+
   // Xem chi tiết sinh viên
   getStudentDetail: (studentCode) => {
     return API.get(`${endpoints["scores-student-detail"]}/${studentCode}/detail`);
   },
-  
+
   // Xem điểm của sinh viên
   getStudentScores: (studentCode, schoolYearId = null) => {
     let url = `${endpoints["scores-student-scores"]}/${studentCode}/scores`;
@@ -352,41 +352,45 @@ export const forumApis = {
   getAllForums: () => {
     return API.get(endpoints["forums"]);
   },
-  
+
   // Lấy diễn đàn theo giáo viên (dành cho giáo viên đăng nhập)
   getTeacherForums: () => {
     return API.get(endpoints["forum-teacher"]);
   },
-  
+
   // Lấy diễn đàn theo sinh viên (dành cho sinh viên đăng nhập)
   getStudentForums: () => {
     return API.get(endpoints["forum-student"]);
   },
-  
+
   // Lấy diễn đàn theo môn học
   getForumsBySubjectTeacher: (subjectTeacherId) => {
     return API.get(`${endpoints["forum-by-subject"]}/${subjectTeacherId}`);
   },
-  
+
   // Lấy chi tiết diễn đàn và các bình luận
   getForumDetail: (forumId) => {
     return API.get(`${endpoints["forum-detail"]}/${forumId}`);
   },
-  
+
   // Thêm diễn đàn mới
   addForum: (forumData) => {
     return API.post(endpoints["forums"] + "/add", forumData);
   },
-  
+
   // Thêm bình luận mới
   addComment: (forumId, commentData) => {
     return API.post(`${endpoints["forum-comments"]}/${forumId}/comments`, commentData);
   },
-  
+
   // Xóa bình luận
   deleteComment: (commentId) => {
     return API.delete(`${endpoints["forums"]}/comments/${commentId}`);
-  }
+  },
+
+  updateForum: (forumData) => API.post(`${endpoints['forums']}/update`, forumData),
+  deleteForum: (forumData) => API.post(`${endpoints['forums']}/delete`, forumData),
+
 };
 
 export const studentApis = {

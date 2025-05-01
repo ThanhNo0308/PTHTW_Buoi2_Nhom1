@@ -401,4 +401,177 @@ public class ApiForumController {
                     .body(Map.of("success", false, "error", "Lỗi hệ thống: " + e.getMessage()));
         }
     }
+
+    /**
+     * API xóa diễn đàn
+     */
+    @PostMapping("/forums/delete")
+    public ResponseEntity<Map<String, Object>> deleteForum(@RequestBody Map<String, Object> payload, Authentication authentication) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Kiểm tra đăng nhập
+            if (authentication == null) {
+                response.put("success", false);
+                response.put("error", "Bạn cần đăng nhập để xóa diễn đàn");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            Integer forumId = (Integer) payload.get("forumId");
+            if (forumId == null) {
+                response.put("success", false);
+                response.put("error", "Thiếu ID diễn đàn");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Lấy forum cần xóa
+            Forum forum = forumService.getForumById(forumId);
+            if (forum == null) {
+                response.put("success", false);
+                response.put("error", "Không tìm thấy diễn đàn");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            // Lấy thông tin người dùng hiện tại
+            String username;
+            if (authentication.getPrincipal() instanceof UserDetails) {
+                username = ((UserDetails) authentication.getPrincipal()).getUsername();
+            } else {
+                username = authentication.getPrincipal().toString();
+            }
+            User currentUser = userService.getUserByUn(username);
+
+            // Kiểm tra quyền xóa (chỉ người tạo, admin, hoặc giáo viên môn học)
+            boolean isOwner = forum.getUserId().getId().equals(currentUser.getId());
+            boolean isAdmin = "Admin".equals(currentUser.getRole().toString());
+
+            boolean isTeacherOfSubject = false;
+            if ("Teacher".equals(currentUser.getRole().toString())) {
+                // Xác định giáo viên bằng email thay vì userid
+                Teacher teacher = teacherService.getTeacherByEmail(currentUser.getEmail());
+                if (teacher != null && forum.getSubjectTeacherId() != null
+                        && forum.getSubjectTeacherId().getTeacherId() != null) {
+                    isTeacherOfSubject = teacher.getId().equals(forum.getSubjectTeacherId().getTeacherId().getId());
+                }
+            }
+
+            if (!isOwner && !isAdmin && !isTeacherOfSubject) {
+                response.put("success", false);
+                response.put("error", "Bạn không có quyền xóa diễn đàn này");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            boolean result = forumService.deleteForum(forumId);
+            if (result) {
+                response.put("success", true);
+                response.put("message", "Xóa diễn đàn thành công");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("error", "Có lỗi xảy ra khi xóa diễn đàn");
+                return ResponseEntity.internalServerError().body(response);
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("error", "Lỗi khi xóa diễn đàn: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * API cập nhật diễn đàn
+     */
+    @PostMapping("/forums/update")
+    public ResponseEntity<Map<String, Object>> updateForum(@RequestBody Map<String, Object> payload, Authentication authentication) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            if (authentication == null) {
+                response.put("success", false);
+                response.put("error", "Bạn cần đăng nhập để cập nhật diễn đàn");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            Integer id = (Integer) payload.get("id");
+            String title = (String) payload.get("title");
+            String description = (String) payload.get("description");
+            String content = (String) payload.get("content");
+            Integer subjectTeacherId = (Integer) payload.get("subjectTeacherId");
+
+            if (id == null || title == null || description == null || content == null) {
+                response.put("success", false);
+                response.put("error", "Thiếu thông tin cần thiết");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Lấy forum hiện tại
+            Forum existingForum = forumService.getForumById(id);
+            if (existingForum == null) {
+                response.put("success", false);
+                response.put("error", "Không tìm thấy diễn đàn");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            // Lấy thông tin người dùng hiện tại
+            String username;
+            if (authentication.getPrincipal() instanceof UserDetails) {
+                username = ((UserDetails) authentication.getPrincipal()).getUsername();
+            } else {
+                username = authentication.getPrincipal().toString();
+            }
+            User currentUser = userService.getUserByUn(username);
+
+            // Kiểm tra quyền chỉnh sửa (chỉ người tạo, admin, hoặc giáo viên môn học)
+            boolean isOwner = existingForum.getUserId().getId().equals(currentUser.getId());
+            boolean isAdmin = "Admin".equals(currentUser.getRole().toString());
+
+            boolean isTeacherOfSubject = false;
+            if ("Teacher".equals(currentUser.getRole().toString())) {
+                // Xác định giáo viên bằng email thay vì userid
+                Teacher teacher = teacherService.getTeacherByEmail(currentUser.getEmail());
+                if (teacher != null && existingForum.getSubjectTeacherId() != null
+                        && existingForum.getSubjectTeacherId().getTeacherId() != null) {
+                    isTeacherOfSubject = teacher.getId().equals(existingForum.getSubjectTeacherId().getTeacherId().getId());
+                }
+            }
+
+            if (!isOwner && !isAdmin && !isTeacherOfSubject) {
+                response.put("success", false);
+                response.put("error", "Bạn không có quyền chỉnh sửa diễn đàn này");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            // Cập nhật thông tin diễn đàn
+            existingForum.setTitle(title);
+            existingForum.setDescription(description);
+            existingForum.setContent(content);
+
+            // Nếu là admin và muốn đổi subjectTeacher
+            if (isAdmin && subjectTeacherId != null) {
+                Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
+                if (subjectTeacher == null) {
+                    response.put("success", false);
+                    response.put("error", "Không tìm thấy thông tin giáo viên-môn học");
+                    return ResponseEntity.badRequest().body(response);
+                }
+                existingForum.setSubjectTeacherId(subjectTeacher);
+            }
+
+            boolean result = forumService.updateForum(existingForum);
+            if (result) {
+                response.put("success", true);
+                response.put("message", "Cập nhật diễn đàn thành công");
+                response.put("forumId", existingForum.getId());
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("error", "Có lỗi xảy ra khi cập nhật diễn đàn");
+                return ResponseEntity.internalServerError().body(response);
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("error", "Lỗi khi cập nhật diễn đàn: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }
