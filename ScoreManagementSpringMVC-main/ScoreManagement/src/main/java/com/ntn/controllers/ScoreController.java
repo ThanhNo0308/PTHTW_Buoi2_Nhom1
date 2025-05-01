@@ -1,6 +1,5 @@
 package com.ntn.controllers;
 
-import com.ntn.pojo.ListScoreDTO;
 import com.ntn.pojo.Score;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Typescore;
@@ -251,49 +250,6 @@ public class ScoreController {
         model.addAttribute("classroom", classService.getClassById(classId));
         model.addAttribute("schoolYears", schoolYearService.getAllSchoolYears());
         return "scores/class-scores";
-    }
-
-    /**
-     * Lấy danh sách điểm của lớp học
-     */
-    @PreAuthorize("hasAuthority('Teacher') or hasAuthority('Admin')")
-    @GetMapping("/api/class-scores")
-    @ResponseBody
-    public ResponseEntity<ListScoreDTO> getClassScores(
-            @RequestParam("classId") int classId,
-            @RequestParam("subjectTeacherId") int subjectTeacherId,
-            @RequestParam("schoolYearId") int schoolYearId) {
-
-        List<Score> scores = scoreService.getScoresBySubjectTeacherIdAndClassIdAndSchoolYearId(
-                subjectTeacherId, classId, schoolYearId);
-
-        ListScoreDTO listScoreDTO = scoreService.createListScoreDTO(scores, subjectTeacherId, schoolYearId);
-
-        if (listScoreDTO == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        return new ResponseEntity<>(listScoreDTO, HttpStatus.OK);
-    }
-
-    /**
-     * Lưu điểm cho lớp học
-     */
-    @PreAuthorize("hasAuthority('Teacher') or hasAuthority('Admin')")
-    @PostMapping("/api/save-scores")
-    @ResponseBody
-    public ResponseEntity<String> saveScores(@RequestBody ListScoreDTO listScoreDTO) {
-        try {
-            boolean success = scoreService.saveListScoreByListScoreDTO(listScoreDTO);
-
-            if (success) {
-                return new ResponseEntity<>("Lưu điểm thành công", HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>("Không thể lưu điểm", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        } catch (Exception e) {
-            return new ResponseEntity<>("Lỗi: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 
     /**

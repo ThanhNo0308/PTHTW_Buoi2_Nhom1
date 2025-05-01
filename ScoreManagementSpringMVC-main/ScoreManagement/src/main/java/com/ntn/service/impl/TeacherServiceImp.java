@@ -49,29 +49,17 @@ public class TeacherServiceImp implements TeacherService {
 
     @Override
     public int getTeacherIdByUsername(String username) {
-        // Lấy User từ username
-        User user = userRepo.getUserByUsername(username);
-        if (user == null) {
-            return 0;
-        }
-
-        // Lấy teacher từ user
-        Teacher teacher = teacherRepo.getTeacherByUserId(user.getId());
-        if (teacher == null) {
-            return 0;
-        }
-
-        return teacher.getId();
+        return this.teacherRepo.getTeacherIdByUsername(username);
     }
 
     @Override
     public List<Class> getClassesByTeacher(int teacherId) {
-        return teacherRepo.getClassesByTeacherId(teacherId);
+        return this.teacherRepo.getClassesByTeacherId(teacherId);
     }
 
     @Override
     public int getSubjectTeacherIdByTeacherAndClass(int teacherId, int classId) {
-        return teacherRepo.getSubjectTeacherIdByTeacherAndClass(teacherId, classId);
+        return this.teacherRepo.getSubjectTeacherIdByTeacherAndClass(teacherId, classId);
     }
 
     @Override

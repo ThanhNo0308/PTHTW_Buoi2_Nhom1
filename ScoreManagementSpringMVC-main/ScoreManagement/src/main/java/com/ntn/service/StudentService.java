@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface StudentService {
+
     List<Student> getStudentByClassId(int classId);
 
     boolean addOrUpdateStudent(Student student);
@@ -46,6 +47,6 @@ public interface StudentService {
     List<Student> getStudentsByKeyword(String keyword);
 
     List<Student> getStudentsByClassIdAndKeyword(Integer classId, String keyword);
-    
-     List<Student> getStudentbyEmail(String email);
+
+    List<Student> getStudentbyEmail(String email);
 }

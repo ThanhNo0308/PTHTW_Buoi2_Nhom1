@@ -22,26 +22,26 @@ public class ForumCommentServiceImpl implements ForumCommentService {
 
     @Override
     public List<Forumcomment> getCommentsByForumId(Integer forumId) {
-        return forumCommentRepository.getCommentsByForumId(forumId);
+        return this.forumCommentRepository.getCommentsByForumId(forumId);
     }
 
     @Override
     public Forumcomment getCommentById(Integer commentId) {
-        return forumCommentRepository.getCommentById(commentId);
+        return this.forumCommentRepository.getCommentById(commentId);
     }
 
     @Override
     public boolean addComment(Forumcomment comment) {
-        return forumCommentRepository.addComment(comment);
+        return this.forumCommentRepository.addComment(comment);
     }
 
     @Override
     public boolean updateComment(Forumcomment comment) {
-        return forumCommentRepository.updateComment(comment);
+        return this.forumCommentRepository.updateComment(comment);
     }
 
     @Override
     public boolean deleteComment(Integer commentId) {
-        return forumCommentRepository.deleteComment(commentId);
+        return this.forumCommentRepository.deleteComment(commentId);
     }
 }

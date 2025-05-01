@@ -9,6 +9,7 @@ import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
 import com.ntn.repository.TeacherRepository;
+import com.ntn.repository.UserRepository;
 import jakarta.persistence.NoResultException;
 import java.util.List;
 import jakarta.persistence.Query;
@@ -30,6 +31,12 @@ public class TeacherRepositoryImp implements TeacherRepository {
 
     @Autowired
     private LocalSessionFactoryBean factory;
+    
+    @Autowired
+    private TeacherRepository teacherRepo;
+
+    @Autowired
+    private UserRepository userRepo;
 
     @Override
     public int getidTeacherByEmail(String email) {
@@ -284,6 +291,23 @@ public class TeacherRepositoryImp implements TeacherRepository {
         query.orderBy(builder.asc(root.get("teacherName")));
 
         return session.createQuery(query).getResultList();
+    }
+    
+    @Override
+    public int getTeacherIdByUsername(String username) {
+        // Lấy User từ username
+        User user = userRepo.getUserByUsername(username);
+        if (user == null) {
+            return 0;
+        }
+
+        // Lấy teacher từ user
+        Teacher teacher = teacherRepo.getTeacherByUserId(user.getId());
+        if (teacher == null) {
+            return 0;
+        }
+
+        return teacher.getId();
     }
 
 }

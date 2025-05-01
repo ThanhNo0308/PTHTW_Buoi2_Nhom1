@@ -97,16 +97,26 @@ const StudentDetail = () => {
     const subjects = subjectScoresByYear[schoolYearId];
     let totalWeightedScore = 0;
     let totalCredits = 0;
+    let validSubjectsCount = 0;
 
     subjects.forEach(subject => {
-      const credits = subject.credits || 0;
-      const avgScore = subject.averageScore || 0;
+      // Chỉ tính môn học có đủ điểm giữa kỳ và cuối kỳ
+      const hasMidTerm = subject.scores?.some(score =>
+        score.scoreType?.scoreType === 'Giữa kỳ' && score.scoreValue !== null);
+      const hasFinalTerm = subject.scores?.some(score =>
+        score.scoreType?.scoreType === 'Cuối kỳ' && score.scoreValue !== null);
 
-      totalWeightedScore += avgScore * credits;
-      totalCredits += credits;
+      if (hasMidTerm && hasFinalTerm) {
+        const credits = subject.credits || 0;
+        const avgScore = subject.averageScore || 0;
+
+        totalWeightedScore += avgScore * credits;
+        totalCredits += credits;
+        validSubjectsCount++;
+      }
     });
 
-    if (totalCredits > 0) {
+    if (totalCredits > 0 && validSubjectsCount > 0) {
       return (totalWeightedScore / totalCredits).toFixed(2);
     }
 

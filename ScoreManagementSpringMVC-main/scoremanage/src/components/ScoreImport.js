@@ -232,39 +232,91 @@ const ScoreImport = () => {
     if (selectedFile) {
       setFile(selectedFile);
       setFileName(selectedFile.name);
-
+  
+      // Reset thông báo
+      setError('');
+      setSuccess('');
+      setMissingScoreTypes([]);
+      setInvalidStudents([]);
+      setShowMissingScoreTypesAlert(true);
+      setShowInvalidStudentsAlert(true);
+  
       // Preview nội dung CSV
       const reader = new FileReader();
       reader.onload = (event) => {
         const csvContent = event.target.result;
         const rows = csvContent.split('\n');
         const csvData = [];
-
+  
         // Chỉ lấy tối đa 5 dòng để preview
         for (let i = 0; i < Math.min(rows.length, 6); i++) {
           if (rows[i].trim()) {
             csvData.push(rows[i].split(','));
           }
         }
-
+  
         setCsvPreview(csvData);
         setShowCsvPreview(true);
+  
+        // Kiểm tra header của CSV
+        if (csvData.length > 0) {
+          const headers = csvData[0].map(header => header.trim());
+          
+          // Tìm vị trí của cột MSSV
+          const mssvIndex = headers.findIndex(
+            h => h === 'MSSV' || h === 'Mã SV' || h.toLowerCase().includes('mssv') || h.toLowerCase().includes('mã sv')
+          );
+          
+          // Tìm vị trí của cột Cuối kỳ
+          const finalExamIndex = headers.findIndex(
+            h => h === 'Cuối kỳ' || h.toLowerCase().includes('cuối kỳ') || h.toLowerCase().includes('cuoi ky')
+          );
+  
+          // Kiểm tra xem có cột STT trước MSSV không
+          let hasSTTColumn = false;
+          if (mssvIndex > 0) {
+            for (let i = 0; i < mssvIndex; i++) {
+              if (headers[i].toLowerCase().includes('stt') || 
+                  headers[i].toLowerCase() === 'tt' || 
+                  headers[i].toLowerCase() === 'id') {
+                hasSTTColumn = true;
+                break;
+              }
+            }
+          }
+  
+          // Kiểm tra xem có cột Điểm TB sau Cuối kỳ không
+          let hasAvgColumn = false;
+          if (finalExamIndex >= 0 && finalExamIndex < headers.length - 1) {
+            for (let i = finalExamIndex + 1; i < headers.length; i++) {
+              if (headers[i].toLowerCase().includes('tb') || 
+                  headers[i].toLowerCase().includes('trung bình') ||
+                  headers[i].toLowerCase().includes('average')) {
+                hasAvgColumn = true;
+                break;
+              }
+            }
+          }
+  
+          // Hiển thị cảnh báo nếu phát hiện cột STT hoặc Điểm TB
+          if (hasSTTColumn || hasAvgColumn) {
+            let warningMsg = 'Vui lòng xóa ';
+            if (hasSTTColumn) warningMsg += 'cột STT trước cột MSSV';
+            if (hasSTTColumn && hasAvgColumn) warningMsg += ' và ';
+            if (hasAvgColumn) warningMsg += 'cột Điểm TB sau cột Cuối kỳ';
+            warningMsg += ' trong file CSV trước khi import. Hệ thống sẽ tự động bỏ qua các cột này, nhưng có thể gây nhầm lẫn cho quá trình import.';
+            
+            setError(warningMsg);
+          }
+        }
       };
-
+  
       reader.readAsText(selectedFile);
     } else {
       setFile(null);
       setFileName('');
       setShowCsvPreview(false);
     }
-
-    // Reset thông báo
-    setError('');
-    setSuccess('');
-    setMissingScoreTypes([]);
-    setInvalidStudents([]);
-    setShowMissingScoreTypesAlert(true);
-    setShowInvalidStudentsAlert(true);
   };
 
   const refreshUserToken = async () => {
@@ -590,6 +642,7 @@ const ScoreImport = () => {
                 </h6>
                 <ul className="mb-0">
                   <li>File CSV phải có định dạng: MSSV, Họ tên, [Điểm bổ sung 1], [Điểm bổ sung 2], [Điểm bổ sung 3], Giữa kỳ, Cuối kỳ</li>
+                  <li>File không được chứa cột STT và Điểm TB - Hệ thống sẽ tự động tính điểm dựa trên loại điểm đã cấu hình của môn học</li>
                   <li>Dòng đầu tiên nên là tiêu đề các cột</li>
                   <li>Điểm số phải trong khoảng từ 0 đến 10</li>
                   <li>Nếu điểm trống, để trống ô đó trong CSV</li>

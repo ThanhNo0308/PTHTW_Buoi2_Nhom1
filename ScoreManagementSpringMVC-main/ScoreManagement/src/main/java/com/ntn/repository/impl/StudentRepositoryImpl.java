@@ -10,9 +10,11 @@ import jakarta.persistence.Query;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import java.util.ArrayList;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -331,5 +333,76 @@ public class StudentRepositoryImpl implements StudentRepository {
 
         // Kiểm tra xem danh sách có phần tử nào không
         return students;
+    }
+
+    @Override
+    public List<Student> findStudentsByCode(String code) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Student> query = builder.createQuery(Student.class);
+        Root<Student> root = query.from(Student.class);
+
+        // Tìm chính xác mã sinh viên (không phân biệt hoa thường)
+        Predicate codePredicate = builder.like(
+                builder.lower(root.get("studentCode")),
+                "%" + code.toLowerCase() + "%"
+        );
+
+        query.where(codePredicate);
+        query.orderBy(builder.asc(root.get("classId").get("className")),
+                builder.asc(root.get("lastName")),
+                builder.asc(root.get("firstName")));
+
+        return session.createQuery(query).getResultList();
+    }
+
+    @Override
+    public List<Student> findStudentsByName(String name) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Student> query = builder.createQuery(Student.class);
+        Root<Student> root = query.from(Student.class);
+
+        // Tìm kiếm bằng cách kết hợp firstName và lastName
+        // Phân biệt dấu nhưng không phân biệt chữ hoa thường
+        String searchName = "%" + name.toLowerCase() + "%";
+
+        Expression<String> fullName = builder.concat(
+                builder.lower(root.get("lastName")),
+                builder.concat(" ", builder.lower(root.get("firstName")))
+        );
+
+        Predicate fullNamePredicate = builder.like(fullName, searchName);
+
+        query.where(fullNamePredicate);
+        query.orderBy(builder.asc(root.get("classId").get("className")),
+                builder.asc(root.get("lastName")),
+                builder.asc(root.get("firstName")));
+
+        return session.createQuery(query).getResultList();
+    }
+
+    @Override
+    public List<Student> findStudentsByClass(String className) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Student> query = builder.createQuery(Student.class);
+        Root<Student> root = query.from(Student.class);
+
+        // Join từ Student đến Class
+        Join<Student, java.lang.Class> classJoin = root.join("classId", JoinType.INNER);
+
+        // Điều kiện tìm kiếm - tên lớp chứa chuỗi tìm kiếm
+        Predicate classNamePredicate = builder.like(
+                builder.lower(classJoin.get("className")),
+                "%" + className.toLowerCase() + "%"
+        );
+
+        query.where(classNamePredicate);
+        query.orderBy(builder.asc(classJoin.get("className")),
+                builder.asc(root.get("lastName")),
+                builder.asc(root.get("firstName")));
+
+        return session.createQuery(query).getResultList();
     }
 }

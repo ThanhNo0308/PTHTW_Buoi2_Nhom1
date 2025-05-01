@@ -31,9 +31,6 @@ public class StudentServiceImpl implements StudentService {
     @Autowired
     private EmailService emailService;
 
-    @Autowired
-    private LocalSessionFactoryBean factory;
-
     @Override
     public List<Student> getStudentByClassId(int classId) {
         return this.studRepo.getStudentByClassId(classId);
@@ -141,73 +138,17 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public List<Student> findStudentsByCode(String code) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Student> query = builder.createQuery(Student.class);
-        Root<Student> root = query.from(Student.class);
-
-        // Tìm chính xác mã sinh viên (không phân biệt hoa thường)
-        Predicate codePredicate = builder.like(
-                builder.lower(root.get("studentCode")),
-                "%" + code.toLowerCase() + "%"
-        );
-
-        query.where(codePredicate);
-        query.orderBy(builder.asc(root.get("classId").get("className")),
-                builder.asc(root.get("lastName")),
-                builder.asc(root.get("firstName")));
-
-        return session.createQuery(query).getResultList();
+        return this.studRepo.findStudentsByCode(code);
     }
 
     @Override
     public List<Student> findStudentsByName(String name) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Student> query = builder.createQuery(Student.class);
-        Root<Student> root = query.from(Student.class);
-
-        // Tìm kiếm bằng cách kết hợp firstName và lastName
-        // Phân biệt dấu nhưng không phân biệt chữ hoa thường
-        String searchName = "%" + name.toLowerCase() + "%";
-
-        Expression<String> fullName = builder.concat(
-                builder.lower(root.get("lastName")),
-                builder.concat(" ", builder.lower(root.get("firstName")))
-        );
-
-        Predicate fullNamePredicate = builder.like(fullName, searchName);
-
-        query.where(fullNamePredicate);
-        query.orderBy(builder.asc(root.get("classId").get("className")),
-                builder.asc(root.get("lastName")),
-                builder.asc(root.get("firstName")));
-
-        return session.createQuery(query).getResultList();
+        return this.studRepo.findStudentsByName(name);
     }
 
     @Override
     public List<Student> findStudentsByClass(String className) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Student> query = builder.createQuery(Student.class);
-        Root<Student> root = query.from(Student.class);
-
-        // Join từ Student đến Class
-        Join<Student, Class> classJoin = root.join("classId", JoinType.INNER);
-
-        // Điều kiện tìm kiếm - tên lớp chứa chuỗi tìm kiếm
-        Predicate classNamePredicate = builder.like(
-                builder.lower(classJoin.get("className")),
-                "%" + className.toLowerCase() + "%"
-        );
-
-        query.where(classNamePredicate);
-        query.orderBy(builder.asc(classJoin.get("className")),
-                builder.asc(root.get("lastName")),
-                builder.asc(root.get("firstName")));
-
-        return session.createQuery(query).getResultList();
+        return this.studRepo.findStudentsByClass(className);
     }
 
     @Override

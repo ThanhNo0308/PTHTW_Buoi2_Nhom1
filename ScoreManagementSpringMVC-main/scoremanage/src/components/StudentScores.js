@@ -31,6 +31,15 @@ const StudentScores = () => {
   const [semesterAverage, setSemesterAverage] = useState(null);
   const [allScoreTypes, setAllScoreTypes] = useState([]);
 
+  const scoreTableStyles = {
+    unconfiguredScoreCell: {
+      backgroundColor: '#f8f9fa',
+      color: '#000',
+      fontStyle: 'italic',
+      position: 'relative'
+    }
+  };
+
   // Load student scores data
   useEffect(() => {
     const loadScores = async () => {
@@ -61,27 +70,27 @@ const StudentScores = () => {
             }
           });
 
-          // Đảm bảo "Giữa kỳ" và "Cuối kỳ" luôn hiển thị đầu tiên nếu có
-          const types = Array.from(scoreTypesSet);
-          const midtermIndex = types.indexOf('Giữa kỳ');
-          const finalIndex = types.indexOf('Cuối kỳ');
-
-          const sortedTypes = [];
-
-          // Thêm Giữa kỳ nếu có
-          if (midtermIndex !== -1) {
-            sortedTypes.push('Giữa kỳ');
-            types.splice(midtermIndex, 1);
+          // Đảm bảo luôn có Giữa kỳ và Cuối kỳ
+          if (!scoreTypesSet.has('Giữa kỳ')) {
+            scoreTypesSet.add('Giữa kỳ');
+          }
+          if (!scoreTypesSet.has('Cuối kỳ')) {
+            scoreTypesSet.add('Cuối kỳ');
           }
 
-          // Thêm Cuối kỳ nếu có
-          if (finalIndex !== -1) {
-            sortedTypes.push('Cuối kỳ');
-            types.splice(types.indexOf('Cuối kỳ'), 1);
-          }
+          // Sắp xếp các loại điểm
+          const sortedTypes = Array.from(scoreTypesSet).sort((a, b) => {
+            // Cuối kỳ luôn đứng cuối cùng
+            if (a === 'Cuối kỳ') return 1;
+            if (b === 'Cuối kỳ') return -1;
 
-          // Thêm các loại điểm còn lại theo thứ tự alphabet
-          sortedTypes.push(...types.sort());
+            // Giữa kỳ luôn đứng áp cuối (trước Cuối kỳ)
+            if (a === 'Giữa kỳ') return 1;
+            if (b === 'Giữa kỳ') return -1;
+
+            // Các loại điểm bổ sung khác sắp xếp theo alphabet và nằm đầu tiên
+            return a.localeCompare(b);
+          });
 
           setAllScoreTypes(sortedTypes);
         } else {
@@ -105,7 +114,7 @@ const StudentScores = () => {
     setSelectedSchoolYear(e.target.value);
   };
 
-  
+
 
   // Group scores by subject
   const groupScoresBySubject = () => {
@@ -152,6 +161,11 @@ const StudentScores = () => {
 
   // Calculate subject average based on score weights
   const calculateSubjectAverage = (subjectScores, subjectWeights) => {
+    // Kiểm tra xem có đủ cả điểm giữa kỳ và cuối kỳ không
+    if (!subjectScores['Giữa kỳ'] || !subjectScores['Cuối kỳ']) {
+      return null;  // Trả về null nếu không đủ các điểm bắt buộc
+    }
+
     // Default weights if not configured
     const defaultWeights = {
       'Giữa kỳ': 0.4,
@@ -163,9 +177,9 @@ const StudentScores = () => {
 
     Object.keys(subjectScores).forEach(type => {
       const score = subjectScores[type];
+      if (score === undefined || score === null) return;
 
       // Sử dụng trọng số từ dữ liệu nếu có, nếu không dùng giá trị mặc định
-      // hoặc phân bổ đều cho các loại điểm khác
       const weight = subjectWeights[type] || defaultWeights[type] ||
         (1 / Object.keys(subjectScores).length);
 
@@ -178,6 +192,18 @@ const StudentScores = () => {
     }
 
     return null;
+  };
+
+  const isScoreTypeConfigured = (subject, scoreType) => {
+    // Nếu đã có điểm của loại này thì coi như đã cấu hình
+    if (subject.scores[scoreType] !== undefined) return true;
+
+    // Giữa kỳ và Cuối kỳ luôn được coi là có cấu hình
+    if (scoreType === 'Giữa kỳ' || scoreType === 'Cuối kỳ') return true;
+
+    // Kiểm tra xem môn học này có điểm nào khác không
+    // Nếu có ít nhất một điểm khác, thì loại điểm này không được cấu hình
+    return Object.keys(subject.scores).length === 0;
   };
 
   // Thêm hàm tính điểm trung bình học kỳ
@@ -323,7 +349,7 @@ const StudentScores = () => {
                     <th>Số tín chỉ</th>
                     {/* Tạo cột động cho mỗi loại điểm */}
                     {allScoreTypes.map(scoreType => (
-                      <th key={scoreType}>Điểm {scoreType}</th>
+                      <th key={scoreType}>{scoreType}</th>
                     ))}
                     <th>Điểm TB</th>
                     <th>Kết quả</th>
@@ -341,8 +367,13 @@ const StudentScores = () => {
                         <td className="text-center">{subject.credits}</td>
                         {/* Hiển thị điểm cho từng loại điểm */}
                         {allScoreTypes.map(scoreType => (
-                          <td key={`${subject.subjectId}-${scoreType}`} className="text-center">
-                            {subject.scores[scoreType] !== undefined ? subject.scores[scoreType] : '-'}
+                          <td
+                            key={`${subject.subjectId}-${scoreType}`}
+                            className="text-center"
+                            style={!isScoreTypeConfigured(subject, scoreType) ? scoreTableStyles.unconfiguredScoreCell : {}}
+                            title={!isScoreTypeConfigured(subject, scoreType) ? 'Loại điểm này không được cấu hình cho môn học' : ''}
+                          >
+                            {subject.scores[scoreType] !== undefined ? subject.scores[scoreType].toFixed(1) : '—'}
                           </td>
                         ))}
                         <td className={`text-center ${avgScore !== null ? 'fw-bold' : ''}`}>
@@ -365,6 +396,12 @@ const StudentScores = () => {
             <Alert variant="info">
               Không có dữ liệu điểm nào được tìm thấy.
             </Alert>
+          )}
+          {groupedScoresBySubject.length > 0 && (
+            <div className="mt-2 text-muted small">
+              <span className="d-inline-block px-2 py-1 me-2" style={scoreTableStyles.unconfiguredScoreCell}>—</span>
+              <span>Chưa có điểm hoặc Loại điểm không được cấu hình cho môn học này</span>
+            </div>
           )}
         </Card.Body>
       </Card>

@@ -14,7 +14,7 @@ const ForumList = () => {
   const [error, setError] = useState("");
   const [subjectTeachers, setSubjectTeachers] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState("");
-
+  
   useEffect(() => {
     if (!user) {
       navigate("/login");

@@ -45,61 +45,65 @@ const StudentScoresList = () => {
             navigate('/login');
             return;
         }
-
+    
         if (user.role !== 'Student') {
             navigate('/');
             return;
         }
-
+    
         const loadScores = async () => {
             try {
                 setLoading(true);
                 setError(null);
-
+    
                 const response = await studentApis.getStudentScores(selectedSchoolYear);
                 console.log("API response:", response.data);
-
+    
                 if (response.data) {
                     // Set scores data
                     setScores(response.data.scores || []);
-
+    
                     // Set school years (filtered to only show those with enrollments)
                     setSchoolYears(response.data.schoolYears || []);
-
+    
                     // Set current school year
                     setCurrentSchoolYear(response.data.currentSchoolYear);
-
+    
                     // Set subject averages
                     setSubjectAverages(response.data.subjectAverages || {});
-
+    
                     // Set semester average
                     setSemesterAverage(response.data.semesterAverage || 0);
-
+    
                     // Set enrolled subjects
                     setEnrolledSubjects(response.data.enrolledSubjects || {});
-
-                    // Extract all score types from the scores data
-                    const types = new Set();
+    
+                    // Mặc định luôn có Giữa kỳ và Cuối kỳ
+                    const types = new Set(['Giữa kỳ', 'Cuối kỳ']);
+                    
+                    // Thêm các loại điểm khác từ dữ liệu API
                     (response.data.scores || []).forEach(score => {
-                        if (score.scoreType && score.scoreType.scoreType) {
+                        if (score.scoreType && score.scoreType.scoreType 
+                            && score.scoreType.scoreType !== 'Giữa kỳ' 
+                            && score.scoreType.scoreType !== 'Cuối kỳ') {
                             types.add(score.scoreType.scoreType);
                         }
                     });
-
-                    // Sort score types - ensure midterm and final are first
+    
+                    // Sắp xếp loại điểm
                     const sortedTypes = Array.from(types).sort((a, b) => {
                         // Cuối kỳ luôn đứng cuối cùng
                         if (a === 'Cuối kỳ') return 1;
                         if (b === 'Cuối kỳ') return -1;
-
-                        // Giữa kỳ đứng trước Cuối kỳ nhưng sau các loại điểm khác
+                        
+                        // Giữa kỳ luôn đứng áp cuối (trước Cuối kỳ)
                         if (a === 'Giữa kỳ') return 1;
                         if (b === 'Giữa kỳ') return -1;
-
-                        // Các loại điểm khác sắp xếp theo alphabet
+                        
+                        // Các loại điểm bổ sung khác sắp xếp theo alphabet và nằm đầu tiên
                         return a.localeCompare(b);
                     });
-
+    
                     setScoreTypes(sortedTypes);
                 }
             } catch (err) {
@@ -110,7 +114,7 @@ const StudentScoresList = () => {
                 setLoading(false);
             }
         };
-
+    
         loadScores();
     }, [user, navigate, selectedSchoolYear]);
 

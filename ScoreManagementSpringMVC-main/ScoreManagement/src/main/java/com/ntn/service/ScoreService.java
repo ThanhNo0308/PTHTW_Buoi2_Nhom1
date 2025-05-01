@@ -1,9 +1,7 @@
 package com.ntn.service;
 
-import com.ntn.pojo.ListScoreDTO;
 import com.ntn.pojo.Score;
 import com.ntn.pojo.Student;
-import com.ntn.pojo.Typescore;
 import java.util.List;
 import java.util.Map;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,8 +28,6 @@ public interface ScoreService {
 
     List<Score> getListScoreBySubjectTeacherIdAndSchoolYearIdAndStudentId(int subjectTeacherID, int schoolYearId, int studentID);
 
-    boolean saveListScoreByListScoreDTO(ListScoreDTO listScoreDTO);
-
     boolean importScoresFromCsv(MultipartFile file, int subjectTeacherId, int classId, int schoolYearId) throws Exception;
 
     byte[] exportScoresToCsv(int subjectTeacherId, int classId, int schoolYearId) throws Exception;
@@ -48,8 +44,6 @@ public interface ScoreService {
 
     List<Score> getScoresBySubjectTeacherIdAndClassIdAndSchoolYearId(int subjectTeacherId, int classId, int schoolYearId);
 
-    ListScoreDTO createListScoreDTO(List<Score> scores, int subjectTeacherId, int schoolYearId);
-
     Score getScoreByStudentSubjectSchoolYearAndType(
             int studentId, int subjectTeacherId, int schoolYearId, String scoreType);
 
@@ -65,7 +59,7 @@ public interface ScoreService {
     boolean saveScoreWeights(Integer subjectTeacherId, Integer schoolYearId, Map<String, Double> weights);
 
     Map<String, Double> getScoreWeights(Integer subjectTeacherId, Integer schoolYearId);
-    
+
     boolean deleteScore(Integer scoreId);
 
 }

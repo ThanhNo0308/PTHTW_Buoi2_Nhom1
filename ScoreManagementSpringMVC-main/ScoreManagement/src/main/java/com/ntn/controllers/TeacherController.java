@@ -1,6 +1,5 @@
 package com.ntn.controllers;
 
-import com.ntn.pojo.ListScoreDTO;
 import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Score;
 import com.ntn.pojo.Student;

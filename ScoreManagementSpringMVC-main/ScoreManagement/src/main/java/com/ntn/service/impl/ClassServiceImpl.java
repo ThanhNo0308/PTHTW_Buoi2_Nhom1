@@ -29,7 +29,7 @@ public class ClassServiceImpl implements ClassService {
     
     @Override
     public List<Class> getClassesByKeyword(String keyword) {
-        return classRepo.getClassesByKeyword(keyword);
+        return this.classRepo.getClassesByKeyword(keyword);
     }
 
     @Override

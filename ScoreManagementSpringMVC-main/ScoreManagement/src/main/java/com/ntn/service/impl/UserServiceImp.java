@@ -6,7 +6,6 @@ package com.ntn.service.impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import com.ntn.controllers.ApiUserController;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
@@ -15,29 +14,17 @@ import com.ntn.repository.UserRepository;
 import com.ntn.service.UserService;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
-import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service("UserDetailsService")
 public class UserServiceImp implements UserService {
@@ -53,20 +40,6 @@ public class UserServiceImp implements UserService {
     @Autowired
     private Cloudinary cloudinary;
 
-//    @Autowired
-//    private Cloudinary cloudinary;
-//    @Override
-//    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-//        User u = this.userRepo.getUserByUsername(username);
-//        if (u == null) {
-//            throw new UsernameNotFoundException("Invalid");
-//        }
-//        Set<GrantedAuthority> authorities = new HashSet<>();
-//        User authenticatedUser = getUserByUn(u.getUsername());
-//        authorities.add(new SimpleGrantedAuthority(authenticatedUser.getRole().name()));
-//        return new org.springframework.security.core.userdetails.User(
-//                u.getUsername(), u.getPassword(), authorities);
-//    }
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepo.getUserByUsername(username);
@@ -152,7 +125,6 @@ public class UserServiceImp implements UserService {
 
     @Override
     public boolean isEmailExists(String email) {
-
         return userRepo.findEmail(email);
     }
 
@@ -181,7 +153,6 @@ public class UserServiceImp implements UserService {
             // Không tìm thấy Teacher với email tương ứng
             return null;
         }
-
     }
 
     @Override

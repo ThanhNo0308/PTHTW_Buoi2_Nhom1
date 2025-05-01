@@ -5,10 +5,7 @@
 package com.ntn.service.impl;
 
 import com.ntn.pojo.Schoolyear;
-import com.ntn.pojo.Subjectteacher;
-import com.ntn.pojo.Typescore;
 import com.ntn.repository.SchoolYearRepository;
-import com.ntn.repository.impl.SchoolYearRepositoryImp;
 import com.ntn.service.SchoolYearService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
