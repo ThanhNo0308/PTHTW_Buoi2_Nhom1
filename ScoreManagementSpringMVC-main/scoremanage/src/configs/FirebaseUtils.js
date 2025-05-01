@@ -174,7 +174,10 @@ export const setupPresence = (userId) => {
  * Tạo ID cuộc trò chuyện từ ID của 2 người dùng
  */
 export const getChatId = (uid1, uid2) => {
-  return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
+  // Đảm bảo IDs là strings
+  const id1 = String(uid1);
+  const id2 = String(uid2);
+  return id1 < id2 ? `${id1}_${id2}` : `${id2}_${id1}`;
 };
 
 /**
@@ -182,7 +185,9 @@ export const getChatId = (uid1, uid2) => {
  */
 export const sendMessage = async (senderId, receiverId, senderName, text, file = null) => {
   try {
-    const chatId = getChatId(senderId, receiverId);
+    const senderIdStr = String(senderId);
+    const receiverIdStr = String(receiverId);
+    const chatId = getChatId(senderIdStr, receiverIdStr);
     const messagesRef = collection(db, 'chats', chatId, 'messages');
     
     let fileURL = null;
@@ -201,7 +206,7 @@ export const sendMessage = async (senderId, receiverId, senderName, text, file =
     // Thêm tin nhắn mới
     const messageData = {
       text: text.trim(),
-      senderId,
+      senderId: senderIdStr,  
       senderName,
       timestamp: serverTimestamp(),
       read: false,

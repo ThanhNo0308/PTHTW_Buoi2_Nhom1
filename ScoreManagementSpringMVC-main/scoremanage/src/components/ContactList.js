@@ -141,7 +141,7 @@ const ContactList = ({ contacts, selectedContact, onSelectContact, currentUser, 
                 <p className="contact-status small mb-0">
                   {contact.studentCode 
                     ? `MSSV: ${contact.studentCode}` 
-                    : (contact.teacherCode ? `GV: ${contact.teacherCode}` : '')
+                    : (contact.email ? `GV: ${contact.email}` : '')
                   }
                 </p>
               </div>

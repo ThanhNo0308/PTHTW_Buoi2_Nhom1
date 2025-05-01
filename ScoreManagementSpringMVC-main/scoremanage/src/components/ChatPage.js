@@ -4,7 +4,7 @@ import { MyUserContext } from '../App';
 import { useNavigate } from 'react-router-dom';
 import ContactList from './ContactList';
 import ChatWindow from './ChatWindow';
-import { db } from '../configs/FirebaseConfig'; 
+import { db } from '../configs/FirebaseConfig';
 import { collection, query, where, orderBy, onSnapshot, getFirestore, enableNetwork, disableNetwork } from 'firebase/firestore';
 import { saveUserToFirestore, setupPresence } from '../configs/FirebaseUtils';
 import '../assets/css/FireBase.css';
@@ -23,7 +23,7 @@ const ChatPage = () => {
       const redirectTimer = setTimeout(() => {
         navigate('/login');
       }, 500); // Chờ 500ms để hiển thị thông báo trước khi chuyển hướng
-      
+
       return () => clearTimeout(redirectTimer);
     }
   }, [user, navigate]);
@@ -68,7 +68,8 @@ const ChatPage = () => {
       try {
         // Tạo một ID duy nhất từ username và role
         const userId = `${user.username}_${user.role}`;
-        
+        console.log("Tạo user với ID nhất quán:", userId);
+
         // Chuẩn bị dữ liệu người dùng
         const userData = {
           id: userId,
@@ -78,12 +79,12 @@ const ChatPage = () => {
           role: user.role || "",
           avatar: user.avatar || null
         };
-        
+
         // Nếu là sinh viên, thêm mã sinh viên
         if (user.role === 'Student') {
           userData.studentCode = user.studentCode || user.username || "";
           userData.className = user.className || "";
-        } 
+        }
         // Nếu là giảng viên, thêm mã giảng viên
         else if (user.role === 'Teacher') {
           userData.teacherCode = user.teacherId || user.username || "";
@@ -133,7 +134,7 @@ const ChatPage = () => {
               unreadCount: 0 // Số tin nhắn chưa đọc, sẽ cập nhật sau
             }))
             .filter(contact => contact.id !== userId); // Lọc bỏ user hiện tại
-          
+
           setContacts(contactsList);
           setLoading(false);
         });
@@ -142,13 +143,13 @@ const ChatPage = () => {
       } catch (error) {
         console.error('Lỗi khi tải danh sách liên hệ:', error);
         setLoading(false);
-        return () => {};
+        return () => { };
       }
     };
 
     // Thiết lập và cleanup
-    let cleanupPresence = () => {};
-    let cleanupContacts = () => {};
+    let cleanupPresence = () => { };
+    let cleanupContacts = () => { };
 
     const setup = async () => {
       cleanupPresence = await ensureUserInFirestore();
@@ -180,11 +181,12 @@ const ChatPage = () => {
             {user ? (
               <>
                 <Col md={4} className="contact-list-col">
-                  <ContactList 
-                    contacts={contacts} 
+                  <ContactList
+                    contacts={contacts}
                     selectedContact={selectedContact}
                     onSelectContact={handleSelectContact}
                     currentUser={{
+                      // Đảm bảo luôn sử dụng format chuỗi username_role cho tất cả người dùng
                       id: `${user.username}_${user.role}`,
                       ...user
                     }}
@@ -193,9 +195,10 @@ const ChatPage = () => {
                 </Col>
                 <Col md={8} className="chat-window-col">
                   {selectedContact ? (
-                    <ChatWindow 
-                      contact={selectedContact} 
+                    <ChatWindow
+                      contact={selectedContact}
                       currentUser={{
+                        // Đảm bảo luôn sử dụng format chuỗi username_role cho tất cả người dùng
                         id: `${user.username}_${user.role}`,
                         ...user
                       }}

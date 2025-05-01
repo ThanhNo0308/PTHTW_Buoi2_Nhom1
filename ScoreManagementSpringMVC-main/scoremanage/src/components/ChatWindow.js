@@ -37,10 +37,21 @@ const ChatWindow = ({ contact, currentUser }) => {
   // Theo dõi tin nhắn
   useEffect(() => {
     if (!currentUser || !contact) return;
-
-    const chatId = getChatId(currentUser.id, contact.id);
+  
+    // Sử dụng username_role thay vì currentUser.id
+    const currentUserId = `${currentUser.username}_${currentUser.role}`;
+    const contactId = contact.id;
+  
+    console.log("Loading messages between users:");
+    console.log("Current user:", currentUserId);
+    console.log("Contact:", contactId);
+  
+    const chatId = getChatId(currentUserId, contactId);
+    console.log("Using chatId for loading:", chatId);
+    
     const messagesRef = collection(db, 'chats', chatId, 'messages');
     
+    // Phần còn lại của hàm giữ nguyên, nhưng sửa việc kiểm tra ID người gửi
     const unsubscribe = onSnapshot(
       query(messagesRef, orderBy('timestamp', 'asc')),
       (snapshot) => {
@@ -52,10 +63,10 @@ const ChatWindow = ({ contact, currentUser }) => {
         setMessages(messagesList);
         setLoading(false);
         
-        // Đánh dấu các tin nhắn từ người kia là đã đọc
+        // Đánh dấu các tin nhắn từ người kia là đã đọc - sửa ID so sánh
         snapshot.docs.forEach(doc => {
           const messageData = doc.data();
-          if (messageData.senderId === contact.id && !messageData.read) {
+          if (messageData.senderId === contactId && !messageData.read) {
             updateDoc(doc.ref, { read: true });
           }
         });
@@ -79,15 +90,25 @@ const ChatWindow = ({ contact, currentUser }) => {
     
     try {
       setSending(true);
-      const chatId = getChatId(currentUser.id, contact.id);
+      
+      // Đảm bảo ID nhất quán - sử dụng username_role thay vì id số
+      const currentUserId = `${currentUser.username}_${currentUser.role}`;
+      const contactId = contact.id;
+      
+      console.log("Sending message from:", currentUserId, "to:", contactId);
+      
+      const chatId = getChatId(currentUserId, contactId);
+      console.log("Using chatId for sending:", chatId);
+      
       const messagesRef = collection(db, 'chats', chatId, 'messages');
       
+      // Phần còn lại của hàm giữ nguyên
       let fileURL = null;
       let fileName = null;
       let fileType = null;
       
-      // Xử lý tải file lên nếu có
       if (file) {
+        // Xử lý file như trước
         setFileUploading(true);
         const fileRef = ref(storage, `chat_files/${chatId}/${Date.now()}_${file.name}`);
         await uploadBytes(fileRef, file);
@@ -98,10 +119,10 @@ const ChatWindow = ({ contact, currentUser }) => {
         setFileUploading(false);
       }
       
-      // Tạo tin nhắn mới
+      // Sửa senderId để đảm bảo nhất quán
       await addDoc(messagesRef, {
         text: message.trim(),
-        senderId: currentUser.id,
+        senderId: currentUserId, // Sử dụng username_role
         senderName: currentUser.name,
         timestamp: serverTimestamp(),
         read: false,
@@ -110,7 +131,6 @@ const ChatWindow = ({ contact, currentUser }) => {
         fileType
       });
       
-      // Reset form
       setMessage('');
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -185,7 +205,7 @@ const ChatWindow = ({ contact, currentUser }) => {
         ) : messages.length > 0 ? (
           <>
             {messages.map((msg, index) => {
-              const isCurrentUser = msg.senderId === currentUser.id;
+              const isCurrentUser = msg.senderId === `${currentUser.username}_${currentUser.role}`;
               
               return (
                 <div 
