@@ -6,8 +6,10 @@ import ContactList from './ContactList';
 import ChatWindow from './ChatWindow';
 import { db } from '../configs/FirebaseConfig';
 import { collection, query, where, orderBy, onSnapshot, getFirestore, enableNetwork, disableNetwork } from 'firebase/firestore';
-import { saveUserToFirestore, setupPresence } from '../configs/FirebaseUtils';
+import { saveUserToFirestore, setupPresence} from '../configs/FirebaseUtils';
 import '../assets/css/FireBase.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {faComments} from '@fortawesome/free-solid-svg-icons';
 
 const ChatPage = () => {
   const [user] = useContext(MyUserContext);
@@ -164,7 +166,7 @@ const ChatPage = () => {
   }, [user, navigate, networkStatus]);
 
   // Hàm xử lý khi chọn một liên hệ
-  const handleSelectContact = (contact) => {
+  const handleSelectContact = async (contact) => {
     setSelectedContact(contact);
   };
 
@@ -205,7 +207,7 @@ const ChatPage = () => {
                   ) : (
                     <div className="no-chat-selected">
                       <div className="text-center p-5">
-                        <i className="fas fa-comments fs-1 text-muted"></i>
+                      <FontAwesomeIcon icon={faComments} className="fs-1 text-muted" />
                         <p className="mt-3">Chọn một liên hệ để bắt đầu trò chuyện</p>
                       </div>
                     </div>

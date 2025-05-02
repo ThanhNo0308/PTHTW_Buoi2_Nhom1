@@ -238,33 +238,6 @@ export const markMessageAsRead = async (chatId, messageId) => {
   }
 };
 
-
-// Đánh dấu tất cả tin nhắn của một người gửi là đã đọc
-export const markAllMessagesAsRead = async (userId, contactId) => {
-  try {
-    const chatId = getChatId(userId, contactId);
-    const messagesRef = collection(db, 'chats', chatId, 'messages');
-    
-    const unreadMessages = query(
-      messagesRef,
-      where('senderId', '==', contactId),
-      where('read', '==', false)
-    );
-    
-    const snapshot = await getDocs(unreadMessages);
-    
-    // Cập nhật tất cả tin nhắn chưa đọc
-    const updatePromises = snapshot.docs.map(doc => {
-      return updateDoc(doc.ref, { read: true });
-    });
-    
-    await Promise.all(updatePromises);
-  } catch (error) {
-    console.error('Error marking all messages as read:', error);
-  }
-};
-
-
 // Xóa một tin nhắn
 export const deleteMessage = async (chatId, messageId, deleteFile = true) => {
   try {

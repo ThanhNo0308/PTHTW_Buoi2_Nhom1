@@ -1,13 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { InputGroup, Form, Button, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPaperPlane, faUserCircle, faEllipsisV, faFileUpload } from '@fortawesome/free-solid-svg-icons';
-import { db, storage } from '../configs/FirebaseConfig'; 
-import {collection, query, where, orderBy, addDoc, serverTimestamp, 
-  onSnapshot, doc, updateDoc} from 'firebase/firestore';
+import {
+  faPaperPlane,
+  faUserCircle,
+  faEllipsisV,
+  faFileUpload,
+  faCheck,
+  faCheckDouble,
+  faFile,
+  faTimes,
+  faComments
+} from '@fortawesome/free-solid-svg-icons';
+import { db, storage } from '../configs/FirebaseConfig';
+import { markMessageAsRead } from '../configs/FirebaseUtils';
+import {
+  collection, query, where, orderBy, addDoc, serverTimestamp,
+  onSnapshot, doc, updateDoc
+} from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import moment from 'moment';
 import 'moment/locale/vi';
+import '../assets/css/FireBase.css';
 
 const ChatWindow = ({ contact, currentUser }) => {
   const [message, setMessage] = useState('');
@@ -28,15 +42,15 @@ const ChatWindow = ({ contact, currentUser }) => {
   // Theo dõi tin nhắn
   useEffect(() => {
     if (!currentUser || !contact) return;
-  
+
     // Sử dụng username_role 
     const currentUserId = `${currentUser.username}_${currentUser.role}`;
     const contactId = contact.id;
-  
+
     const chatId = getChatId(currentUserId, contactId);
-    
+
     const messagesRef = collection(db, 'chats', chatId, 'messages');
-    
+
     // Kiểm tra ID người gửi
     const unsubscribe = onSnapshot(
       query(messagesRef, orderBy('timestamp', 'asc')),
@@ -48,12 +62,12 @@ const ChatWindow = ({ contact, currentUser }) => {
         }));
         setMessages(messagesList);
         setLoading(false);
-        
+
         // Đánh dấu các tin nhắn từ người kia là đã đọc 
         snapshot.docs.forEach(doc => {
           const messageData = doc.data();
           if (messageData.senderId === contactId && !messageData.read) {
-            updateDoc(doc.ref, { read: true });
+            markMessageAsRead(chatId, doc.id);
           }
         });
       }
@@ -66,24 +80,24 @@ const ChatWindow = ({ contact, currentUser }) => {
   // Gửi tin nhắn
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    
+
     if ((!message.trim() && !file) || !currentUser || !contact) return;
-    
+
     try {
       setSending(true);
-      
+
       // ID sử dụng username_role 
       const currentUserId = `${currentUser.username}_${currentUser.role}`;
       const contactId = contact.id;
-      
+
       const chatId = getChatId(currentUserId, contactId);
-      
+
       const messagesRef = collection(db, 'chats', chatId, 'messages');
-      
+
       let fileURL = null;
       let fileName = null;
       let fileType = null;
-      
+
       if (file) {
         // Xử lý file 
         setFileUploading(true);
@@ -95,7 +109,7 @@ const ChatWindow = ({ contact, currentUser }) => {
         setFile(null);
         setFileUploading(false);
       }
-      
+
       await addDoc(messagesRef, {
         text: message.trim(),
         senderId: currentUserId, // Sử dụng username_role
@@ -106,7 +120,7 @@ const ChatWindow = ({ contact, currentUser }) => {
         fileName,
         fileType
       });
-      
+
       setMessage('');
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -124,15 +138,15 @@ const ChatWindow = ({ contact, currentUser }) => {
       setFile(e.target.files[0]);
     }
   };
-  
+
   // Hiển thị thời gian tin nhắn
   const formatMessageTime = (timestamp) => {
     if (!timestamp) return '';
-    
+
     moment.locale('vi');
     const now = moment();
     const messageTime = moment(timestamp);
-    
+
     if (now.clone().startOf('day').isSame(messageTime.clone().startOf('day'))) {
       // Cùng ngày - hiển thị thời gian kèm "Hôm nay"
       return `Hôm nay, ${messageTime.format('HH:mm')}`;
@@ -153,23 +167,23 @@ const ChatWindow = ({ contact, currentUser }) => {
       <div className="chat-header d-flex justify-content-between align-items-center p-3">
         <div className="d-flex align-items-center">
           {contact.image ? (
-            <img 
-              src={contact.image} 
-              alt={contact.name} 
+            <img
+              src={contact.image}
+              alt={contact.name}
               className="contact-avatar rounded-circle me-2"
             />
           ) : (
-            <FontAwesomeIcon 
-              icon={faUserCircle} 
-              size="2x" 
-              className="me-2 text-secondary" 
+            <FontAwesomeIcon
+              icon={faUserCircle}
+              size="2x"
+              className="me-2 text-secondary"
             />
           )}
           <div>
             <h5 className="mb-0">{contact.name}</h5>
             <small className="text-muted">
-              {contact.studentCode 
-                ? `Sinh viên - MSSV: ${contact.studentCode}` 
+              {contact.studentCode
+                ? `Sinh viên - MSSV: ${contact.studentCode}`
                 : `Giảng viên - Email: ${contact.email}`}
             </small>
           </div>
@@ -178,7 +192,7 @@ const ChatWindow = ({ contact, currentUser }) => {
           <FontAwesomeIcon icon={faEllipsisV} />
         </Button>
       </div>
-      
+
       <div className="chat-messages p-3">
         {loading ? (
           <div className="d-flex justify-content-center align-items-center h-100">
@@ -188,49 +202,53 @@ const ChatWindow = ({ contact, currentUser }) => {
           <>
             {messages.map((msg, index) => {
               const isCurrentUser = msg.senderId === `${currentUser.username}_${currentUser.role}`;
-              
+
               return (
-                <div 
-                  key={msg.id} 
+                <div
+                  key={msg.id}
                   className={`message-container ${isCurrentUser ? 'message-right' : 'message-left'}`}
                 >
                   <div className="message-content">
                     {!isCurrentUser && (
                       <div className="sender-name mb-1 fw-bold">{msg.senderName}</div>
                     )}
-                    
+
                     {msg.fileURL && (
                       <div className="file-attachment mb-2">
                         {msg.fileType?.startsWith('image/') ? (
-                          <img 
-                            src={msg.fileURL} 
-                            alt="Attached" 
-                            className="img-fluid rounded message-image" 
+                          <img
+                            src={msg.fileURL}
+                            alt="Attached"
+                            className="img-fluid rounded message-image"
                           />
                         ) : (
-                          <a 
-                            href={msg.fileURL} 
-                            target="_blank" 
+                          <a
+                            href={msg.fileURL}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="file-download-link"
                           >
-                            <i className="fas fa-file me-2"></i>
+                            <FontAwesomeIcon icon={faFile} className="me-2" />
                             {msg.fileName || 'Tải tệp đính kèm'}
                           </a>
                         )}
                       </div>
                     )}
-                    
+
                     {msg.text && <div className="message-text">{msg.text}</div>}
-                    
+
                     <div className="message-time">
                       {formatMessageTime(msg.timestamp)}
                       {isCurrentUser && (
-                        <span className="ms-1">
+                        <span className="message-read-status ms-2">
                           {msg.read ? (
-                            <i className="fas fa-check-double text-primary"></i>
+                            <span className="read">
+                              <FontAwesomeIcon icon={faCheckDouble} /> Đã đọc
+                            </span>
                           ) : (
-                            <i className="fas fa-check"></i>
+                            <span className="unread">
+                              <FontAwesomeIcon icon={faCheck} /> Chưa đọc
+                            </span>
                           )}
                         </span>
                       )}
@@ -243,35 +261,35 @@ const ChatWindow = ({ contact, currentUser }) => {
           </>
         ) : (
           <div className="no-messages text-center p-5">
-            <i className="fas fa-comments fs-1 text-muted"></i>
+            <FontAwesomeIcon icon={faComments} className="fs-1 text-muted" />
             <p className="mt-3">Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</p>
           </div>
         )}
       </div>
-      
+
       <div className="chat-input p-3">
         {file && (
           <div className="selected-file mb-2 p-2 rounded border">
             <div className="d-flex align-items-center justify-content-between">
               <div>
-                <i className="fas fa-file me-2"></i>
+                <FontAwesomeIcon icon={faFile} className="me-2" />
                 {file.name}
               </div>
-              <Button 
-                variant="link" 
-                className="text-danger p-0" 
+              <Button
+                variant="link"
+                className="text-danger p-0"
                 onClick={() => setFile(null)}
               >
-                <i className="fas fa-times"></i>
+                <FontAwesomeIcon icon={faTimes} />
               </Button>
             </div>
           </div>
         )}
-        
+
         <Form onSubmit={handleSendMessage}>
           <InputGroup>
-            <Button 
-              variant="outline-secondary" 
+            <Button
+              variant="outline-secondary"
               onClick={() => fileInputRef.current.click()}
               disabled={fileUploading}
             >
@@ -283,7 +301,7 @@ const ChatWindow = ({ contact, currentUser }) => {
                 style={{ display: 'none' }}
               />
             </Button>
-            
+
             <Form.Control
               type="text"
               placeholder="Nhập tin nhắn..."
@@ -291,10 +309,10 @@ const ChatWindow = ({ contact, currentUser }) => {
               onChange={(e) => setMessage(e.target.value)}
               disabled={sending}
             />
-            
-            <Button 
-              type="submit" 
-              variant="primary" 
+
+            <Button
+              type="submit"
+              variant="primary"
               disabled={(!message.trim() && !file) || sending || fileUploading}
             >
               {sending || fileUploading ? (
