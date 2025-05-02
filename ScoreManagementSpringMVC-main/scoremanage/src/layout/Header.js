@@ -11,7 +11,7 @@ import {
   faHome, faChalkboardTeacher, faUserGraduate, faCogs, faChartBar,
   faSignInAlt, faUserPlus, faUserCircle, faSignOutAlt, faUser,
   faSchool, faGraduationCap, faBuilding, faBook, faCalendarAlt,
-  faTasks, faChartLine, faChartPie, faChartArea, faSearch, faFileImport, faClipboardList, faComments
+  faTasks, faChartLine, faChartPie, faChartArea, faSearch, faFileImport, faClipboardList, faComments, faMessage
 } from '@fortawesome/free-solid-svg-icons';
 
 
@@ -131,7 +131,7 @@ const Header = () => {
                 </Nav.Link>
                 {user && (
                   <Nav.Link as={NavLink} to="/chat" className="nav-link">
-                    <FontAwesomeIcon icon={faComments} className="me-1" /> Tin nhắn
+                    <FontAwesomeIcon icon={faMessage} className="me-1" /> Tin nhắn
                   </Nav.Link>
                 )}
               </Nav>
@@ -157,7 +157,7 @@ const Header = () => {
                 </Nav.Link>
                 {user && (
                   <Nav.Link as={NavLink} to="/chat" className="nav-link">
-                    <FontAwesomeIcon icon={faComments} className="me-1" /> Tin nhắn
+                    <FontAwesomeIcon icon={faMessage} className="me-1" /> Tin nhắn
                   </Nav.Link>
                 )}
               </Nav>
