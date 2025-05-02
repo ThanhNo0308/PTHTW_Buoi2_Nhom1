@@ -6,10 +6,10 @@ import ContactList from './ContactList';
 import ChatWindow from './ChatWindow';
 import { db } from '../configs/FirebaseConfig';
 import { collection, query, where, orderBy, onSnapshot, getFirestore, enableNetwork, disableNetwork } from 'firebase/firestore';
-import { saveUserToFirestore, setupPresence} from '../configs/FirebaseUtils';
+import { saveUserToFirestore, setupPresence } from '../configs/FirebaseUtils';
 import '../assets/css/FireBase.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faComments} from '@fortawesome/free-solid-svg-icons';
+import { faComments } from '@fortawesome/free-solid-svg-icons';
 
 const ChatPage = () => {
   const [user] = useContext(MyUserContext);
@@ -68,8 +68,7 @@ const ChatPage = () => {
     const ensureUserInFirestore = async () => {
       try {
         // Tạo một ID duy nhất từ username và role
-        const userId = `${user.username}_${user.role}`;
-        console.log("Tạo user với ID nhất quán:", userId);
+        const userId = `${user.id}_${user.username}_${user.role}`;
 
         // Chuẩn bị dữ liệu người dùng
         const userData = {
@@ -106,25 +105,13 @@ const ChatPage = () => {
     const loadContacts = async () => {
       try {
         setLoading(true);
-        const userRole = user.role;
-        const userId = `${user.username}_${user.role}`;
-        let contactsQuery;
+        const userId = `${user.id}_${user.username}_${user.role}`;
 
-        if (userRole === 'Teacher') {
-          // Giảng viên: Tải danh sách sinh viên
-          contactsQuery = query(
-            collection(db, 'users'),
-            where('role', '==', 'Student'),
-            orderBy('name')
-          );
-        } else {
-          // Sinh viên: Tải danh sách giảng viên
-          contactsQuery = query(
-            collection(db, 'users'),
-            where('role', '==', 'Teacher'),
-            orderBy('name')
-          );
-        }
+        // Tải tất cả người dùng, không phân biệt vai trò
+        const contactsQuery = query(
+          collection(db, 'users'),
+          orderBy('name')
+        );
 
         // Lắng nghe thay đổi real-time
         const unsubscribe = onSnapshot(contactsQuery, (snapshot) => {
@@ -188,7 +175,7 @@ const ChatPage = () => {
                     onSelectContact={handleSelectContact}
                     currentUser={{
                       // Luôn sử dụng format chuỗi username_role cho tất cả người dùng
-                      id: `${user.username}_${user.role}`,
+                      id: `${user.id}_${user.username}_${user.role}`,
                       ...user
                     }}
                     loading={loading}
@@ -200,14 +187,14 @@ const ChatPage = () => {
                       contact={selectedContact}
                       currentUser={{
                         // Luôn sử dụng format chuỗi username_role cho tất cả người dùng
-                        id: `${user.username}_${user.role}`,
+                        id: `${user.id}_${user.username}_${user.role}`,
                         ...user
                       }}
                     />
                   ) : (
                     <div className="no-chat-selected">
                       <div className="text-center p-5">
-                      <FontAwesomeIcon icon={faComments} className="fs-1 text-muted" />
+                        <FontAwesomeIcon icon={faComments} className="fs-1 text-muted" />
                         <p className="mt-3">Chọn một liên hệ để bắt đầu trò chuyện</p>
                       </div>
                     </div>

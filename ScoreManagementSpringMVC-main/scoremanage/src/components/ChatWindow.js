@@ -45,7 +45,7 @@ const ChatWindow = ({ contact, currentUser }) => {
     if (!currentUser || !contact) return;
 
     // Sử dụng username_role 
-    const currentUserId = `${currentUser.username}_${currentUser.role}`;
+    const currentUserId = `${currentUser.id}_${currentUser.username}_${currentUser.role}`;
     const contactId = contact.id;
 
     const chatId = getChatId(currentUserId, contactId);
@@ -88,7 +88,7 @@ const ChatWindow = ({ contact, currentUser }) => {
       setSending(true);
 
       // ID sử dụng username_role 
-      const currentUserId = `${currentUser.username}_${currentUser.role}`;
+      const currentUserId = `${currentUser.id}_${currentUser.username}_${currentUser.role}`;
       const contactId = contact.id;
 
       const chatId = getChatId(currentUserId, contactId);
@@ -227,7 +227,7 @@ const ChatWindow = ({ contact, currentUser }) => {
         ) : messages.length > 0 ? (
           <>
             {messages.map((msg, index) => {
-              const isCurrentUser = msg.senderId === `${currentUser.username}_${currentUser.role}`;
+              const isCurrentUser = msg.senderId === `${currentUser.id}_${currentUser.username}_${currentUser.role}`;
               const prevMsg = index > 0 ? messages[index - 1] : null;
               const showTimeDivider = shouldShowTimeDivider(msg, prevMsg);
 

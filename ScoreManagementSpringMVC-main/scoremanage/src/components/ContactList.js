@@ -110,6 +110,7 @@ const ContactList = ({ contacts, selectedContact, onSelectContact, currentUser, 
               className={`contact-item d-flex align-items-center ${selectedContact?.id === contact.id ? 'active' : ''} ${contact.unreadCount > 0 ? 'has-unread' : ''}`}
               action
               onClick={() => onSelectContact(contact)}
+              data-role={contact.role || 'Unknown'}
             >
               <div className="contact-avatar-container me-2 position-relative">
                 {contact.image ? (
@@ -137,9 +138,23 @@ const ContactList = ({ contacts, selectedContact, onSelectContact, currentUser, 
                   )}
                 </div>
                 <p className="contact-status small mb-0">
+                  {contact.role === 'Student' ? (
+                    <span className="badge bg-primary me-1">Sinh viên</span>
+                  ) : contact.role === 'Teacher' ? (
+                    <span className="badge bg-success me-1">Giảng viên</span>
+                  ) : (
+                    <span className="badge bg-secondary me-1">{contact.role || 'Người dùng'}</span>
+                  )}
+
+                </p>
+                <p className="contact-status small mb-0">
                   {contact.studentCode
                     ? `MSSV: ${contact.studentCode}`
-                    : (contact.email ? `GV: ${contact.email}` : '')
+                    : contact.email
+                      ? `Email: ${contact.email}`
+                      : contact.username
+                        ? `ID: ${contact.username}`
+                        : ''
                   }
                 </p>
               </div>

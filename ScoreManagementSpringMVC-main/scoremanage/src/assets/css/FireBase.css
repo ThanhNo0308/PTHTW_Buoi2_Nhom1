@@ -203,7 +203,45 @@
 }
 
 .contact-status {
-  color: #6c757d !important;
+  color: #505459 !important;
+}
+
+.contact-status .badge {
+  font-size: 0.7rem;
+  font-weight: normal;
+  padding: 0.15rem 0.4rem;
+}
+
+.contact-detail {
+  font-size: 0.7rem;
+  color: #6c757d;
+  margin-top: 2px !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+/* Điều chỉnh kích thước item trong danh sách */
+.contact-item {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  cursor: pointer;
+  padding: 10px 12px;
+}
+
+/* Điều chỉnh contact-status */
+.contact-status {
+  margin-bottom: 2px !important;
+}
+
+.contact-item[data-role="Student"] .contact-avatar-icon {
+  color: #0d6efd;
+}
+
+.contact-item[data-role="Teacher"] .contact-avatar-icon {
+  color: #198754;
 }
 
 .contact-item.has-unread {
