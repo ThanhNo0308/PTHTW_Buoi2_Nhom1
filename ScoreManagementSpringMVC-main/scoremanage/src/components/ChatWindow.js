@@ -3,17 +3,8 @@ import { InputGroup, Form, Button, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPaperPlane, faUserCircle, faEllipsisV, faFileUpload } from '@fortawesome/free-solid-svg-icons';
 import { db, storage } from '../configs/FirebaseConfig'; 
-import { 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  addDoc, 
-  serverTimestamp, 
-  onSnapshot,
-  doc,
-  updateDoc
-} from 'firebase/firestore';
+import {collection, query, where, orderBy, addDoc, serverTimestamp, 
+  onSnapshot, doc, updateDoc} from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import moment from 'moment';
 import 'moment/locale/vi';
@@ -38,20 +29,15 @@ const ChatWindow = ({ contact, currentUser }) => {
   useEffect(() => {
     if (!currentUser || !contact) return;
   
-    // Sử dụng username_role thay vì currentUser.id
+    // Sử dụng username_role 
     const currentUserId = `${currentUser.username}_${currentUser.role}`;
     const contactId = contact.id;
   
-    console.log("Loading messages between users:");
-    console.log("Current user:", currentUserId);
-    console.log("Contact:", contactId);
-  
     const chatId = getChatId(currentUserId, contactId);
-    console.log("Using chatId for loading:", chatId);
     
     const messagesRef = collection(db, 'chats', chatId, 'messages');
     
-    // Phần còn lại của hàm giữ nguyên, nhưng sửa việc kiểm tra ID người gửi
+    // Kiểm tra ID người gửi
     const unsubscribe = onSnapshot(
       query(messagesRef, orderBy('timestamp', 'asc')),
       (snapshot) => {
@@ -63,7 +49,7 @@ const ChatWindow = ({ contact, currentUser }) => {
         setMessages(messagesList);
         setLoading(false);
         
-        // Đánh dấu các tin nhắn từ người kia là đã đọc - sửa ID so sánh
+        // Đánh dấu các tin nhắn từ người kia là đã đọc 
         snapshot.docs.forEach(doc => {
           const messageData = doc.data();
           if (messageData.senderId === contactId && !messageData.read) {
@@ -86,24 +72,20 @@ const ChatWindow = ({ contact, currentUser }) => {
     try {
       setSending(true);
       
-      // Đảm bảo ID nhất quán - sử dụng username_role thay vì id số
+      // ID sử dụng username_role 
       const currentUserId = `${currentUser.username}_${currentUser.role}`;
       const contactId = contact.id;
       
-      console.log("Sending message from:", currentUserId, "to:", contactId);
-      
       const chatId = getChatId(currentUserId, contactId);
-      console.log("Using chatId for sending:", chatId);
       
       const messagesRef = collection(db, 'chats', chatId, 'messages');
       
-      // Phần còn lại của hàm giữ nguyên
       let fileURL = null;
       let fileName = null;
       let fileType = null;
       
       if (file) {
-        // Xử lý file như trước
+        // Xử lý file 
         setFileUploading(true);
         const fileRef = ref(storage, `chat_files/${chatId}/${Date.now()}_${file.name}`);
         await uploadBytes(fileRef, file);
@@ -114,7 +96,6 @@ const ChatWindow = ({ contact, currentUser }) => {
         setFileUploading(false);
       }
       
-      // Sửa senderId để đảm bảo nhất quán
       await addDoc(messagesRef, {
         text: message.trim(),
         senderId: currentUserId, // Sử dụng username_role
@@ -146,17 +127,23 @@ const ChatWindow = ({ contact, currentUser }) => {
   
   // Hiển thị thời gian tin nhắn
   const formatMessageTime = (timestamp) => {
+    if (!timestamp) return '';
+    
     moment.locale('vi');
     const now = moment();
     const messageTime = moment(timestamp);
     
-    if (now.diff(messageTime, 'days') === 0) {
-      return messageTime.format('HH:mm');
-    } else if (now.diff(messageTime, 'days') === 1) {
+    if (now.clone().startOf('day').isSame(messageTime.clone().startOf('day'))) {
+      // Cùng ngày - hiển thị thời gian kèm "Hôm nay"
+      return `Hôm nay, ${messageTime.format('HH:mm')}`;
+    } else if (now.clone().subtract(1, 'days').startOf('day').isSame(messageTime.clone().startOf('day'))) {
+      // Ngày hôm qua
       return `Hôm qua, ${messageTime.format('HH:mm')}`;
-    } else if (now.diff(messageTime, 'days') < 7) {
-      return messageTime.format('ddd, HH:mm');
+    } else if (now.clone().diff(messageTime, 'days') < 7) {
+      // Trong tuần - hiển thị thứ
+      return `${messageTime.format('dddd')}, ${messageTime.format('HH:mm')}`;
     } else {
+      // Trên 1 tuần - hiển thị ngày tháng
       return messageTime.format('DD/MM/YYYY, HH:mm');
     }
   };
@@ -209,7 +196,7 @@ const ChatWindow = ({ contact, currentUser }) => {
                 >
                   <div className="message-content">
                     {!isCurrentUser && (
-                      <div className="sender-name mb-1">{msg.senderName}</div>
+                      <div className="sender-name mb-1 fw-bold">{msg.senderName}</div>
                     )}
                     
                     {msg.fileURL && (

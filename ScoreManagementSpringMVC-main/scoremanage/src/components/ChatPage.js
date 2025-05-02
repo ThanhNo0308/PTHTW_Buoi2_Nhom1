@@ -51,7 +51,6 @@ const ChatPage = () => {
   }, []);
 
   useEffect(() => {
-    // Kiểm tra user đã đăng nhập chưa
     if (!user) {
       navigate('/login');
       return;
@@ -186,7 +185,7 @@ const ChatPage = () => {
                     selectedContact={selectedContact}
                     onSelectContact={handleSelectContact}
                     currentUser={{
-                      // Đảm bảo luôn sử dụng format chuỗi username_role cho tất cả người dùng
+                      // Luôn sử dụng format chuỗi username_role cho tất cả người dùng
                       id: `${user.username}_${user.role}`,
                       ...user
                     }}
@@ -198,7 +197,7 @@ const ChatPage = () => {
                     <ChatWindow
                       contact={selectedContact}
                       currentUser={{
-                        // Đảm bảo luôn sử dụng format chuỗi username_role cho tất cả người dùng
+                        // Luôn sử dụng format chuỗi username_role cho tất cả người dùng
                         id: `${user.username}_${user.role}`,
                         ...user
                       }}

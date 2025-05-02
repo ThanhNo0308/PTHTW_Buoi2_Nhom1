@@ -43,9 +43,6 @@ const ContactList = ({ contacts, selectedContact, onSelectContact, currentUser, 
   useEffect(() => {
     if (!currentUser || !contacts.length) return;
 
-    console.log("Current User ID:", currentUser.id);
-  console.log("Contacts:", contacts.map(c => c.id));
-
     // Tạo một listener cho mỗi cuộc trò chuyện để đếm tin nhắn chưa đọc
     const unsubscribes = contacts.map(contact => {
       const chatId = getChatId(currentUser.id, contact.id);

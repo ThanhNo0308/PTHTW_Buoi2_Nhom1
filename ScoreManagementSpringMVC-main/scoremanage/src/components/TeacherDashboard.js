@@ -126,7 +126,7 @@ const TeacherDashboard = () => {
                   </div>
                   <Card.Body>
                     <Card.Text>
-                      Nhập điểm cho sinh viên theo từng môn học và lớp. Nhập từ file Excel nhanh chóng.
+                      Nhập điểm cho sinh viên theo từng môn học và lớp. Nhập từ file CSV nhanh chóng.
                     </Card.Text>
                     <Link to="/teacher/scores/import" className="btn btn-success feature-btn w-100">
                       <FontAwesomeIcon icon={faFileImport} className="me-2" />
@@ -146,7 +146,7 @@ const TeacherDashboard = () => {
                   </div>
                   <Card.Body>
                     <Card.Text>
-                      Tìm kiếm thông tin sinh viên theo mã số, họ tên hoặc lớp học nhanh chóng.
+                      Tìm kiếm thông tin sinh viên theo MSSV, họ tên hoặc lớp học nhanh chóng.
                     </Card.Text>
                     <Link to="/teacher/students/search" className="btn btn-info feature-btn w-100 text-white">
                       <FontAwesomeIcon icon={faSearch} className="me-2" />

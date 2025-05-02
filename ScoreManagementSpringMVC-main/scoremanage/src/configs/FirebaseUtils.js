@@ -4,9 +4,8 @@ import {collection, doc, setDoc, getDoc, addDoc, query, where, orderBy,
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { API, endpoints } from './Apis';
 
-/**
- * Lưu thông tin người dùng vào Firestore
- */
+
+// Lưu thông tin người dùng vào Firestore
 export const saveUserToFirestore = async (user) => {
   if (!user) return;
 
@@ -110,9 +109,8 @@ export const saveUserToFirestore = async (user) => {
   }
 };
 
-/**
- * Lấy thông tin người dùng từ Firestore
- */
+
+// Lấy thông tin người dùng từ Firestore
 export const getUserFromFirestore = async (userId) => {
   if (!userId) return null;
 
@@ -131,9 +129,8 @@ export const getUserFromFirestore = async (userId) => {
   }
 };
 
-/**
- * Cập nhật trạng thái online của người dùng
- */
+
+// Cập nhật trạng thái online của người dùng
 export const updateOnlineStatus = async (userId, isOnline = true) => {
   try {
     const userStatusRef = doc(db, 'online_status', userId);
@@ -146,9 +143,8 @@ export const updateOnlineStatus = async (userId, isOnline = true) => {
   }
 };
 
-/**
- * Thiết lập xử lý khi người dùng offline
-  */
+
+// Thiết lập xử lý khi người dùng offline
 export const setupPresence = (userId) => {
   if (!userId) return () => {};
 
@@ -170,9 +166,8 @@ export const setupPresence = (userId) => {
   };
 };
 
-/**
- * Tạo ID cuộc trò chuyện từ ID của 2 người dùng
- */
+
+// Tạo ID cuộc trò chuyện từ ID của 2 người dùng
 export const getChatId = (uid1, uid2) => {
   // Đảm bảo IDs là strings
   const id1 = String(uid1);
@@ -180,9 +175,8 @@ export const getChatId = (uid1, uid2) => {
   return id1 < id2 ? `${id1}_${id2}` : `${id2}_${id1}`;
 };
 
-/**
- * Gửi tin nhắn mới
- */
+
+// Gửi tin nhắn mới
 export const sendMessage = async (senderId, receiverId, senderName, text, file = null) => {
   try {
     const senderIdStr = String(senderId);
@@ -233,9 +227,8 @@ export const sendMessage = async (senderId, receiverId, senderName, text, file =
   }
 };
 
-/**
- * Đánh dấu tin nhắn là đã đọc
- */
+
+// Đánh dấu tin nhắn là đã đọc
 export const markMessageAsRead = async (chatId, messageId) => {
   try {
     const messageRef = doc(db, 'chats', chatId, 'messages', messageId);
@@ -245,9 +238,8 @@ export const markMessageAsRead = async (chatId, messageId) => {
   }
 };
 
-/**
- * Đánh dấu tất cả tin nhắn của một người gửi là đã đọc
- */
+
+// Đánh dấu tất cả tin nhắn của một người gửi là đã đọc
 export const markAllMessagesAsRead = async (userId, contactId) => {
   try {
     const chatId = getChatId(userId, contactId);
@@ -272,9 +264,8 @@ export const markAllMessagesAsRead = async (userId, contactId) => {
   }
 };
 
-/**
- * Xóa một tin nhắn
- */
+
+// Xóa một tin nhắn
 export const deleteMessage = async (chatId, messageId, deleteFile = true) => {
   try {
     // Lấy thông tin tin nhắn trước khi xóa
@@ -303,9 +294,8 @@ export const deleteMessage = async (chatId, messageId, deleteFile = true) => {
   }
 };
 
-/**
- * Đếm số tin nhắn chưa đọc
- */
+
+// Đếm số tin nhắn chưa đọc
 export const countUnreadMessages = async (userId, contactId) => {
   try {
     const chatId = getChatId(userId, contactId);
