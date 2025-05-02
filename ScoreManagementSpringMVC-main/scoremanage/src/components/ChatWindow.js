@@ -10,13 +10,13 @@ import {
   faCheckDouble,
   faFile,
   faTimes,
-  faComments
+  faComments, faTrash
 } from '@fortawesome/free-solid-svg-icons';
 import { db, storage } from '../configs/FirebaseConfig';
-import { markMessageAsRead } from '../configs/FirebaseUtils';
+import { markMessageAsRead, deleteMessage } from '../configs/FirebaseUtils';
 import {
   collection, query, where, orderBy, addDoc, serverTimestamp,
-  onSnapshot, doc, updateDoc
+  onSnapshot, doc, updateDoc, setDoc
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import moment from 'moment';
@@ -82,52 +82,63 @@ const ChatWindow = ({ contact, currentUser }) => {
   const handleSendMessage = async (e) => {
     e.preventDefault();
 
-    if ((!message.trim() && !file) || !currentUser || !contact) return;
+    if ((!message.trim() && !file) || sending) return;
 
     try {
       setSending(true);
 
-      // ID sử dụng username_role 
-      const currentUserId = `${currentUser.id}_${currentUser.username}_${currentUser.role}`;
-      const contactId = contact.id;
+      // Giữ các giá trị hiện tại
+      const currentMessage = message;
+      const currentFile = file;
 
-      const chatId = getChatId(currentUserId, contactId);
-
-      const messagesRef = collection(db, 'chats', chatId, 'messages');
-
-      let fileURL = null;
-      let fileName = null;
-      let fileType = null;
-
-      if (file) {
-        // Xử lý file 
-        setFileUploading(true);
-        const fileRef = ref(storage, `chat_files/${chatId}/${Date.now()}_${file.name}`);
-        await uploadBytes(fileRef, file);
-        fileURL = await getDownloadURL(fileRef);
-        fileName = file.name;
-        fileType = file.type;
-        setFile(null);
-        setFileUploading(false);
-      }
-
-      await addDoc(messagesRef, {
-        text: message.trim(),
-        senderId: currentUserId, // Sử dụng username_role
-        senderName: currentUser.name,
-        timestamp: serverTimestamp(),
-        read: false,
-        fileURL,
-        fileName,
-        fileType
-      });
-
+      // Reset form
       setMessage('');
+      setFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+
+      // Các thông tin cần thiết
+      const currentUserId = `${currentUser.id}_${currentUser.username}_${currentUser.role}`;
+      const contactId = contact.id;
+      const chatId = getChatId(currentUserId, contactId);
+
+      // Xử lý file dưới dạng Base64
+      let fileData = null;
+      if (currentFile) {
+        fileData = {
+          fileName: currentFile.name,
+          fileType: currentFile.type,
+          fileSize: currentFile.size,
+          fileContent: currentFile.base64
+        };
+      }
+
+      // Tạo tin nhắn với fileData thay vì URL
+      const messageData = {
+        text: currentMessage.trim(),
+        senderId: currentUserId,
+        senderName: currentUser.name || currentUser.username,
+        timestamp: serverTimestamp(),
+        read: false,
+        fileData: fileData // Lưu trực tiếp trong Firestore
+      };
+
+      // Thêm tin nhắn vào Firestore
+      const messagesRef = collection(db, 'chats', chatId, 'messages');
+      await addDoc(messagesRef, messageData);
+
+      // Cập nhật metadata của cuộc trò chuyện
+      const chatRef = doc(db, 'chats', chatId);
+      await setDoc(chatRef, {
+        participants: [currentUserId, contactId],
+        lastMessageAt: serverTimestamp(),
+        lastMessageText: currentMessage.trim() || (currentFile ? `Đã gửi ${currentFile.name}` : '')
+      }, { merge: true });
+
     } catch (error) {
       console.error('Lỗi khi gửi tin nhắn:', error);
+      alert('Không thể gửi tin nhắn. Vui lòng thử lại sau.');
     } finally {
       setSending(false);
     }
@@ -135,8 +146,27 @@ const ChatWindow = ({ contact, currentUser }) => {
 
   // Xử lý khi chọn file
   const handleFileChange = (e) => {
-    if (e.target.files[0]) {
-      setFile(e.target.files[0]);
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      // Giới hạn kích thước file - 500KB là an toàn cho Firestore
+      const MAX_FILE_SIZE = 500 * 1024; // 500KB
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        alert(`File quá lớn. Vui lòng chọn file nhỏ hơn ${MAX_FILE_SIZE / 1024}KB`);
+        e.target.value = "";
+        return;
+      }
+
+      // Đọc file dưới dạng Base64
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFile({
+          name: selectedFile.name,
+          type: selectedFile.type,
+          size: selectedFile.size,
+          base64: event.target.result
+        });
+      };
+      reader.readAsDataURL(selectedFile);
     }
   };
 
@@ -163,15 +193,16 @@ const ChatWindow = ({ contact, currentUser }) => {
     }
   };
 
+  // Hiển thị thời gian divider
   const shouldShowTimeDivider = (currentMsg, prevMsg) => {
     if (!prevMsg) return true;
 
     const currentTime = moment(currentMsg.timestamp);
     const prevTime = moment(prevMsg.timestamp);
 
-    // Hiển thị divider khi khác ngày hoặc cách nhau ít nhất 30 phút
+    // Hiển thị divider khi khác ngày hoặc cách nhau ít nhất 1 ngày
     return !currentTime.isSame(prevTime, 'day') ||
-      Math.abs(currentTime.diff(prevTime, 'minutes')) >= 30;
+      Math.abs(currentTime.diff(prevTime, 'minutes')) >= 1440;
   };
 
   useEffect(() => {
@@ -187,6 +218,24 @@ const ChatWindow = ({ contact, currentUser }) => {
       chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
     }
   }, [contact]);
+
+  // Xóa tin nhắn
+  const handleDeleteMessage = async (messageId, hasFile = false) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa tin nhắn này không?')) {
+      try {
+        // Sử dụng ID người dùng hiện tại và liên hệ để tạo chatId
+        const currentUserId = `${currentUser.id}_${currentUser.username}_${currentUser.role}`;
+        const contactId = contact.id;
+        const chatId = getChatId(currentUserId, contactId);
+
+        await deleteMessage(chatId, messageId, hasFile);
+        // Không cần làm gì thêm vì tin nhắn sẽ tự động cập nhật qua onSnapshot
+      } catch (error) {
+        console.error('Lỗi khi xóa tin nhắn:', error);
+        alert('Không thể xóa tin nhắn. Vui lòng thử lại sau.');
+      }
+    }
+  };
 
   return (
     <div className="chat-window" ref={chatWindowRef}>
@@ -250,7 +299,37 @@ const ChatWindow = ({ contact, currentUser }) => {
                         <div className="sender-name mb-1 fw-bold">{msg.senderName}</div>
                       )}
 
-                      {msg.fileURL && (
+                      {msg.fileData && (
+                        <div className="file-attachment mb-2">
+                          {msg.fileData.fileType && msg.fileData.fileType.startsWith('image/') ? (
+                            // Hiển thị hình ảnh
+                            <img
+                              src={msg.fileData.fileContent}
+                              alt="Attached"
+                              className="img-fluid rounded message-image"
+                              style={{ maxWidth: '100%', maxHeight: '300px' }}
+                            />
+                          ) : (
+                            // Hiển thị link tải xuống
+                            <div className="file-download-link">
+                              <FontAwesomeIcon icon={faFile} className="me-2" />
+                              <a
+                                href={msg.fileData.fileContent}
+                                download={msg.fileData.fileName}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {msg.fileData.fileName || 'Tải tệp đính kèm'}
+                              </a>
+                              <span className="ms-2 text-muted small">
+                                ({Math.round(msg.fileData.fileSize / 1024)} KB)
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {msg.fileURL && !msg.fileData && (
                         <div className="file-attachment mb-2">
                           {msg.fileType?.startsWith('image/') ? (
                             <img
@@ -289,7 +368,17 @@ const ChatWindow = ({ contact, currentUser }) => {
                             )}
                           </span>
                         )}
+                        {isCurrentUser && (
+                          <button
+                            className="delete-message-btn"
+                            onClick={() => handleDeleteMessage(msg.id, !!(msg.fileData || msg.fileURL))}
+                            title="Xóa tin nhắn"
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </button>
+                        )}
                       </div>
+
                     </div>
                   </div>
                 </React.Fragment>

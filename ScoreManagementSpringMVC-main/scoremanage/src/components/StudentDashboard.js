@@ -208,10 +208,10 @@ const StudentDashboard = () => {
                 <img
                   src={student?.image || user?.image || defaultAvatar}
                   alt="Profile"
-                  className="rounded-circle mb-3"
+                  className="rounded-circle mb-1"
                   style={{ width: "80px", height: "80px", objectFit: "cover", border: "3px solid #f8f9fa" }}
                 />
-                <h5 className="mb-1">{student?.lastName || user?.name} {student?.firstName}</h5>
+                <h5 className="mb-2">{student?.lastName || user?.name} {student?.firstName}</h5>
                 <span className="badge bg-primary px-3 py-2 mb-3">{user?.role || "Sinh viên"}</span>
                 <div className="mb-4 text-start">
                   <p className="mb-2"><strong>MSSV:</strong> {student?.studentCode || "Chưa cập nhật"}</p>

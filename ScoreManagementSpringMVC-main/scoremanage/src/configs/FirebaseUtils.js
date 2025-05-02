@@ -267,23 +267,3 @@ export const deleteMessage = async (chatId, messageId, deleteFile = true) => {
   }
 };
 
-
-// Đếm số tin nhắn chưa đọc
-export const countUnreadMessages = async (userId, contactId) => {
-  try {
-    const chatId = getChatId(userId, contactId);
-    const messagesRef = collection(db, 'chats', chatId, 'messages');
-    
-    const unreadQuery = query(
-      messagesRef,
-      where('senderId', '==', contactId),
-      where('read', '==', false)
-    );
-    
-    const snapshot = await getDocs(unreadQuery);
-    return snapshot.docs.length;
-  } catch (error) {
-    console.error('Error counting unread messages:', error);
-    return 0;
-  }
-};
