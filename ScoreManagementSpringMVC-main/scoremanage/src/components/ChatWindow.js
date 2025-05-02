@@ -33,6 +33,7 @@ const ChatWindow = ({ contact, currentUser }) => {
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const chatWindowRef = useRef(null);
+  const chatMessagesRef = useRef(null);
 
   // Tạo ID cuộc trò chuyện từ ID của 2 người dùng
   const getChatId = (uid1, uid2) => {
@@ -162,6 +163,20 @@ const ChatWindow = ({ contact, currentUser }) => {
     }
   };
 
+  useEffect(() => {
+    // Chỉ cuộn trong khung chat khi có tin nhắn mới
+    if (chatMessagesRef.current && messages.length > 0) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
+  }, [messages]);
+  
+  // Auto-scroll khi khung chat mới được mở
+  useEffect(() => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
+  }, [contact]);
+
   return (
     <div className="chat-window" ref={chatWindowRef}>
       <div className="chat-header d-flex justify-content-between align-items-center p-3">
@@ -193,7 +208,7 @@ const ChatWindow = ({ contact, currentUser }) => {
         </Button>
       </div>
 
-      <div className="chat-messages p-3">
+      <div className="chat-messages p-3" ref={chatMessagesRef}>
         {loading ? (
           <div className="d-flex justify-content-center align-items-center h-100">
             <Spinner animation="border" variant="primary" />
