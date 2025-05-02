@@ -163,13 +163,24 @@ const ChatWindow = ({ contact, currentUser }) => {
     }
   };
 
+  const shouldShowTimeDivider = (currentMsg, prevMsg) => {
+    if (!prevMsg) return true;
+
+    const currentTime = moment(currentMsg.timestamp);
+    const prevTime = moment(prevMsg.timestamp);
+
+    // Hiển thị divider khi khác ngày hoặc cách nhau ít nhất 30 phút
+    return !currentTime.isSame(prevTime, 'day') ||
+      Math.abs(currentTime.diff(prevTime, 'minutes')) >= 30;
+  };
+
   useEffect(() => {
     // Chỉ cuộn trong khung chat khi có tin nhắn mới
     if (chatMessagesRef.current && messages.length > 0) {
       chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
     }
   }, [messages]);
-  
+
   // Auto-scroll khi khung chat mới được mở
   useEffect(() => {
     if (chatMessagesRef.current) {
@@ -217,59 +228,71 @@ const ChatWindow = ({ contact, currentUser }) => {
           <>
             {messages.map((msg, index) => {
               const isCurrentUser = msg.senderId === `${currentUser.username}_${currentUser.role}`;
+              const prevMsg = index > 0 ? messages[index - 1] : null;
+              const showTimeDivider = shouldShowTimeDivider(msg, prevMsg);
 
               return (
-                <div
-                  key={msg.id}
-                  className={`message-container ${isCurrentUser ? 'message-right' : 'message-left'}`}
-                >
-                  <div className="message-content">
-                    {!isCurrentUser && (
-                      <div className="sender-name mb-1 fw-bold">{msg.senderName}</div>
-                    )}
+                <React.Fragment key={msg.id}>
+                  {showTimeDivider && (
+                    <div className="time-divider">
+                      <div className="time-divider-line"></div>
+                      <span className="time-divider-text">
+                        {moment(msg.timestamp).format('HH:mm D MMMM, YYYY')}
+                      </span>
+                      <div className="time-divider-line"></div>
+                    </div>
+                  )}
+                  <div
+                    className={`message-container ${isCurrentUser ? 'message-right' : 'message-left'}`}
+                  >
+                    <div className="message-content">
+                      {!isCurrentUser && (
+                        <div className="sender-name mb-1 fw-bold">{msg.senderName}</div>
+                      )}
 
-                    {msg.fileURL && (
-                      <div className="file-attachment mb-2">
-                        {msg.fileType?.startsWith('image/') ? (
-                          <img
-                            src={msg.fileURL}
-                            alt="Attached"
-                            className="img-fluid rounded message-image"
-                          />
-                        ) : (
-                          <a
-                            href={msg.fileURL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="file-download-link"
-                          >
-                            <FontAwesomeIcon icon={faFile} className="me-2" />
-                            {msg.fileName || 'Tải tệp đính kèm'}
-                          </a>
+                      {msg.fileURL && (
+                        <div className="file-attachment mb-2">
+                          {msg.fileType?.startsWith('image/') ? (
+                            <img
+                              src={msg.fileURL}
+                              alt="Attached"
+                              className="img-fluid rounded message-image"
+                            />
+                          ) : (
+                            <a
+                              href={msg.fileURL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="file-download-link"
+                            >
+                              <FontAwesomeIcon icon={faFile} className="me-2" />
+                              {msg.fileName || 'Tải tệp đính kèm'}
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                      {msg.text && <div className="message-text">{msg.text}</div>}
+
+                      <div className="message-time">
+                        {formatMessageTime(msg.timestamp)}
+                        {isCurrentUser && (
+                          <span className="message-read-status ms-2">
+                            {msg.read ? (
+                              <span className="read">
+                                <FontAwesomeIcon icon={faCheckDouble} /> Đã đọc
+                              </span>
+                            ) : (
+                              <span className="unread">
+                                <FontAwesomeIcon icon={faCheck} /> Chưa đọc
+                              </span>
+                            )}
+                          </span>
                         )}
                       </div>
-                    )}
-
-                    {msg.text && <div className="message-text">{msg.text}</div>}
-
-                    <div className="message-time">
-                      {formatMessageTime(msg.timestamp)}
-                      {isCurrentUser && (
-                        <span className="message-read-status ms-2">
-                          {msg.read ? (
-                            <span className="read">
-                              <FontAwesomeIcon icon={faCheckDouble} /> Đã đọc
-                            </span>
-                          ) : (
-                            <span className="unread">
-                              <FontAwesomeIcon icon={faCheck} /> Chưa đọc
-                            </span>
-                          )}
-                        </span>
-                      )}
                     </div>
                   </div>
-                </div>
+                </React.Fragment>
               );
             })}
             <div ref={messagesEndRef} />

@@ -276,3 +276,26 @@
   padding: 12px;
   z-index: 10;
 }
+
+.time-divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  width: 100%;
+}
+
+.time-divider-line {
+  flex-grow: 1;
+  height: 1px;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.time-divider-text {
+  padding: 0 10px;
+  font-size: 12px;
+  color: #65676B;
+  background-color: #f5f5f5;
+  border-radius: 10px;
+  margin: 0 10px;
+  text-align: center;
+}
