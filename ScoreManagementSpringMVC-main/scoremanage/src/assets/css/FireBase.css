@@ -1,5 +1,5 @@
 .chat-container {
-    max-width: 1200px;
+    max-width: 1000px;
     margin: 0 auto;
   }
   
@@ -106,7 +106,7 @@
   
   .message-container {
     margin-bottom: 15px;
-    max-width: 80%;
+    max-width: 100%;
     display: flex;
   }
   
@@ -174,4 +174,8 @@
   
   .selected-file {
     background-color: #f8f9fa;
+  }
+
+  .contact-status {
+    color: #6c757d !important;
   }

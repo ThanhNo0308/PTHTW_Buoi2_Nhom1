@@ -77,11 +77,6 @@ const ChatWindow = ({ contact, currentUser }) => {
     return () => unsubscribe();
   }, [currentUser, contact]);
 
-  // Tự động cuộn xuống tin nhắn mới nhất
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
   // Gửi tin nhắn
   const handleSendMessage = async (e) => {
     e.preventDefault();

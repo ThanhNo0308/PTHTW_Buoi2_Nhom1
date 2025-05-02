@@ -5,10 +5,13 @@ import axios from 'axios';
 import { endpoints, authApi, SERVER, API } from '../configs/Apis';
 import { Alert, Spinner, Col, Card, Button } from 'react-bootstrap';
 import "../assets/css/base.css";
-import "../assets/css/styles.css";
+import "../assets/css/dashboard.css";
 import defaultAvatar from '../assets/images/logo.png';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faComments, faChalkboardTeacher, faExclamationCircle, faCheckCircle, faUserEdit } from '@fortawesome/free-solid-svg-icons';
+import {
+  faComments, faChalkboardTeacher, faExclamationCircle, faCheckCircle, faUserEdit, faUsers, faGraduationCap, faFileImport, faSearch, faUser,
+  faChalkboard, faSchool, faPaperPlane
+} from '@fortawesome/free-solid-svg-icons';
 
 const TeacherDashboard = () => {
   const [user] = useContext(MyUserContext);
@@ -60,123 +63,166 @@ const TeacherDashboard = () => {
   }
 
   return (
-    <div className="container mt-4">
-      <h1 className="mb-4">
-        <i className="fas fa-chalkboard-teacher me-2"></i>
-        Trang quản lý của giảng viên
-      </h1>
-
-      {successMessage && (
-        <Alert variant="success" dismissible onClose={() => setSuccessMessage("")}>
-          <i className="fas fa-check-circle me-2"></i> {successMessage}
-        </Alert>
-      )}
-
-      {error && (
-        <Alert variant="danger" dismissible onClose={() => setError("")}>
-          <i className="fas fa-exclamation-circle me-2"></i> {error}
-        </Alert>
-      )}
-
-      <div className="row mt-4">
-        <div className="col-md-6">
-          <div className="card mb-4 shadow-sm">
-            <div className="card-header bg-primary text-white">
-              <i className="fas fa-users me-2"></i>
-              Quản lý lớp học
-            </div>
-            <div className="card-body">
-              <Link to="/teacher/classes" className="btn btn-primary btn-lg d-block mb-3">
-                <i className="fas fa-chalkboard me-2"></i> Danh sách lớp dạy
-              </Link>
-              <p>Xem danh sách các lớp học bạn được phân công giảng dạy, quản lý điểm của lớp.</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-6">
-          <div className="card mb-4 shadow-sm">
-            <div className="card-header bg-success text-white">
-              <i className="fas fa-graduation-cap me-2"></i>
-              Nhập điểm
-            </div>
-            <div className="card-body">
-              <Link to="/teacher/scores/import" className="btn btn-success btn-lg d-block mb-3">
-                <i className="fas fa-file-import me-2"></i> Nhập điểm từ file
-              </Link>
-              <p>Nhập điểm cho sinh viên theo từng môn học và lớp.</p>
+    <div className="teacher-dashboard">
+      <div className="dashboard-header">
+        <div className="container">
+          <div className="teacher-profile">
+            <img src={user?.image || defaultAvatar} alt="Profile" className="profile-avatar" />
+            <div className="profile-info">
+              <div className="welcome-text">Xin chào, Giảng viên</div>
+              <h2>{user?.name || "Giảng viên " + user?.username}</h2>
+              <div className="d-flex gap-2">
+                <span className="badge bg-light text-dark">
+                  {teacherInfo?.roleSpecificInfo?.departmentId?.departmentName || "Khoa CNTT"}
+                </span>
+                <span className="badge bg-light text-dark">{user?.email || "Email chưa cập nhật"}</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="row">
-        <div className="col-md-6">
-          <div className="card mb-4 shadow-sm">
-            <div className="card-header bg-info text-white">
-              <i className="fas fa-search me-2"></i>
-              Tra cứu thông tin
+      <div className="container">
+        {successMessage && (
+          <Alert variant="success" dismissible onClose={() => setSuccessMessage("")} className="animate-fade-in">
+            <FontAwesomeIcon icon={faCheckCircle} className="me-2" />
+            {successMessage}
+          </Alert>
+        )}
+
+        {error && (
+          <Alert variant="danger" dismissible onClose={() => setError("")} className="animate-fade-in">
+            <FontAwesomeIcon icon={faExclamationCircle} className="me-2" />
+            {error}
+          </Alert>
+        )}
+
+        <div className="row">
+          <div className="col-lg-8">
+            <div className="row mb-4">
+              <div className="col-md-6 mb-3">
+                <div className="feature-card">
+                  <div className="card-header-custom bg-soft-primary">
+                    <FontAwesomeIcon icon={faUsers} className="card-header-icon" />
+                    Quản lý lớp học
+                  </div>
+                  <Card.Body>
+                    <Card.Text>
+                      Xem danh sách lớp dạy, quản lý sinh viên và điểm số của lớp học bạn phụ trách.
+                    </Card.Text>
+                    <Link to="/teacher/classes" className="btn btn-primary feature-btn w-100">
+                      <FontAwesomeIcon icon={faChalkboard} className="me-2" />
+                      Danh sách lớp dạy
+                    </Link>
+                  </Card.Body>
+                </div>
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <div className="feature-card">
+                  <div className="card-header-custom bg-soft-success">
+                    <FontAwesomeIcon icon={faFileImport} className="card-header-icon" />
+                    Nhập điểm
+                  </div>
+                  <Card.Body>
+                    <Card.Text>
+                      Nhập điểm cho sinh viên theo từng môn học và lớp. Nhập từ file Excel nhanh chóng.
+                    </Card.Text>
+                    <Link to="/teacher/scores/import" className="btn btn-success feature-btn w-100">
+                      <FontAwesomeIcon icon={faFileImport} className="me-2" />
+                      Nhập điểm từ file
+                    </Link>
+                  </Card.Body>
+                </div>
+              </div>
             </div>
-            <div className="card-body">
-              <Link to="/teacher/students/search" className="btn btn-info btn-lg d-block mb-3">
-                <i className="fas fa-search me-2"></i> Tìm kiếm sinh viên
-              </Link>
-              <p>Tìm kiếm thông tin sinh viên theo mã, tên hoặc lớp.</p>
+
+            <div className="row mb-4">
+              <div className="col-md-6 mb-3">
+                <div className="feature-card">
+                  <div className="card-header-custom bg-soft-info">
+                    <FontAwesomeIcon icon={faSearch} className="card-header-icon" />
+                    Tra cứu thông tin
+                  </div>
+                  <Card.Body>
+                    <Card.Text>
+                      Tìm kiếm thông tin sinh viên theo mã số, họ tên hoặc lớp học nhanh chóng.
+                    </Card.Text>
+                    <Link to="/teacher/students/search" className="btn btn-info feature-btn w-100 text-white">
+                      <FontAwesomeIcon icon={faSearch} className="me-2" />
+                      Tìm kiếm sinh viên
+                    </Link>
+                  </Card.Body>
+                </div>
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <div className="feature-card">
+                  <div className="card-header-custom bg-soft-warning">
+                    <FontAwesomeIcon icon={faComments} className="card-header-icon" />
+                    Diễn đàn học tập
+                  </div>
+                  <Card.Body>
+                    <Card.Text>
+                      Trao đổi, thảo luận với sinh viên. Giải đáp thắc mắc và chia sẻ tài liệu học tập.
+                    </Card.Text>
+                    <Link to="/forums" className="btn btn-warning feature-btn w-100">
+                      <FontAwesomeIcon icon={faComments} className="me-2" />
+                      Truy cập diễn đàn
+                    </Link>
+                  </Card.Body>
+                </div>
+              </div>
+              <div className="col-md-12 mb-3">
+                <div className="feature-card mb-4">
+                  <div className="card-header-custom bg-soft-danger">
+                    <FontAwesomeIcon icon={faPaperPlane} className="card-header-icon" />
+                    Tin nhắn
+                  </div>
+                  <Card.Body>
+                    <Card.Text>
+                      Gửi và nhận tin nhắn với sinh viên và đồng nghiệp. Trao đổi thông tin nhanh chóng.
+                    </Card.Text>
+                    <Link to="/chat" className="btn btn-outline-danger feature-btn w-100">
+                      <FontAwesomeIcon icon={faPaperPlane} className="me-2" />
+                      Truy cập tin nhắn
+                    </Link>
+                  </Card.Body>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="col-md-6">
-          <div className="card mb-4 shadow-sm">
-            <div className="card-header bg-warning text-dark">
-              <i className="fas fa-user me-2"></i>
-              Thông tin cá nhân
-            </div>
-            <div className="card-body">
-              <div className="mb-3 text-center">
+          <div className="col-lg-4">
+            <div className="feature-card mb-4">
+              <div className="card-header-custom bg-soft-dark">
+                <FontAwesomeIcon icon={faUser} className="card-header-icon" />
+                Thông tin cá nhân
+              </div>
+              <Card.Body className="text-center">
                 <img
                   src={user?.image || defaultAvatar}
                   alt="Profile"
-                  className="img-thumbnail rounded-circle"
-                  style={{ width: "100px", height: "100px", objectFit: "cover" }}
+                  className="rounded-circle mb-3"
+                  style={{ width: "80px", height: "80px", objectFit: "cover", border: "3px solid #f8f9fa" }}
                 />
-              </div>
-              <h5 className="text-center mb-3">{user?.name || user?.username || "Giảng viên"}</h5>
-              <div className="text-center mb-4">
-                <span className="badge bg-primary px-3 py-2">{user?.role || "Giảng viên"}</span>
-              </div>
-              <div className="d-grid">
-                <Link to="/profile" className="btn btn-warning">
-                  <i className="fas fa-user-edit me-2"></i> Cập nhật thông tin
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="row">
-        <Col md={4} className="mb-4">
-          <Card className="h-100 shadow dashboard-card">
-            <Card.Body>
-              <div className="d-flex align-items-center mb-3">
-                <div className="rounded-icon bg-info me-3">
-                  <FontAwesomeIcon icon={faComments} />
+                <h5 className="mb-1">{user?.name || user?.username || "Giảng viên"}</h5>
+                <span className="badge bg-primary px-3 py-2 mb-3">{user?.role || "Giảng viên"}</span>
+                <div className="mb-4 text-start">
+                  <p className="mb-2"><strong>Email:</strong> {user?.email || "Chưa cập nhật"}</p>
+                  <p className="mb-2"><strong>Khoa:</strong> {teacherInfo?.roleSpecificInfo?.departmentId?.departmentName || "Chưa cập nhật"}</p>
                 </div>
-                <h3 className="card-title mb-0">Diễn đàn học tập</h3>
-              </div>
-              <Card.Text>
-                Trao đổi, thảo luận về nội dung bài học. Đặt câu hỏi và giải đáp thắc mắc của sinh viên.
-              </Card.Text>
-            </Card.Body>
-            <Card.Footer className="bg-transparent border-0 pb-3">
-              <Button as={Link} to="/forums" variant="outline-info" className="w-100">
-                <FontAwesomeIcon icon={faComments} className="me-2" />
-                Truy cập diễn đàn
-              </Button>
-            </Card.Footer>
-          </Card>
-        </Col>
+                <Link to="/profile" className="btn btn-outline-dark w-100 feature-btn">
+                  <FontAwesomeIcon icon={faUserEdit} className="me-2" />
+                  Cập nhật thông tin
+                </Link>
+              </Card.Body>
+            </div>
+
+
+          </div>
+
+        </div>
       </div>
     </div>
   );

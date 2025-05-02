@@ -6,10 +6,12 @@ import { endpoints, API } from '../configs/Apis';
 import { Alert, Spinner, Col, Card, Button, Row } from 'react-bootstrap';
 import "../assets/css/base.css";
 import "../assets/css/styles.css";
+import "../assets/css/dashboard.css";
+import defaultAvatar from '../assets/images/logo.png';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faComments, faCheckCircle, faExclamationCircle,
-  faChartLine, faUsers, faUserEdit, faBook, faGraduationCap
+  faChartLine, faUsers, faUserEdit, faBook, faGraduationCap, faPaperPlane
 } from '@fortawesome/free-solid-svg-icons';
 
 const StudentDashboard = () => {
@@ -63,148 +65,169 @@ const StudentDashboard = () => {
   }
 
   return (
-    <div className="container mt-4">
-      <h1 className="mb-4">Chào mừng, {user.name || user.username}!</h1>
-
-      {successMessage && (
-        <Alert variant="success" dismissible onClose={() => setSuccessMessage("")}>
-          <FontAwesomeIcon icon={faCheckCircle} className="me-2" /> {successMessage}
-        </Alert>
-      )}
-
-      {error && (
-        <Alert variant="danger" dismissible onClose={() => setError("")}>
-          <FontAwesomeIcon icon={faExclamationCircle} className="me-2" /> {error}
-        </Alert>
-      )}
-
-      <Row className="mt-4">
-        <Col md={6} lg={4} className="mb-4">
-          <Card className="h-100 shadow-sm">
-            <Card.Header className="bg-primary text-white">
-              <FontAwesomeIcon icon={faChartLine} className="me-2" />
-              Điểm số
-            </Card.Header>
-            <Card.Body className="d-flex flex-column">
-              <p>Xem bảng điểm của tất cả các môn học và theo dõi kết quả học tập.</p>
-              <div className="mt-auto">
-                <Link to="/student/scores" className="btn btn-primary w-100">
-                  <FontAwesomeIcon icon={faChartLine} className="me-2" /> Xem điểm của tôi
-                </Link>
+    <div className="teacher-dashboard"> {/* Sử dụng class của teacher */}
+      <div className="dashboard-header">
+        <div className="container">
+          <div className="teacher-profile">
+            <img src={student?.image || user?.image || defaultAvatar} alt="Profile" className="profile-avatar" />
+            <div className="profile-info">
+              <div className="welcome-text">Xin chào, Sinh viên</div>
+              <h2>{student?.lastName || user?.name} {student?.firstName || ""}</h2>
+              <div className="d-flex gap-2">
+                <span className="badge bg-light text-dark">
+                  MSSV: {student?.studentCode || "Chưa cập nhật"}
+                </span>
+                <span className="badge bg-light text-dark">
+                  Lớp: {student?.classId?.className || "Chưa cập nhật"}
+                </span>
               </div>
-            </Card.Body>
-          </Card>
-        </Col>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <Col md={6} lg={4} className="mb-4">
-          <Card className="h-100 shadow-sm">
-            <Card.Header className="bg-info text-white">
-              <FontAwesomeIcon icon={faUsers} className="me-2" />
-              Lớp học
-            </Card.Header>
-            <Card.Body className="d-flex flex-column">
-              <p>Xem thông tin về lớp học và danh sách các bạn cùng lớp.</p>
-              <div className="mt-auto">
-                <Link to="/student/class-info" className="btn btn-info w-100 text-white">
-                  <FontAwesomeIcon icon={faUsers} className="me-2" /> Thông tin lớp
-                </Link>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+      <div className="container">
+        {successMessage && (
+          <Alert variant="success" dismissible onClose={() => setSuccessMessage("")} className="animate-fade-in">
+            <FontAwesomeIcon icon={faCheckCircle} className="me-2" />
+            {successMessage}
+          </Alert>
+        )}
 
-        <Col md={6} lg={4} className="mb-4">
-          <Card className="h-100 shadow-sm">
-            <Card.Header className="bg-success text-white">
-              <FontAwesomeIcon icon={faBook} className="me-2" />
-              Môn học
-            </Card.Header>
-            <Card.Body className="d-flex flex-column">
-              <p>Xem danh sách môn học bạn đã đăng ký trong học kỳ hiện tại và trước đây.</p>
-              <div className="mt-auto">
-                <Link to="/student/subjects" className="btn btn-success w-100">
-                  <FontAwesomeIcon icon={faBook} className="me-2" /> Môn học đã đăng ký
-                </Link>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+        {error && (
+          <Alert variant="danger" dismissible onClose={() => setError("")} className="animate-fade-in">
+            <FontAwesomeIcon icon={faExclamationCircle} className="me-2" />
+            {error}
+          </Alert>
+        )}
 
-      <Row className="mt-2">
-        <Col md={6} className="mb-4">
-          <Card className="h-100 shadow-sm">
-            <Card.Header className="bg-warning text-dark">
-              <FontAwesomeIcon icon={faUserEdit} className="me-2" />
-              Thông tin cá nhân
-            </Card.Header>
-            <Card.Body>
-              {student ? (
-                <>
-                  <div className="text-center mb-3">
-                    <img
-                      src={student?.image || user?.image || "/images/default-avatar.jpg"}
-                      alt="Avatar"
-                      className="rounded-circle"
-                      style={{ width: "100px", height: "100px", objectFit: "cover" }}
-                    />
-                    <h5 className="mt-2">{student?.lastName || user?.name} {student?.firstName} </h5>
-                    <span className="badge bg-primary mb-3">{user?.role}</span>
+        <div className="row">
+          <div className="col-lg-8">
+            <div className="row mb-4">
+              <div className="col-md-6 mb-3">
+                <div className="feature-card">
+                  <div className="card-header-custom bg-soft-primary">
+                    <FontAwesomeIcon icon={faChartLine} className="card-header-icon" />
+                    Điểm số
                   </div>
-                  <table className="table">
-                    <tbody>
-                      <tr>
-                        <th style={{ width: "40%" }}>MSSV:</th>
-                        <td>{student?.studentCode || "-"}</td>
-                      </tr>
-                      <tr>
-                        <th>Email:</th>
-                        <td>{student?.email || user?.email || "-"}</td>
-                      </tr>
-                      <tr>
-                        <th>Giới tính:</th>
-                        <td>{student?.gender === 0 || user?.gender === 0 ? "Nam" : "Nữ"}</td>
-                      </tr>
-                      <tr>
-                        <th>Lớp:</th>
-                        <td>{student?.classId?.className || "-"}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div className="text-center mt-3">
-                    <Link to="/profile" className="btn btn-warning">
-                      <FontAwesomeIcon icon={faUserEdit} className="me-2" /> Cập nhật thông tin
+                  <Card.Body>
+                    <Card.Text>
+                      Xem bảng điểm của tất cả các môn học và theo dõi kết quả học tập.
+                    </Card.Text>
+                    <Link to="/student/scores" className="btn btn-primary feature-btn w-100">
+                      <FontAwesomeIcon icon={faChartLine} className="me-2" />
+                      Xem điểm của tôi
                     </Link>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center">
-                  <Spinner animation="border" size="sm" className="me-2" />
-                  Đang tải thông tin...
+                  </Card.Body>
                 </div>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col md={6} className="mb-4">
-          <Card className="h-100 shadow-sm">
-            <Card.Header className="bg-info text-white">
-              <FontAwesomeIcon icon={faComments} className="me-2" />
-              Diễn đàn học tập
-            </Card.Header>
-            <Card.Body className="d-flex flex-column">
-              <p>Tham gia các diễn đàn học tập để xem thảo luận và đặt câu hỏi về các môn học. Trao đổi kiến thức và học hỏi từ giảng viên và bạn học.</p>
-              <div className="mt-auto">
-                <Link to="/forums" className="btn btn-info w-100 text-white">
-                  <FontAwesomeIcon icon={faComments} className="me-2" />
-                  Truy cập diễn đàn
-                </Link>
               </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+
+              <div className="col-md-6 mb-3">
+                <div className="feature-card">
+                  <div className="card-header-custom bg-soft-info">
+                    <FontAwesomeIcon icon={faUsers} className="card-header-icon" />
+                    Lớp học
+                  </div>
+                  <Card.Body>
+                    <Card.Text>
+                      Xem thông tin về lớp học và danh sách các bạn cùng lớp.
+                    </Card.Text>
+                    <Link to="/student/class-info" className="btn btn-info feature-btn w-100 text-white">
+                      <FontAwesomeIcon icon={faUsers} className="me-2" />
+                      Thông tin lớp
+                    </Link>
+                  </Card.Body>
+                </div>
+              </div>
+            </div>
+
+            <div className="row mb-4">
+              <div className="col-md-6 mb-3">
+                <div className="feature-card">
+                  <div className="card-header-custom bg-soft-success">
+                    <FontAwesomeIcon icon={faBook} className="card-header-icon" />
+                    Môn học
+                  </div>
+                  <Card.Body>
+                    <Card.Text>
+                      Xem danh sách môn học bạn đã đăng ký trong học kỳ hiện tại và trước đây.
+                    </Card.Text>
+                    <Link to="/student/subjects" className="btn btn-success feature-btn w-100">
+                      <FontAwesomeIcon icon={faBook} className="me-2" />
+                      Môn học đã đăng ký
+                    </Link>
+                  </Card.Body>
+                </div>
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <div className="feature-card">
+                  <div className="card-header-custom bg-soft-warning">
+                    <FontAwesomeIcon icon={faComments} className="card-header-icon" />
+                    Diễn đàn học tập
+                  </div>
+                  <Card.Body>
+                    <Card.Text>
+                      Tham gia các diễn đàn học tập để xem thảo luận và đặt câu hỏi về các môn học.
+                    </Card.Text>
+                    <Link to="/forums" className="btn btn-warning feature-btn w-100">
+                      <FontAwesomeIcon icon={faComments} className="me-2" />
+                      Truy cập diễn đàn
+                    </Link>
+                  </Card.Body>
+                </div>
+              </div>
+
+              <div className="col-md-12 mb-3">
+                <div className="feature-card mb-4">
+                  <div className="card-header-custom bg-soft-danger">
+                    <FontAwesomeIcon icon={faPaperPlane} className="card-header-icon" />
+                    Tin nhắn
+                  </div>
+                  <Card.Body>
+                    <Card.Text>
+                      Gửi và nhận tin nhắn với giảng viên và đồng nghiệp. Trao đổi thông tin nhanh chóng.
+                    </Card.Text>
+                    <Link to="/chat" className="btn btn-outline-danger feature-btn w-100">
+                      <FontAwesomeIcon icon={faPaperPlane} className="me-2" />
+                      Truy cập tin nhắn
+                    </Link>
+                  </Card.Body>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-lg-4">
+            <div className="feature-card mb-4">
+              <div className="card-header-custom bg-soft-dark">
+                <FontAwesomeIcon icon={faGraduationCap} className="card-header-icon" />
+                Thông tin cá nhân
+              </div>
+              <Card.Body className="text-center">
+                <img
+                  src={student?.image || user?.image || defaultAvatar}
+                  alt="Profile"
+                  className="rounded-circle mb-3"
+                  style={{ width: "80px", height: "80px", objectFit: "cover", border: "3px solid #f8f9fa" }}
+                />
+                <h5 className="mb-1">{student?.lastName || user?.name} {student?.firstName}</h5>
+                <span className="badge bg-primary px-3 py-2 mb-3">{user?.role || "Sinh viên"}</span>
+                <div className="mb-4 text-start">
+                  <p className="mb-2"><strong>MSSV:</strong> {student?.studentCode || "Chưa cập nhật"}</p>
+                  <p className="mb-2"><strong>Email:</strong> {student?.email || user?.email || "Chưa cập nhật"}</p>
+                  <p className="mb-2"><strong>Lớp:</strong> {student?.classId?.className || "Chưa cập nhật"}</p>
+                  <p className="mb-2"><strong>Chuyên ngành:</strong> {student?.classId?.majorId?.majorName || "Chưa cập nhật"}</p>
+                </div>
+                <Link to="/profile" className="btn btn-outline-dark w-100 feature-btn">
+                  <FontAwesomeIcon icon={faUserEdit} className="me-2" />
+                  Cập nhật thông tin
+                </Link>
+              </Card.Body>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
