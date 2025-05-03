@@ -44,9 +44,7 @@ public class ApiUserController {
     @Autowired
     private Cloudinary cloudinary;
 
-    /**
-     * Đăng nhập và trả về JWT token
-     */
+    // Đăng nhập
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> requestBody) {
         String username = requestBody.get("username");
@@ -109,9 +107,7 @@ public class ApiUserController {
         }
     }
 
-    /**
-     * Đăng ký sinh viên mới
-     */
+    // Đăng ký tài khoản sinh viên
     @PostMapping("/register/student")
     public ResponseEntity<?> registerStudent(@RequestBody Map<String, String> params) {
         String email = params.get("email");
@@ -162,9 +158,8 @@ public class ApiUserController {
         }
     }
 
-    /**
-     * Lấy thông tin người dùng hiện tại
-     */
+    
+    //Lấy thông tin người dùng hiện tại
     @GetMapping("/current-user")
     public ResponseEntity<?> getCurrentUser(Principal principal) {
         if (principal == null) {
@@ -190,7 +185,7 @@ public class ApiUserController {
         userMap.put("identifyCard", user.getIdentifyCard());
         userMap.put("birthdate", user.getBirthdate());
         userMap.put("phone", user.getPhone());
-        userMap.put("active", user.getActive());  // Thêm trường active
+        userMap.put("active", user.getActive());  
 
         response.put("user", userMap);
 
@@ -232,9 +227,7 @@ public class ApiUserController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    /**
-     * Cập nhật thông tin người dùng
-     */
+    // Cập nhật thông tin người dùng
     @PostMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody Map<String, Object> profileData) {
         Integer userId = (Integer) profileData.get("id");
@@ -351,9 +344,7 @@ public class ApiUserController {
         }
     }
 
-    /**
-     * Đổi mật khẩu
-     */
+    // Đổi mật khẩu
     @PostMapping("/profile/change-password")
     public ResponseEntity<?> changePassword(@RequestBody Map<String, String> passwordData) {
         int userId = Integer.parseInt(passwordData.get("id"));
@@ -412,9 +403,7 @@ public class ApiUserController {
         }
     }
 
-    /**
-     * Kiểm tra email sinh viên tồn tại
-     */
+    // Kiểm tra email sinh viên tồn tại
     @GetMapping("/check-student-email")
     public ResponseEntity<?> checkStudentEmail(@RequestParam("email") String email) {
         Map<String, Object> response = new HashMap<>();
@@ -424,9 +413,7 @@ public class ApiUserController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    /**
-     * Kiểm tra email giảng viên tồn tại
-     */
+    // Kiểm tra email giảng viên tồn tại
     @GetMapping("/check-teacher-email")
     public ResponseEntity<?> checkTeacherEmail(@RequestParam("email") String email) {
         Map<String, Object> response = new HashMap<>();

@@ -378,7 +378,8 @@ public class ApiForumController {
         }
     }
 
-    @GetMapping("/subject-teachers")
+    // Lấy danh sách phân công môn học của giảng viên ở DIỄN ĐÀN
+    @GetMapping("/forums/subject-teachers")
     public ResponseEntity<?> getTeacherSubjects(@RequestParam String username) {
         try {
             Teacher teacher = teacherService.getTeacherByUsername(username);

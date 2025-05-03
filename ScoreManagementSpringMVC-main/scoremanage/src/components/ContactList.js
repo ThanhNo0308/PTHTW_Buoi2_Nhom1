@@ -25,17 +25,8 @@ const ContactList = ({ contacts, selectedContact, onSelectContact, currentUser, 
       );
     });
 
-    // Sắp xếp: Đầu tiên là liên hệ có tin nhắn chưa đọc (ưu tiên)
-    const sorted = [...filtered].sort((a, b) => {
-      // Ưu tiên người có tin nhắn chưa đọc
-      if ((a.unreadCount || 0) > 0 && (b.unreadCount || 0) === 0) return -1;
-      if ((a.unreadCount || 0) === 0 && (b.unreadCount || 0) > 0) return 1;
 
-      // Nếu cùng trạng thái tin nhắn, thì sắp xếp theo tên
-      return a.name.localeCompare(b.name);
-    });
-
-    setFilteredContacts(sorted);
+    setFilteredContacts(filtered);
   }, [contacts, searchTerm]);
 
   // Theo dõi trạng thái online của người dùng

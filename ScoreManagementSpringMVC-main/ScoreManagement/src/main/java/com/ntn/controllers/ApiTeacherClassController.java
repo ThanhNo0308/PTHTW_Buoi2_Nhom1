@@ -28,7 +28,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/teacher")
+@RequestMapping("/api/teacherclass")
 public class ApiTeacherClassController {
 
     @Autowired
@@ -55,6 +55,7 @@ public class ApiTeacherClassController {
     @Autowired
     private TypeScoreService typeScoreService;
 
+    // Lấy danh sách lớp được phân công
     @GetMapping("/classes")
     public ResponseEntity<?> getTeacherClasses(@RequestParam String username) {
         try {
@@ -125,6 +126,7 @@ public class ApiTeacherClassController {
         }
     }
 
+    // Lấy thông tin chi tiết lớp học
     @GetMapping("/classes/{classId}")
     public ResponseEntity<?> getClassDetail(
             @PathVariable("classId") int classId,
@@ -185,6 +187,7 @@ public class ApiTeacherClassController {
         }
     }
 
+    // Lấy điểm của lớp được phân công
     @GetMapping("/classes/{classId}/scores")
     public ResponseEntity<?> getClassScores(
             @PathVariable("classId") int classId,

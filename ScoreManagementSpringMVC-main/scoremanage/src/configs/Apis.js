@@ -4,44 +4,52 @@ const SERVER_CONTEXT = "/ScoreManagement";
 const SERVER = "http://localhost:9090";
 
 export const endpoints = {
-
+  // API User
   "login": `${SERVER_CONTEXT}/api/login`,
   "registerstudent": `${SERVER_CONTEXT}/api/register/student`,
   "profile": `${SERVER_CONTEXT}/api/profile`,
   "current-user": `${SERVER_CONTEXT}/api/current-user`,
 
-  "teacher-classes": `${SERVER_CONTEXT}/api/teacher/classes`,
-  "teacher-subject-teachers": `${SERVER_CONTEXT}/api/subject-teachers`,
-  "teacher-class-detail": `${SERVER_CONTEXT}/api/teacher/classes`,  // + /{classId}
-  "teacher-class-scores": `${SERVER_CONTEXT}/api/teacher/classes`,  // + /{classId}/scores
-  "scores-type-list": `${SERVER_CONTEXT}/api/scores/score-types/list`,
-  "scores-type-by-class": `${SERVER_CONTEXT}/api/scores/score-types/by-class`,
-  "scores-weights": `${SERVER_CONTEXT}/api/scores/score-types/weights`,
-  "scores-add-type": `${SERVER_CONTEXT}/api/scores/score-types/add`,
-  "scores-remove-type": `${SERVER_CONTEXT}/api/scores/score-types/remove`,
+  // API TeacherClasses
+  "teacher-classes": `${SERVER_CONTEXT}/api/teacherclass/classes`,
+  "teacher-class-detail": `${SERVER_CONTEXT}/api/teacherclass/classes`,  // + /{classId}
+  "teacher-class-scores": `${SERVER_CONTEXT}/api/teacherclass/classes`,  // + /{classId}/scores
+  
+  // API TypeScores
+  "scores-type-list": `${SERVER_CONTEXT}/api/typescores/score-types/list`,
+  "scores-type-by-class": `${SERVER_CONTEXT}/api/typescores/score-types/by-class`,
+  "scores-weights": `${SERVER_CONTEXT}/api/typescores/score-types/weights`,
+  "scores-add-type": `${SERVER_CONTEXT}/api/typescores/score-types/add`,
+  "scores-remove-type": `${SERVER_CONTEXT}/api/typescores/score-types/remove`,
+  
+  // API Scores
   "scores-configure-weights": `${SERVER_CONTEXT}/api/scores/classes`,  // + /{classId}/scores/configure-weights
   "scores-save-draft": `${SERVER_CONTEXT}/api/scores/save-scores-draft`,
   "scores-save": `${SERVER_CONTEXT}/api/scores/save-scores`,
-
+  "scores-available-school-years": `${SERVER_CONTEXT}/api/scores/available-school-years`,
   "scores-import-form": `${SERVER_CONTEXT}/api/scores/import-scores-form`,
-  "scores-import": `${SERVER_CONTEXT}/api/scores/import-scores`,
   "scores-template": `${SERVER_CONTEXT}/api/scores/scores/template`,
+  "scores-import": `${SERVER_CONTEXT}/api/scores/import-scores`,
   "scores-export-csv": `${SERVER_CONTEXT}/api/scores/classes`,  // + /{classId}/export-csv
   "scores-export-pdf": `${SERVER_CONTEXT}/api/scores/classes`,  // + /{classId}/export-pdf
-  "scores-students-assigned": `${SERVER_CONTEXT}/api/scores/students/assigned`,
-  "scores-students-search": `${SERVER_CONTEXT}/api/scores/students/search`,
-  "scores-student-detail": `${SERVER_CONTEXT}/api/scores/students`,  // + /{studentCode}/detail
-  "scores-student-scores": `${SERVER_CONTEXT}/api/scores/students`, // + /{studentId}/scores?schoolYearId=...
-  "scores-available-school-years": `${SERVER_CONTEXT}/api/scores/available-school-years`,
-  "classes-by-subject": `${SERVER_CONTEXT}/api/scores/classes/by-subject`,
-
+ 
+  //API Teacher 
+  "scores-students-assigned": `${SERVER_CONTEXT}/api/teacher/students/assigned`,
+  "scores-students-search": `${SERVER_CONTEXT}/api/teacher/students/search`,
+  "scores-student-detail": `${SERVER_CONTEXT}/api/teacher/students`,  // + /{studentCode}/detail
+  "scores-student-scores": `${SERVER_CONTEXT}/api/teacher/students`, // + /{studentId}/scores?schoolYearId=...
+  
+  // API Forum
   "forums": `${SERVER_CONTEXT}/api/forums`,
   "forum-detail": `${SERVER_CONTEXT}/api/forums`,  // + /{forumId}
   "forum-comments": `${SERVER_CONTEXT}/api/forums`, // + /{forumId}/comments
   "forum-by-subject": `${SERVER_CONTEXT}/api/forums/by-subject-teacher`, // + /{subjectTeacherId}
   "forum-teacher": `${SERVER_CONTEXT}/api/forums/teacher`,
+  // API ForumStudent
   "forum-student": `${SERVER_CONTEXT}/api/forums/student`,
+  "teacher-subject-teachers": `${SERVER_CONTEXT}/api/forums/subject-teachers`,
 
+  // API Student
   "student-current": `${SERVER_CONTEXT}/api/student/current-student`,
   "student-scores": `${SERVER_CONTEXT}/api/student/scores`,
   "student-class-info": `${SERVER_CONTEXT}/api/student/class-info`,
@@ -88,7 +96,6 @@ export const userApis = {
 
   // Đăng ký sinh viên
   registerStudent: (data) => {
-    // Đảm bảo dữ liệu không có giá trị undefined hoặc null
     const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
       if (value !== null && value !== undefined) {
         acc[key] = value;
@@ -122,15 +129,13 @@ export const userApis = {
     return API.get(endpoints["current-user"]);
   },
 
+  // Cập nhật avatar
   uploadAvatar: (userId, imageFile) => {
     const formData = new FormData();
     formData.append('id', userId);
     formData.append('image', imageFile);
 
-    console.log("Uploading avatar for user ID:", userId);
-    console.log("File name:", imageFile.name);
-
-    // Quan trọng: Không thiết lập Content-Type, để browser tự xử lý boundary
+    // Không thiết lập Content-Type, để browser tự xử lý boundary
     return axios.post(`${SERVER}${endpoints["profile"]}/upload-avatar`, formData, {
       headers: {
         'Authorization': `Bearer ${cookie.load("user")?.token}`
@@ -308,16 +313,11 @@ export const scoreApis = {
     return API.get(url);
   },
 
-  // Lấy danh sách năm học
+   // Lấy danh sách năm học-học kì khi import điểm
   getAvailableSchoolYears: (subjectTeacherId, classId) => {
     return API.get(
       `${endpoints["scores-available-school-years"]}?subjectTeacherId=${subjectTeacherId}&classId=${classId}`
     );
-  },
-
-  // API để lấy các lớp dựa trên môn học
-  getClassesBySubject: (subjectId) => {
-    return API.get(`${endpoints["classes-by-subject"]}?subjectId=${subjectId}`);
   },
 };
 
