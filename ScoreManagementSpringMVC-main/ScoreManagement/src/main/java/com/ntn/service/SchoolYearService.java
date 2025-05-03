@@ -5,8 +5,6 @@
 package com.ntn.service;
 
 import com.ntn.pojo.Schoolyear;
-import com.ntn.pojo.Subjectteacher;
-import com.ntn.pojo.Typescore;
 import java.util.List;
 
 public interface SchoolYearService {
@@ -16,10 +14,6 @@ public interface SchoolYearService {
     int getCurrentSchoolYearId();
 
     List<Schoolyear> getAllSchoolYears();
-
-   
-
-    
 
     boolean addOrUpdateSchoolYear(Schoolyear schoolYear);
 

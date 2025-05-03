@@ -28,10 +28,6 @@ import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- *
- * @author nguye
- */
 @Repository
 @Transactional
 public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeacherRepository {

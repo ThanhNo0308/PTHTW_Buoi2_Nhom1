@@ -36,8 +36,6 @@ public class UserServiceImp implements UserService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
     @Autowired
-    private LocalSessionFactoryBean factory;
-    @Autowired
     private Cloudinary cloudinary;
 
     @Override

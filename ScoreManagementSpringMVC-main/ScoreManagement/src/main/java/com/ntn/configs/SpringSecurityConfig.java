@@ -43,12 +43,6 @@ import org.springframework.web.multipart.support.MultipartFilter;
 public class SpringSecurityConfig {
 
     @Autowired
-    private Environment env;
-
-    @Autowired
-    private UserDetailsService userDetailsService;
-
-    @Autowired
     private CustomLoginSuccessHandler loginSuccessHandler;
 
     @Bean

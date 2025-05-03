@@ -4,24 +4,11 @@ import com.ntn.pojo.Student;
 import com.ntn.repository.StudentRepository;
 import com.ntn.service.EmailService;
 import com.ntn.service.StudentService;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Service;
 
-/**
- * Triển khai dịch vụ sinh viên
- */
 @Service
 public class StudentServiceImpl implements StudentService {
 

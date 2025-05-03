@@ -8,7 +8,6 @@ import com.ntn.pojo.User;
 import java.util.List;
 import java.util.Map;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService extends UserDetailsService {
 

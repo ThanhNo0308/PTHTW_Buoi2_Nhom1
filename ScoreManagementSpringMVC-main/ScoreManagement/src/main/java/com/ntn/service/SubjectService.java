@@ -25,8 +25,6 @@ public interface SubjectService {
 
     List<Integer> getSubjectIdByListSubjectTeacherId(List<Integer> listSubjectTeacherId);
 
-    
-
     boolean addOrUpdateSubject(Subject subject);
 
     boolean deleteSubject(int subjectId);

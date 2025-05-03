@@ -10,8 +10,8 @@ import com.ntn.pojo.Score;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Typescore;
-import com.ntn.repository.ClassScoreTypeRepository;
 import com.ntn.repository.TypeScoreRepository;
+import com.ntn.service.ClassScoreTypeService;
 import com.ntn.service.ScoreService;
 import com.ntn.service.StudentService;
 import jakarta.persistence.NoResultException;
@@ -47,7 +47,7 @@ public class TypeScoreRepositoryImpl implements TypeScoreRepository {
     private ScoreService scoreService;
 
     @Autowired
-    private ClassScoreTypeRepository classScoreTypeRepository;
+    private ClassScoreTypeService classScoreTypeService;
     
     @Autowired
     private TypeScoreRepository typeScoreRepository;
@@ -295,12 +295,12 @@ public class TypeScoreRepositoryImpl implements TypeScoreRepository {
             }
 
             // 2. Xóa loại điểm trong bảng ClassScoreTypes
-            List<Classscoretypes> classScoreTypes = classScoreTypeRepository.getScoreTypesByClass(
+            List<Classscoretypes> classScoreTypes = classScoreTypeService.getScoreTypesByClass(
                     classId, subjectTeacherId, schoolYearId);
 
             for (Classscoretypes cst : classScoreTypes) {
                 if (cst.getScoreType().getScoreType().equals(scoreType)) {
-                    return classScoreTypeRepository.deleteScoreType(cst.getId());
+                    return classScoreTypeService.deleteScoreType(cst.getId());
                 }
             }
 
@@ -320,7 +320,7 @@ public class TypeScoreRepositoryImpl implements TypeScoreRepository {
                 floatWeights.put(entry.getKey(), entry.getValue().floatValue());
             }
 
-            return classScoreTypeRepository.updateScoreTypeWeights(classId, subjectTeacherId, schoolYearId, floatWeights);
+            return classScoreTypeService.updateScoreTypeWeights(classId, subjectTeacherId, schoolYearId, floatWeights);
         } catch (Exception e) {
             e.printStackTrace();
             return false;

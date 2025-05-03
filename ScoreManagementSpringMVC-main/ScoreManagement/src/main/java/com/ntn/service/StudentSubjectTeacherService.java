@@ -8,10 +8,6 @@ import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subjectteacher;
 import java.util.List;
 
-/**
- *
- * @author nguye
- */
 public interface StudentSubjectTeacherService {
 
     List<Studentsubjectteacher> getStudsubjteachs();
@@ -32,17 +28,17 @@ public interface StudentSubjectTeacherService {
 
     List<Studentsubjectteacher> getBySubjectId(int subjectId);
 
-
     List<Studentsubjectteacher> getByClassId(int classId);
 
-   boolean checkDuplicate(Integer studentId, Integer subjectTeacherId);
+    boolean checkDuplicate(Integer studentId, Integer subjectTeacherId);
+
     boolean checkDuplicateExcept(Integer studentId, Integer subjectTeacherId, Integer exceptId);
+
     int batchEnrollStudents(int classId, int subjectTeacherId);
-    
+
     List<Studentsubjectteacher> getBySchoolYearIdThroughSubjectTeacher(int schoolYearId);
 
     boolean hasRelatedScores(int enrollmentId);
-
 
     long countEnrollments();
 
@@ -51,7 +47,7 @@ public interface StudentSubjectTeacherService {
     List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID);
 
     List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID);
-    
+
     List<Studentsubjectteacher> getEnrollmentsByStudentCode(String studentCode);
 
 }

@@ -15,7 +15,6 @@ import com.cloudinary.utils.ObjectUtils;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
-import com.ntn.pojo.User.Role;
 import com.ntn.service.ClassService;
 import com.ntn.service.DepartmentService;
 import com.ntn.service.MajorService;

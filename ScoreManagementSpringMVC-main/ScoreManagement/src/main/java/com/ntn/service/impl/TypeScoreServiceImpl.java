@@ -5,6 +5,7 @@
 package com.ntn.service.impl;
 
 import com.ntn.pojo.Classscoretypes;
+import com.ntn.pojo.Student;
 import com.ntn.pojo.Typescore;
 import com.ntn.repository.ClassScoreTypeRepository;
 import com.ntn.repository.TypeScoreRepository;
@@ -101,5 +102,15 @@ public class TypeScoreServiceImpl implements TypeScoreService {
     @Override
     public boolean updateScoreTypeWeights(Integer classId, Integer subjectTeacherId, Integer schoolYearId, Map<String, Double> weights) {
        return this.typeScoreRepository.updateScoreTypeWeights(classId, subjectTeacherId, schoolYearId, weights);
+    }
+
+    @Override
+    public int countScoreTypesBySubjectTeacher(int subjectTeacherId) {
+        return this.typeScoreRepository.countScoreTypesBySubjectTeacher(subjectTeacherId);
+    }
+
+    @Override
+    public Student getStudentByCode(String studentCode) {
+        return this.typeScoreRepository.getStudentByCode(studentCode);
     }
 }

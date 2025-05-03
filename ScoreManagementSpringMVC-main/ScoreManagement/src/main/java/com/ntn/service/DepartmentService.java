@@ -8,10 +8,16 @@ import com.ntn.pojo.Department;
 import java.util.List;
 
 public interface DepartmentService {
+
     List<Department> getDepartments();
+
     boolean addOrUpdateDepartment(Department department);
+
     boolean deleteDepartment(int departmentId);
+
     Department getDepartmentById(int departmentId);
+
     boolean hasRelatedData(int departmentId);
+
     long countDepartments();
 }

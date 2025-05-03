@@ -2,7 +2,6 @@ package com.ntn.repository.impl;
 
 import com.ntn.pojo.Student;
 import com.ntn.pojo.User;
-import com.ntn.pojo.Class;
 import com.ntn.repository.StudentRepository;
 import java.util.List;
 import java.util.Optional;

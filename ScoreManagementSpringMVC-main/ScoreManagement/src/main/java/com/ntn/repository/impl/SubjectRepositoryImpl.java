@@ -5,27 +5,20 @@
 package com.ntn.repository.impl;
 
 import com.ntn.pojo.Department;
-import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subject;
-import com.ntn.pojo.Subjectteacher;
 import com.ntn.repository.SubjectRepository;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;

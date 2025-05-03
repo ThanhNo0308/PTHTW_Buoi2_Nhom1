@@ -1,10 +1,7 @@
 package com.ntn.repository.impl;
 
 import com.ntn.pojo.Schoolyear;
-import com.ntn.pojo.Subjectteacher;
-import com.ntn.pojo.Typescore;
 import com.ntn.repository.SchoolYearRepository;
-import jakarta.persistence.NoResultException;
 import java.util.List;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -14,7 +11,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,8 +21,6 @@ public class SchoolYearRepositoryImp implements SchoolYearRepository {
 
     @Autowired
     private LocalSessionFactoryBean factory;
-    @Autowired
-    private Environment env;
 
     @Override
     public List<Schoolyear> getListSchoolYear(String currentYear) {

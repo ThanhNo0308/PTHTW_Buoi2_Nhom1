@@ -14,10 +14,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-/**
- *
- * @author vhuunghia
- */
 @Service
 public class TeacherServiceImp implements TeacherService {
 

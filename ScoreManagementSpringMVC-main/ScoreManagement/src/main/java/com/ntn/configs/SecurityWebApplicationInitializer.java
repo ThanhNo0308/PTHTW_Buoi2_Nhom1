@@ -4,10 +4,6 @@
  */
 package com.ntn.configs;
 
-/**
- *
- * @author vhuunghia
- */
 import org.springframework.security.web.context.AbstractSecurityWebApplicationInitializer;
 
 /**

@@ -16,7 +16,6 @@ import com.ntn.service.StudentService;
 import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TeacherService;
 import com.ntn.service.UserService;
-import jakarta.validation.Valid;
 import java.beans.PropertyEditorSupport;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -40,7 +39,6 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller

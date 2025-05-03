@@ -16,6 +16,7 @@ public class ForumServiceImpl implements ForumService {
     
     @Autowired
     private ForumRepository forumRepo;
+    
     @Override
     public List<Forum> getForums() {
         return this.forumRepo.getForums();

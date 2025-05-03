@@ -4,6 +4,7 @@
  */
 package com.ntn.service;
 
+import com.ntn.pojo.Student;
 import com.ntn.pojo.Typescore;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,10 @@ public interface TypeScoreService {
     Typescore getScoreTypeByName(String name);
 
     boolean addScoreType(String typeName, int subjectTeacherId);
+    
+    int countScoreTypesBySubjectTeacher(int subjectTeacherId);
+    
+    Student getStudentByCode(String studentCode);
 
     boolean addScoreType(Typescore newType);
 

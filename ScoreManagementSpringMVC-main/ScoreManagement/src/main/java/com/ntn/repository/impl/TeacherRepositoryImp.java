@@ -5,11 +5,11 @@
 package com.ntn.repository.impl;
 
 import com.ntn.pojo.Department;
-import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
 import com.ntn.repository.TeacherRepository;
 import com.ntn.repository.UserRepository;
+import com.ntn.service.UserService;
 import jakarta.persistence.NoResultException;
 import java.util.List;
 import jakarta.persistence.Query;
@@ -36,7 +36,7 @@ public class TeacherRepositoryImp implements TeacherRepository {
     private TeacherRepository teacherRepo;
 
     @Autowired
-    private UserRepository userRepo;
+    private UserService userService;
 
     @Override
     public int getidTeacherByEmail(String email) {
@@ -296,7 +296,7 @@ public class TeacherRepositoryImp implements TeacherRepository {
     @Override
     public int getTeacherIdByUsername(String username) {
         // Lấy User từ username
-        User user = userRepo.getUserByUsername(username);
+        User user = userService.getUserByUn(username);
         if (user == null) {
             return 0;
         }

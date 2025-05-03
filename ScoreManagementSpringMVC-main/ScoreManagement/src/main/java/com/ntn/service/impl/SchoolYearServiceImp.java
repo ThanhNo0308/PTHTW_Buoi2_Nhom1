@@ -32,10 +32,6 @@ public class SchoolYearServiceImp implements SchoolYearService {
         return this.schoolYearRepo.getAllSchoolYears();
     }
 
-   
-
-   
-
     @Override
     public boolean addOrUpdateSchoolYear(Schoolyear schoolYear) {
         return this.schoolYearRepo.addOrUpdateSchoolYear(schoolYear);

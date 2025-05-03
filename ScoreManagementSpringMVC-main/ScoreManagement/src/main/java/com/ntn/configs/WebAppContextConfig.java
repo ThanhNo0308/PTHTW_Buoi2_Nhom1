@@ -20,10 +20,6 @@ import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import org.springframework.web.servlet.view.JstlView;
 
-/**
- *
- * @author Kiet
- */
 @Configuration
 @EnableWebMvc
 @EnableTransactionManagement
@@ -40,12 +36,6 @@ public class WebAppContextConfig implements WebMvcConfigurer {
     public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
         configurer.enable();
     }
-
-//    @Override
-//    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-//        registry.addResourceHandler("/static/**")
-//                .addResourceLocations("classpath:/static/");
-//    }
     
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -60,7 +50,6 @@ public class WebAppContextConfig implements WebMvcConfigurer {
     @Bean
     public MessageSource messageSource() {
         ResourceBundleMessageSource m = new ResourceBundleMessageSource();
-
         m.setBasenames("messages");
 
         return m;

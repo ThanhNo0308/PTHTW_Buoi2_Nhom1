@@ -19,10 +19,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
-/**
- *
- * @author Kiet
- */
 public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherServletInitializer {
 
     @Override
@@ -32,8 +28,6 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
             ThymeleafConfig.class,
             SpringSecurityConfig.class,
             EmailConfig.class
-//                ,JwtSecurityConfig.class
-
         };
 
     }
@@ -55,8 +49,8 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
     @Override
     protected void customizeRegistration(ServletRegistration.Dynamic registration) {
         String location = "/";
-        long maxFileSize = 5242880; // 5MB
-        long maxRequestSize = 20971520; // 20MB
+        long maxFileSize = 5242880; 
+        long maxRequestSize = 20971520; 
         int fileSizeThreshold = 0;
 
         registration.setMultipartConfig(new MultipartConfigElement(location, maxFileSize, maxRequestSize, fileSizeThreshold));
@@ -65,7 +59,7 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
     @Override
     protected Filter[] getServletFilters() {
         return new Filter[]{
-            new CorsFilter(), // CorsFilter phải đứng trước JwtFilter
+            new CorsFilter(), 
             new JwtFilter()
         };
 

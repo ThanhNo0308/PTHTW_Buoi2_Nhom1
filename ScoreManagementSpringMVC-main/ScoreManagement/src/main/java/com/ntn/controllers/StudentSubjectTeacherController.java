@@ -1,12 +1,8 @@
 package com.ntn.controllers;
 
-import com.ntn.pojo.Department;
-import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Studentsubjectteacher;
-import com.ntn.pojo.Subject;
 import com.ntn.pojo.Subjectteacher;
-import com.ntn.pojo.Teacher;
 import com.ntn.service.ClassService;
 import com.ntn.service.SchoolYearService;
 import com.ntn.service.StudentService;
@@ -26,11 +22,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import jakarta.validation.Valid;
 import java.beans.PropertyEditorSupport;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import org.springframework.web.bind.WebDataBinder;
 
 @Controller

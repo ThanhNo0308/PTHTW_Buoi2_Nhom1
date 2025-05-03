@@ -13,9 +13,7 @@ import java.util.List;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +29,6 @@ public class UserRepositoryImp implements UserRepository {
 
     @Autowired
     private LocalSessionFactoryBean factory;
-    @Autowired
-    private Environment env;
     @Autowired
     private BCryptPasswordEncoder passEncoder;
     @Autowired

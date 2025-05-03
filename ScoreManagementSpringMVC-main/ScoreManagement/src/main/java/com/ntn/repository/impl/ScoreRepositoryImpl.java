@@ -22,9 +22,12 @@ import com.ntn.repository.ClassScoreTypeRepository;
 import com.ntn.repository.ScoreRepository;
 import com.ntn.repository.SubjectTeacherRepository;
 import com.ntn.repository.TypeScoreRepository;
+import com.ntn.service.ClassScoreTypeService;
 import com.ntn.service.ClassService;
 import com.ntn.service.EmailService;
 import com.ntn.service.SchoolYearService;
+import com.ntn.service.ScoreService;
+import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TypeScoreService;
 import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -64,28 +67,22 @@ public class ScoreRepositoryImpl implements ScoreRepository {
     private LocalSessionFactoryBean factory;
 
     @Autowired
-    private ClassScoreTypeRepository classScoreTypeRepository;
+    private ClassScoreTypeService ClassScoreTypeService;
 
     @Autowired
-    private SubjectTeacherRepository subjectTeacherRepository;
-
-    @Autowired
-    private TypeScoreRepository typeScoreRepository;
+    private SubjectTeacherService subjectTeacherService;
 
     @Autowired
     private SchoolYearService schoolYearService;
 
     @Autowired
-    private ScoreRepository scoreRepo;
+    private ScoreService scoreService;
 
     @Autowired
     private TypeScoreService typeScoreService;
 
     @Autowired
     private ClassService classService;
-
-    @Autowired
-    private EmailService emailService;
 
     @Override
     public Float getScoreWeight(Score score) {
@@ -104,7 +101,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
 
     @Override
     public Float getScoreWeight(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType) {
-        return classScoreTypeRepository.getWeightForScoreType(classId, subjectTeacherId, schoolYearId, scoreType);
+        return ClassScoreTypeService.getWeightForScoreType(classId, subjectTeacherId, schoolYearId, scoreType);
     }
 
     @Override
@@ -364,12 +361,12 @@ public class ScoreRepositoryImpl implements ScoreRepository {
             Session session = this.factory.getObject().getCurrentSession();
 
             // Tìm SubjectTeacher chính xác bằng cả 3 thông số
-            Subjectteacher subjectTeacher = subjectTeacherRepository.findByIdClassIdAndSchoolYearId(
+            Subjectteacher subjectTeacher = subjectTeacherService.findByIdClassIdAndSchoolYearId(
                     subjectTeacherId, classId, schoolYearId);
 
             if (subjectTeacher == null) {
                 // Nếu không tìm thấy với 3 tiêu chí, thử tìm chỉ với ID
-                subjectTeacher = subjectTeacherRepository.getSubJectTeacherById(subjectTeacherId);
+                subjectTeacher = subjectTeacherService.getSubJectTeacherById(subjectTeacherId);
 
                 // Log cảnh báo nếu classId không khớp
                 if (subjectTeacher != null && subjectTeacher.getClassId() != null
@@ -403,7 +400,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
                 }
 
                 // Tìm thông tin sinh viên
-                Student student = typeScoreRepository.getStudentByCode(studentCode);
+                Student student = typeScoreService.getStudentByCode(studentCode);
                 if (student == null) {
                     System.err.println("Không tìm thấy sinh viên với mã: " + studentCode);
                     continue;
@@ -486,13 +483,13 @@ public class ScoreRepositoryImpl implements ScoreRepository {
     // Hàm hỗ trợ tìm loại điểm (không phân biệt hoa thường và khoảng trắng)
     private Typescore findScoreType(String headerName) {
         // Tìm chính xác trước
-        Typescore typeScore = typeScoreRepository.getScoreTypeByName(headerName);
+        Typescore typeScore = typeScoreService.getScoreTypeByName(headerName);
         if (typeScore != null) {
             return typeScore;
         }
 
         // Nếu không tìm thấy, thử so sánh không phân biệt hoa thường và khoảng trắng
-        List<Typescore> allTypes = typeScoreRepository.getAllScoreTypes();
+        List<Typescore> allTypes = typeScoreService.getAllScoreTypes();
         String normalizedHeader = normalizeString(headerName);
 
         for (Typescore type : allTypes) {
@@ -513,14 +510,14 @@ public class ScoreRepositoryImpl implements ScoreRepository {
 
     @Override
     public byte[] exportScoresToCsv(int subjectTeacherId, int classId, int schoolYearId) throws Exception {
-        List<Score> scores = this.scoreRepo.getScoresBySubjectTeacherIdAndClassIdAndSchoolYearId(
+        List<Score> scores = this.scoreService.getScoresBySubjectTeacherIdAndClassIdAndSchoolYearId(
                 subjectTeacherId, classId, schoolYearId);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         try {
             // Lấy thông tin chi tiết
-            Subjectteacher subjectTeacher = subjectTeacherRepository.getSubJectTeacherById(subjectTeacherId);
+            Subjectteacher subjectTeacher = subjectTeacherService.getSubJectTeacherById(subjectTeacherId);
             com.ntn.pojo.Class classInfo = classService.getClassById(classId);
             Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
 
@@ -660,7 +657,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
 
     @Override
     public byte[] exportScoresToPdf(int subjectTeacherId, int classId, int schoolYearId) throws Exception {
-        List<Score> scores = this.scoreRepo.getScoresBySubjectTeacherIdAndClassIdAndSchoolYearId(
+        List<Score> scores = this.scoreService.getScoresBySubjectTeacherIdAndClassIdAndSchoolYearId(
                 subjectTeacherId, classId, schoolYearId);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -684,7 +681,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
             Font smallFont = new Font(unicodeFont, 9, Font.NORMAL);
 
             // Lấy thông tin chi tiết
-            Subjectteacher subjectTeacher = subjectTeacherRepository.getSubJectTeacherById(subjectTeacherId);
+            Subjectteacher subjectTeacher = subjectTeacherService.getSubJectTeacherById(subjectTeacherId);
             com.ntn.pojo.Class classInfo = classService.getClassById(classId);
             Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
 
@@ -993,14 +990,14 @@ public class ScoreRepositoryImpl implements ScoreRepository {
     @Override
     public boolean addScoreColumn(String columnName, int subjectTeacherId, int schoolYearId) {
         // Kiểm tra số lượng cột điểm hiện tại (không quá 5)
-        int currentColumnCount = typeScoreRepository.countScoreTypesBySubjectTeacher(subjectTeacherId);
+        int currentColumnCount = typeScoreService.countScoreTypesBySubjectTeacher(subjectTeacherId);
 
         if (currentColumnCount >= 5) {
             return false;
         }
 
         // Thêm cột điểm mới
-        return typeScoreRepository.addScoreType(columnName, subjectTeacherId);
+        return typeScoreService.addScoreType(columnName, subjectTeacherId);
     }
 
     @Override
@@ -1010,7 +1007,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
             Set<Integer> classIds = new HashSet<>();
 
             // Lấy danh sách các lớp từ điểm hiện tại
-            List<Score> existingScores = scoreRepo.getListScoreBySubjectTeacherIdAndSchoolYearId(
+            List<Score> existingScores = scoreService.getListScoreBySubjectTeacherIdAndSchoolYearId(
                     subjectTeacherId, schoolYearId);
 
             for (Score score : existingScores) {
@@ -1026,7 +1023,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
                     floatWeights.put(entry.getKey(), entry.getValue().floatValue());
                 }
 
-                classScoreTypeRepository.updateScoreTypeWeights(
+                ClassScoreTypeService.updateScoreTypeWeights(
                         classId, subjectTeacherId, schoolYearId, floatWeights);
             }
 
@@ -1058,7 +1055,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
 
             if (classId != null) {
                 // Lấy trọng số từ ClassScoreType
-                List<Classscoretypes> classScoreTypes = classScoreTypeRepository.getScoreTypesByClass(
+                List<Classscoretypes> classScoreTypes = ClassScoreTypeService.getScoreTypesByClass(
                         classId, subjectTeacherId, schoolYearId);
 
                 for (Classscoretypes cst : classScoreTypes) {

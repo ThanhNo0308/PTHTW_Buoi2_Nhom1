@@ -6,7 +6,6 @@ package com.ntn.service.impl;
 
 import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subject;
-import com.ntn.pojo.Subjectteacher;
 import com.ntn.repository.SubjectRepository;
 import com.ntn.service.SubjectService;
 import java.util.List;
@@ -44,19 +43,13 @@ public class SubjectServiceImpl implements SubjectService {
         return this.subjRepo.getSubjectsByKeyword(keyword);
     }
 
-   
-
-    
-
     @Override
     public List<Integer> getSubjectTeacherId(List<Studentsubjectteacher> studentSubjectTeacher) {
-
         return this.subjRepo.getSubjectTeacherId(studentSubjectTeacher);
     }
 
     @Override
     public List<Integer> getSubjectIdByListSubjectTeacherId(List<Integer> listSubjectTeacherId) {
-
         return this.subjRepo.getSubjectIdByListSubjectTeacherId(listSubjectTeacherId);
     }
 

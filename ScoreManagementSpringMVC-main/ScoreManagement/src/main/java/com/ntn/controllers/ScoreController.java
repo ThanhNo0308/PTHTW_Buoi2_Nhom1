@@ -3,7 +3,6 @@ package com.ntn.controllers;
 import com.ntn.pojo.Score;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Typescore;
-import com.ntn.repository.TypeScoreRepository;
 import com.ntn.service.ClassService;
 import com.ntn.service.EmailService;
 import com.ntn.service.SchoolYearService;
@@ -23,12 +22,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/scores")
