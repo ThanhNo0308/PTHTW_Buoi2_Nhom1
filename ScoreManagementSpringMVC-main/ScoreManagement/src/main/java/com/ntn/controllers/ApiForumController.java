@@ -43,9 +43,7 @@ public class ApiForumController {
     @Autowired
     private SubjectTeacherService subjectTeacherService;
 
-    /**
-     * Lấy danh sách tất cả diễn đàn
-     */
+    // Lấy danh sách tất cả diễn đàn
     @GetMapping("/forums")
     public ResponseEntity<Map<String, Object>> getAllForums() {
         Map<String, Object> response = new HashMap<>();
@@ -61,9 +59,7 @@ public class ApiForumController {
         }
     }
 
-    /**
-     * Lấy diễn đàn theo môn học của giáo viên
-     */
+    // Lấy diễn đàn theo môn học của giáo viên
     @GetMapping("/forums/by-subject-teacher/{subjectTeacherId}")
     public ResponseEntity<Map<String, Object>> getForumsBySubjectTeacher(@PathVariable Integer subjectTeacherId) {
         Map<String, Object> response = new HashMap<>();
@@ -79,9 +75,7 @@ public class ApiForumController {
         }
     }
 
-    /**
-     * Lấy chi tiết diễn đàn và các comment
-     */
+    // Lấy chi tiết diễn đàn và các comment
     @GetMapping("/forums/{forumId}")
     public ResponseEntity<Map<String, Object>> getForumDetail(@PathVariable Integer forumId) {
         Map<String, Object> response = new HashMap<>();
@@ -106,9 +100,7 @@ public class ApiForumController {
         }
     }
 
-    /**
-     * Thêm diễn đàn mới
-     */
+    // Thêm diễn đàn mới
     @PostMapping("/forums/add")
     public ResponseEntity<Map<String, Object>> addForum(@RequestBody Map<String, Object> payload, Authentication authentication) {
         Map<String, Object> response = new HashMap<>();
@@ -174,9 +166,7 @@ public class ApiForumController {
         }
     }
 
-    /**
-     * Thêm bình luận mới
-     */
+    // Thêm bình luận mới
     @PostMapping("/forums/{forumId}/comments")
     public ResponseEntity<Map<String, Object>> addComment(@PathVariable Integer forumId, @RequestBody Map<String, Object> payload, Authentication authentication) {
         Map<String, Object> response = new HashMap<>();
@@ -250,9 +240,7 @@ public class ApiForumController {
         }
     }
 
-    /**
-     * Xóa bình luận
-     */
+    // Xóa bình luận
     @DeleteMapping("/forums/comments/{commentId}")
     public ResponseEntity<Map<String, Object>> deleteComment(@PathVariable Integer commentId, Authentication authentication) {
         Map<String, Object> response = new HashMap<>();
@@ -305,9 +293,7 @@ public class ApiForumController {
         }
     }
 
-    /**
-     * Lấy danh sách các diễn đàn cho giáo viên (theo các môn đang dạy)
-     */
+    // Lấy danh sách các diễn đàn cho giáo viên (theo các môn đang dạy)
     @GetMapping("/forums/teacher")
     public ResponseEntity<Map<String, Object>> getTeacherForums(Authentication authentication) {
         Map<String, Object> response = new HashMap<>();
@@ -342,10 +328,8 @@ public class ApiForumController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-
-    /**
-     * Lấy danh sách các diễn đàn cho sinh viên (theo các môn đã đăng ký)
-     */
+ 
+    // Lấy danh sách các diễn đàn cho sinh viên (theo các môn đã đăng ký)
     @GetMapping("/forums/student")
     public ResponseEntity<Map<String, Object>> getStudentForums(Authentication authentication) {
         Map<String, Object> response = new HashMap<>();
@@ -403,9 +387,7 @@ public class ApiForumController {
         }
     }
 
-    /**
-     * API xóa diễn đàn
-     */
+    // Xóa diễn đàn
     @PostMapping("/forums/delete")
     public ResponseEntity<Map<String, Object>> deleteForum(@RequestBody Map<String, Object> payload, Authentication authentication) {
         Map<String, Object> response = new HashMap<>();
@@ -479,9 +461,7 @@ public class ApiForumController {
         }
     }
 
-    /**
-     * API cập nhật diễn đàn
-     */
+    // Cập nhật diễn đàn
     @PostMapping("/forums/update")
     public ResponseEntity<Map<String, Object>> updateForum(@RequestBody Map<String, Object> payload, Authentication authentication) {
         Map<String, Object> response = new HashMap<>();

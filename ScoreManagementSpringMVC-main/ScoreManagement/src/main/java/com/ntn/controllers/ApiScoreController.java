@@ -22,14 +22,11 @@ import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -38,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -69,9 +65,6 @@ public class ApiScoreController {
 
     @Autowired
     private TeacherService teacherService;
-
-    @Autowired
-    private StudentSubjectTeacherService studentSubjectTeacherService;
 
     // Cấu hình trọng số điểm
     @PostMapping("/classes/{classId}/scores/configure-weights")

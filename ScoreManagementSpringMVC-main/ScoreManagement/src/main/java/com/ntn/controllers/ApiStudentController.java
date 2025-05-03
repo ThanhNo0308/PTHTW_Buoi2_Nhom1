@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,7 +29,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,17 +51,9 @@ public class ApiStudentController {
     private UserService userService;
 
     @Autowired
-    private ClassService classService;
-
-    @Autowired
     private StudentSubjectTeacherService studentSubjectTeacherService;
 
-    @Autowired
-    private SubjectTeacherService subjectTeacherService;
-
-    /**
-     * API lấy thông tin sinh viên hiện tại
-     */
+    // Lấy thông tin sinh viên hiện tại
     @GetMapping("/current-student")
     public ResponseEntity<?> getCurrentStudent(Principal principal) {
         Map<String, Object> response = new HashMap<>();
@@ -97,9 +87,7 @@ public class ApiStudentController {
         }
     }
 
-    /**
-     * API lấy điểm của sinh viên đăng nhập
-     */
+    // Lấy điểm của sinh viên đăng nhập
     @GetMapping("/scores")
     public ResponseEntity<?> getStudentScores(
             Principal principal,
@@ -242,9 +230,7 @@ public class ApiStudentController {
         }
     }
 
-    /**
-     * API lấy thông tin lớp và danh sách sinh viên trong lớp
-     */
+    // Lấy thông tin lớp và danh sách sinh viên trong lớp
     @GetMapping("/class-info")
     public ResponseEntity<?> getClassInfo(Principal principal) {
         Map<String, Object> response = new HashMap<>();
@@ -289,9 +275,7 @@ public class ApiStudentController {
         }
     }
 
-    /**
-     * API lấy thông tin môn học đã đăng ký của sinh viên
-     */
+    // Lấy thông tin môn học đã đăng ký của sinh viên
     @GetMapping("/subjects")
     public ResponseEntity<?> getEnrolledSubjects(
             Principal principal,

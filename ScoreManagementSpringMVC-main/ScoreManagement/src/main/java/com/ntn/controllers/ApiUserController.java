@@ -299,9 +299,7 @@ public class ApiUserController {
         }
     }
 
-    /**
-     * Cập nhật avatar người dùng
-     */
+    // Cập nhật avatar người dùng
     @PostMapping("/profile/upload-avatar")
     public ResponseEntity<?> uploadAvatar(
             @RequestParam("id") int userId,

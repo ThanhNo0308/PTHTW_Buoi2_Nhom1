@@ -308,6 +308,7 @@ public class ApiTeacherController {
         }
     }
 
+    // Tìm kiếm sinh viên
     @GetMapping("/students/search")
     @Transactional
     public ResponseEntity<Map<String, Object>> searchStudents(
@@ -348,6 +349,7 @@ public class ApiTeacherController {
         }
     }
 
+    // Tất cả sinh viên trong lớp được phân công
     @GetMapping("/students/assigned")
     public ResponseEntity<Map<String, Object>> getAssignedStudents(Authentication authentication) {
         Map<String, Object> response = new HashMap<>();
