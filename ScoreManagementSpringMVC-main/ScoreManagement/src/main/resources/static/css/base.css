@@ -113,15 +113,6 @@
     position: relative;
 }
 
-.header_nav_title:after {
-    content: '';
-    position: absolute;
-    right: -15px;
-    height: 35px;
-    width: 1px;
-    background-color: rgba(255, 255, 255, 0.3);
-}
-
 /* Hiệu ứng cho user dropdown */
 .nav-item.dropdown .dropdown-toggle {
     display: flex;
