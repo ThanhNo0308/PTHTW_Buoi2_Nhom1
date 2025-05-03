@@ -90,40 +90,6 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public int sendNotificationToClass(int classId, String subject, String message) {
-        List<Student> students = this.getStudentByClassId(classId);
-        int sentCount = 0;
-
-        for (Student student : students) {
-            if (student.getEmail() != null && !student.getEmail().isEmpty()) {
-                boolean sent = emailService.sendEmail(student.getEmail(), subject, message);
-                if (sent) {
-                    sentCount++;
-                }
-            }
-        }
-
-        return sentCount;
-    }
-
-    @Override
-    public int sendNotificationToAllStudents(String subject, String message) {
-        List<Student> students = this.getStudents();
-        int sentCount = 0;
-
-        for (Student student : students) {
-            if (student.getEmail() != null && !student.getEmail().isEmpty()) {
-                boolean sent = emailService.sendEmail(student.getEmail(), subject, message);
-                if (sent) {
-                    sentCount++;
-                }
-            }
-        }
-
-        return sentCount;
-    }
-
-    @Override
     public List<Student> findStudentsByCode(String code) {
         return this.studRepo.findStudentsByCode(code);
     }

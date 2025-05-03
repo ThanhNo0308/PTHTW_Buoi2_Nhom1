@@ -167,33 +167,4 @@ public class ForumController {
 
         return "redirect:/admin/forum";
     }
-
-    @GetMapping("/admin/send-notification")
-    public String sendNotificationForm(Model model) {
-        // Thêm danh sách lớp để chọn (nếu muốn gửi thông báo cho một lớp cụ thể)
-        model.addAttribute("classes", classService.getClasses());
-        return "/admin/send-notification";
-    }
-
-    @PostMapping("/admin/send-notification")
-    public String sendNotification(
-            @RequestParam("subject") String subject,
-            @RequestParam("message") String message,
-            @RequestParam(value = "classId", required = false) Integer classId,
-            RedirectAttributes redirectAttributes) {
-
-        int sentCount = 0;
-
-        if (classId != null) {
-            // Gửi cho sinh viên trong một lớp cụ thể
-            sentCount = studentService.sendNotificationToClass(classId, subject, message);
-        } else {
-            // Gửi cho tất cả sinh viên
-            sentCount = studentService.sendNotificationToAllStudents(subject, message);
-        }
-
-        redirectAttributes.addFlashAttribute("successMessage",
-                "Đã gửi thông báo đến " + sentCount + " sinh viên");
-        return "redirect:/admin/dashboard";
-    }
 }

@@ -32,10 +32,6 @@ public interface StudentService {
 
     int countStudents();
 
-    int sendNotificationToClass(int classId, String subject, String message);
-
-    int sendNotificationToAllStudents(String subject, String message);
-
     List<Student> findStudentsByCode(String code);
 
     List<Student> findStudentsByName(String name);

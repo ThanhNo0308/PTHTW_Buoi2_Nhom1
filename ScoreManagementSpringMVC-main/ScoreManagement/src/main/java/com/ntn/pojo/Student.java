@@ -92,9 +92,6 @@ public class Student implements Serializable {
     @JoinColumn(name = "ClassId", referencedColumnName = "Id")
     @ManyToOne
     private Class classId;
-    @OneToMany(mappedBy = "studentId")
-    @JsonIgnore
-    private List<Notification> notificationList;
     @OneToMany(mappedBy = "studentID")
     @JsonIgnore
     private List<Score> scoreList;
@@ -150,16 +147,6 @@ public class Student implements Serializable {
 
     public void setClassId(Class classId) {
         this.classId = classId;
-    }
-
-    @XmlTransient
-    @JsonIgnore
-    public List<Notification> getNotificationList() {
-        return notificationList;
-    }
-
-    public void setNotificationList(List<Notification> notificationList) {
-        this.notificationList = notificationList;
     }
 
     @XmlTransient

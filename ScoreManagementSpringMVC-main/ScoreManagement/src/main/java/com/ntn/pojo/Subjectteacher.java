@@ -48,9 +48,6 @@ public class Subjectteacher implements Serializable {
     @OneToMany(mappedBy = "subjectTeacherId")
     @JsonIgnore
     private List<Forum> forumList;
-    @OneToMany(mappedBy = "subjectTeacherId")
-    @JsonIgnore
-    private List<Notification> notificationList;
     @OneToMany(mappedBy = "subjectTeacherID")
     @JsonIgnore
     private List<Score> scoreList;
@@ -93,16 +90,6 @@ public class Subjectteacher implements Serializable {
 
     public void setForumList(List<Forum> forumList) {
         this.forumList = forumList;
-    }
-
-    @XmlTransient
-    @JsonIgnore
-    public List<Notification> getNotificationList() {
-        return notificationList;
-    }
-
-    public void setNotificationList(List<Notification> notificationList) {
-        this.notificationList = notificationList;
     }
 
     @XmlTransient
