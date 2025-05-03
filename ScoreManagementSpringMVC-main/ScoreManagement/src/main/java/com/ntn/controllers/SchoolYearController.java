@@ -19,7 +19,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
-import org.springframework.web.bind.WebDataBinder;
 
 @Controller
 public class SchoolYearController {
@@ -171,30 +170,6 @@ public class SchoolYearController {
         }
 
         return "redirect:/admin/school-years";
-    }
-
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        dateFormat.setLenient(false);
-        binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, true));
-
-        binder.registerCustomEditor(com.ntn.pojo.Schoolyear.class, new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                if (text == null || text.isEmpty()) {
-                    setValue(null);
-                    return;
-                }
-                try {
-                    int id = Integer.parseInt(text);
-                    com.ntn.pojo.Schoolyear cls = schoolYearService.getSchoolYearById(id);
-                    setValue(cls);
-                } catch (NumberFormatException e) {
-                    setValue(null);
-                }
-            }
-        });
     }
 
     @GetMapping("/admin/school-years/current")

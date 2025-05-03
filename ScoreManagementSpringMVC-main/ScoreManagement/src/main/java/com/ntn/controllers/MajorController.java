@@ -16,10 +16,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import jakarta.validation.Valid;
 import java.beans.PropertyEditorSupport;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.web.bind.WebDataBinder;
 
 @Controller
 public class MajorController {
@@ -165,44 +163,5 @@ public class MajorController {
         }
 
         return "redirect:/admin/majors";
-    }
-
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        // Đăng ký PropertyEditor tùy chỉnh để chuyển đổi id thành đối tượng Department
-        binder.registerCustomEditor(Department.class, new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                if (text == null || text.isEmpty()) {
-                    setValue(null);
-                    return;
-                }
-                try {
-                    int id = Integer.parseInt(text);
-                    Department dept = departmentService.getDepartmentById(id);
-                    setValue(dept);
-                } catch (NumberFormatException e) {
-                    setValue(null);
-                }
-            }
-        });
-
-        // Đăng ký PropertyEditor tùy chỉnh để chuyển đổi id thành đối tượng TrainingType
-        binder.registerCustomEditor(Trainingtype.class, new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                if (text == null || text.isEmpty()) {
-                    setValue(null);
-                    return;
-                }
-                try {
-                    int id = Integer.parseInt(text);
-                    Trainingtype type = trainingTypeService.getTrainingTypeById(id);
-                    setValue(type);
-                } catch (NumberFormatException e) {
-                    setValue(null);
-                }
-            }
-        });
     }
 }

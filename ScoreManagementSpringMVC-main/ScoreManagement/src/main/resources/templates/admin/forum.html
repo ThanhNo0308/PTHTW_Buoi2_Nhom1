@@ -49,7 +49,7 @@
                                 <option th:each="subjteach : ${subjteachs}"
                                         th:value="${subjteach.id}"
                                         th:attr="data-url=@{'/admin/forumBySubjectTeacher'(subjectTeacherId=${subjteach.id})}"
-                                        th:text="${subjteach.teacherId.teacherName + ' - ' + subjteach.subjectId.subjectName}">
+                                        th:text="${subjteach.schoolYearId.nameYear + '(' + subjteach.schoolYearId.semesterName + ') - ' + subjteach.teacherId.teacherName + ' - ' + subjteach.subjectId.subjectName + ' - ' + subjteach.classId.className}">
                                 </option>
                             </select>
                         </div>

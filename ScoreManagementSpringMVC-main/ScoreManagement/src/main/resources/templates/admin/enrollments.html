@@ -48,7 +48,7 @@
                                     <option value="">-- Chọn sinh viên --</option>
                                     <option th:each="student : ${students}" 
                                             th:value="${student.id}" 
-                                            th:text="${student.firstName + ' ' + student.lastName + ' (' + student.studentCode + ')'}"
+                                            th:text="${student.lastName + ' ' + student.firstName + ' (' + student.studentCode + ')'}"
                                             th:selected="${param.studentId != null && param.studentId[0] == student.id.toString()}">
                                     </option>
                                 </select>
@@ -185,7 +185,7 @@
                             <tr th:each="enrollment : ${enrollments}">
                                 <td th:text="${enrollment.id}"></td>
                                 <td>
-                                    <span th:text="${enrollment.studentId.firstName + ' ' + enrollment.studentId.lastName + ' (' + enrollment.studentId.studentCode + ')'}"></span>
+                                    <span th:text="${enrollment.studentId.lastName + ' ' + enrollment.studentId.firstName + ' (' + enrollment.studentId.studentCode + ')'}"></span>
                                 </td>
                                 <td th:text="${enrollment.studentId.classId != null ? enrollment.studentId.classId.className : ''}"></td>
                                 <td th:text="${enrollment.subjectTeacherId.subjectId.subjectName}"></td>
@@ -231,7 +231,7 @@
                                 <option value="">-- Chọn sinh viên --</option>
                                 <option th:each="student : ${students}" 
                                         th:value="${student.id}" 
-                                        th:text="${student.firstName + ' ' + student.lastName + ' (' + student.studentCode + ') - ' + (student.classId != null ? student.classId.className : '')}">
+                                        th:text="${student.lastName + ' ' + student.firstName + ' (' + student.studentCode + ') - ' + (student.classId != null ? student.classId.className : '')}">
                                 </option>
                             </select>
                         </div>

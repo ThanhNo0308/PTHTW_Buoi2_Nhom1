@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.beans.PropertyEditorSupport;
-import org.springframework.web.bind.WebDataBinder;
 
 @Controller
 @PreAuthorize("hasAuthority('Admin')")
@@ -220,61 +219,5 @@ public class SubjectTeacherController {
         }
 
         return "redirect:/admin/subjTeach";
-    }
-
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        // Đăng ký PropertyEditor cho Subject
-        binder.registerCustomEditor(Subject.class, "subjectId", new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                if (text == null || text.isEmpty()) {
-                    setValue(null);
-                    return;
-                }
-                try {
-                    int id = Integer.parseInt(text);
-                    Subject subject = subjectService.getSubjectById(id);
-                    setValue(subject);
-                } catch (NumberFormatException e) {
-                    setValue(null);
-                }
-            }
-        });
-
-        // Đăng ký PropertyEditor cho Teacher
-        binder.registerCustomEditor(Teacher.class, "teacherId", new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                if (text == null || text.isEmpty()) {
-                    setValue(null);
-                    return;
-                }
-                try {
-                    int id = Integer.parseInt(text);
-                    Teacher teacher = teacherService.getTeacherById(id);
-                    setValue(teacher);
-                } catch (NumberFormatException e) {
-                    setValue(null);
-                }
-            }
-        });
-        
-        binder.registerCustomEditor(Class.class, "classId", new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                if (text == null || text.isEmpty()) {
-                    setValue(null);
-                    return;
-                }
-                try {
-                    int id = Integer.parseInt(text);
-                    Class classObj = classService.getClassById(id);
-                    setValue(classObj);
-                } catch (NumberFormatException e) {
-                    setValue(null);
-                }
-            }
-        });
     }
 }

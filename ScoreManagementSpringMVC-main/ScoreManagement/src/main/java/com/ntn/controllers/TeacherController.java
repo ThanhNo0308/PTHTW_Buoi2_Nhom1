@@ -37,7 +37,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -136,32 +135,6 @@ public class TeacherController {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
             return "redirect:/admin/teachers?error=validation";
         }
-    }
-
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        // 1. Đăng ký CustomDateEditor để xử lý chuyển đổi String sang Date
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        dateFormat.setLenient(false);
-        binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, true));
-
-        // 2. Đăng ký PropertyEditor tùy chỉnh để chuyển đổi id thành đối tượng Department
-        binder.registerCustomEditor(Department.class, new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                if (text == null || text.isEmpty()) {
-                    setValue(null);
-                    return;
-                }
-                try {
-                    int id = Integer.parseInt(text);
-                    Department dept = departmentService.getDepartmentById(id);
-                    setValue(dept);
-                } catch (NumberFormatException e) {
-                    setValue(null);
-                }
-            }
-        });
     }
 
     @GetMapping("/admin/teacher-delete/{id}")

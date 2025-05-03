@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.beans.PropertyEditorSupport;
-import org.springframework.web.bind.WebDataBinder;
 
 @Controller
 @PreAuthorize("hasAuthority('Admin')")
@@ -49,45 +48,6 @@ public class StudentSubjectTeacherController {
 
     @Autowired
     private ClassService classService;
-
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        // Xử lý Student
-        binder.registerCustomEditor(Student.class, "studentId", new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                if (text == null || text.isEmpty()) {
-                    setValue(null);
-                    return;
-                }
-                try {
-                    int id = Integer.parseInt(text);
-                    Student student = studentService.getStudentById(id);
-                    setValue(student);
-                } catch (NumberFormatException e) {
-                    setValue(null);
-                }
-            }
-        });
-
-        // Xử lý SubjectTeacher
-        binder.registerCustomEditor(Subjectteacher.class, "subjectTeacherId", new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                if (text == null || text.isEmpty()) {
-                    setValue(null);
-                    return;
-                }
-                try {
-                    int id = Integer.parseInt(text);
-                    Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(id);
-                    setValue(subjectTeacher);
-                } catch (NumberFormatException e) {
-                    setValue(null);
-                }
-            }
-        });
-    }
 
     @GetMapping("/admin/enrollment")
     public String getStudentSubjectTeachers(

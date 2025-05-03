@@ -4,12 +4,24 @@
  */
 package com.ntn.configs;
 
+import com.ntn.formatters.ClassFormatter;
+import com.ntn.formatters.DateFormatter;
+import com.ntn.formatters.DepartmentFormatter;
+import com.ntn.formatters.MajorFormatter;
+import com.ntn.formatters.SchoolYearFormatter;
+import com.ntn.formatters.StudentFormatter;
+import com.ntn.formatters.SubjectFormatter;
+import com.ntn.formatters.SubjectTeacherFormatter;
+import com.ntn.formatters.TeacherFormatter;
+import com.ntn.formatters.TrainingTypeFormatter;
+import com.ntn.formatters.UserFormatter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
@@ -17,8 +29,6 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
-import org.springframework.web.servlet.view.InternalResourceViewResolver;
-import org.springframework.web.servlet.view.JstlView;
 
 @Configuration
 @EnableWebMvc
@@ -27,10 +37,43 @@ import org.springframework.web.servlet.view.JstlView;
     "com.ntn.controllers",
     "com.ntn.repository",
     "com.ntn.service",
-    "com.ntn.components"
+    "com.ntn.formatters"
 })
-//@PropertySource("classpath:configs.properties")
+
 public class WebAppContextConfig implements WebMvcConfigurer {
+    
+    @Autowired
+    private ClassFormatter classFormatter;
+    
+    @Autowired
+    private DateFormatter dateFormatter;
+    
+    @Autowired
+    private DepartmentFormatter departmentFormatter;
+    
+    @Autowired
+    private MajorFormatter majorFormatter;
+    
+    @Autowired
+    private SchoolYearFormatter schoolYearFormatter;
+    
+    @Autowired
+    private StudentFormatter studentFormatter;
+    
+    @Autowired
+    private SubjectFormatter subjectFormatter;
+    
+    @Autowired
+    private SubjectTeacherFormatter subjectTeacherFormatter;
+    
+    @Autowired
+    private TeacherFormatter teacherFormatter;
+    
+    @Autowired
+    private TrainingTypeFormatter trainingTypeFormatter;
+    
+    @Autowired
+    private UserFormatter userFormatter;
 
     @Override
     public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
@@ -66,5 +109,20 @@ public class WebAppContextConfig implements WebMvcConfigurer {
     @Bean
     public HandlerMappingIntrospector mvcHandlerMappingIntrospector() {
         return new HandlerMappingIntrospector();
+    }
+    
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addFormatter(classFormatter);
+        registry.addFormatter(dateFormatter);
+        registry.addFormatter(departmentFormatter);
+        registry.addFormatter(majorFormatter);
+        registry.addFormatter(schoolYearFormatter);
+        registry.addFormatter(studentFormatter);
+        registry.addFormatter(subjectFormatter);
+        registry.addFormatter(subjectTeacherFormatter);
+        registry.addFormatter(teacherFormatter);
+        registry.addFormatter(trainingTypeFormatter);
+        registry.addFormatter(userFormatter);
     }
 }

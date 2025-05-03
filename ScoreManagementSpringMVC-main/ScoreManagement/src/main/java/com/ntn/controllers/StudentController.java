@@ -26,7 +26,6 @@ import java.util.Date;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.WebDataBinder;
 
 @Controller
 public class StudentController {
@@ -219,66 +218,6 @@ public class StudentController {
         } else {
             return "redirect:/admin/classes";
         }
-    }
-
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        dateFormat.setLenient(false);
-        binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, true));
-        // Xử lý chuyển đổi String -> Class
-        binder.registerCustomEditor(com.ntn.pojo.Class.class, new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                if (text == null || text.isEmpty()) {
-                    setValue(null);
-                    return;
-                }
-                try {
-                    int id = Integer.parseInt(text);
-                    com.ntn.pojo.Class cls = classService.getClassById(id);
-                    setValue(cls);
-                } catch (NumberFormatException e) {
-                    setValue(null);
-                }
-            }
-        });
-
-        // Đăng ký PropertyEditor tùy chỉnh để chuyển đổi id thành đối tượng Major
-        binder.registerCustomEditor(Major.class, new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                if (text == null || text.isEmpty()) {
-                    setValue(null);
-                    return;
-                }
-                try {
-                    int id = Integer.parseInt(text);
-                    Major major = majorService.getMajorById(id);
-                    setValue(major);
-                } catch (NumberFormatException e) {
-                    setValue(null);
-                }
-            }
-        });
-
-        // Đăng ký PropertyEditor tùy chỉnh để chuyển đổi id thành đối tượng Teacher
-        binder.registerCustomEditor(Teacher.class, new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                if (text == null || text.isEmpty()) {
-                    setValue(null);
-                    return;
-                }
-                try {
-                    int id = Integer.parseInt(text);
-                    Teacher teacher = teacherService.getTeacherById(id);
-                    setValue(teacher);
-                } catch (NumberFormatException e) {
-                    setValue(null);
-                }
-            }
-        });
     }
 
     @GetMapping("/student-scores")

@@ -22,7 +22,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.validation.Valid;
 import java.beans.PropertyEditorSupport;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.web.bind.WebDataBinder;
 
 @Controller
 public class ClassController {
@@ -151,44 +150,4 @@ public class ClassController {
 
         return "redirect:/admin/classes";
     }
-
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        // Xử lý Major
-        binder.registerCustomEditor(Major.class, "majorId", new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                if (text == null || text.isEmpty()) {
-                    setValue(null);
-                    return;
-                }
-                try {
-                    int id = Integer.parseInt(text);
-                    Major major = majorService.getMajorById(id);
-                    setValue(major);
-                } catch (NumberFormatException e) {
-                    setValue(null);
-                }
-            }
-        });
-
-        // Xử lý Teacher
-        binder.registerCustomEditor(Teacher.class, "teacherId", new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                if (text == null || text.isEmpty()) {
-                    setValue(null);
-                    return;
-                }
-                try {
-                    int id = Integer.parseInt(text);
-                    Teacher teacher = teacherService.getTeacherById(id);
-                    setValue(teacher);
-                } catch (NumberFormatException e) {
-                    setValue(null);
-                }
-            }
-        });
-    }
-
 }
