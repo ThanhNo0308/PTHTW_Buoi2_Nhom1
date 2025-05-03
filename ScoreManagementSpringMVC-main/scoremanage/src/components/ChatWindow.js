@@ -10,7 +10,7 @@ import {
   faCheckDouble,
   faFile,
   faTimes,
-  faComments, faTrash
+  faComments, faTrash, faCircle
 } from '@fortawesome/free-solid-svg-icons';
 import { db, storage } from '../configs/FirebaseConfig';
 import { markMessageAsRead, deleteMessage } from '../configs/FirebaseUtils';
@@ -34,6 +34,50 @@ const ChatWindow = ({ contact, currentUser }) => {
   const fileInputRef = useRef(null);
   const chatWindowRef = useRef(null);
   const chatMessagesRef = useRef(null);
+  const [contactStatus, setContactStatus] = useState({
+    online: false,
+    lastSeen: null
+  });
+
+  // Hiển thị thời gian hoạt động cuối cùng
+  const formatLastSeen = (timestamp) => {
+    if (!timestamp) return 'Chưa hoạt động';
+
+    moment.locale('vi');
+    const lastActive = moment(timestamp);
+    const now = moment();
+
+    if (now.diff(lastActive, 'seconds') < 60) {
+      return 'Vừa mới truy cập';
+    } else if (now.diff(lastActive, 'minutes') < 60) {
+      return `Hoạt động ${now.diff(lastActive, 'minutes')} phút trước`;
+    } else if (now.diff(lastActive, 'hours') < 24) {
+      return `Hoạt động ${now.diff(lastActive, 'hours')} giờ trước`;
+    } else if (now.diff(lastActive, 'days') < 7) {
+      return `Hoạt động ${now.diff(lastActive, 'days')} ngày trước`;
+    } else {
+      return `Hoạt động ngày ${lastActive.format('DD/MM/YYYY')}`;
+    }
+  };
+
+  // Theo dõi trạng thái online và lastSeen
+  useEffect(() => {
+    if (!contact || !contact.id) return;
+
+    const userStatusRef = doc(db, 'online_status', contact.id);
+
+    const unsubscribe = onSnapshot(userStatusRef, (doc) => {
+      if (doc.exists()) {
+        const data = doc.data();
+        setContactStatus({
+          online: data.online || false,
+          lastSeen: data.lastSeen?.toDate() || null
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, [contact]);
 
   // Tạo ID cuộc trò chuyện từ ID của 2 người dùng
   const getChatId = (uid1, uid2) => {
@@ -255,7 +299,14 @@ const ChatWindow = ({ contact, currentUser }) => {
             />
           )}
           <div>
-            <h5 className="mb-0">{contact.name}</h5>
+            <div className="d-flex align-items-center">
+              <h5 className="mb-0 me-2">{contact.name}</h5>
+              {/* Hiển thị trạng thái online/offline */}
+              <span className={`status-indicator ${contactStatus.online ? 'online' : 'offline'}`}>
+                <FontAwesomeIcon icon={faCircle} size="xs" className="me-1" />
+                {contactStatus.online ? 'Đang hoạt động' : formatLastSeen(contactStatus.lastSeen)}
+              </span>
+            </div>
             <small className="text-muted">
               {contact.studentCode
                 ? `Sinh viên - MSSV: ${contact.studentCode}`

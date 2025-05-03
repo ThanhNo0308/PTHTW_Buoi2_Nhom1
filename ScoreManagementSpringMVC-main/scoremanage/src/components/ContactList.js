@@ -5,11 +5,14 @@ import { faSearch, faUserCircle, faCircle } from '@fortawesome/free-solid-svg-ic
 import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../configs/FirebaseConfig';
 import '../assets/css/FireBase.css';
+import moment from 'moment';
+import 'moment/locale/vi';
 
 const ContactList = ({ contacts, selectedContact, onSelectContact, currentUser, loading }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredContacts, setFilteredContacts] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState({});
+  const [lastSeenTimes, setLastSeenTimes] = useState({});
 
   // Lọc danh sách liên hệ khi search term thay đổi
   useEffect(() => {
@@ -22,7 +25,17 @@ const ContactList = ({ contacts, selectedContact, onSelectContact, currentUser, 
       );
     });
 
-    setFilteredContacts(filtered);
+    // Sắp xếp: Đầu tiên là liên hệ có tin nhắn chưa đọc (ưu tiên)
+    const sorted = [...filtered].sort((a, b) => {
+      // Ưu tiên người có tin nhắn chưa đọc
+      if ((a.unreadCount || 0) > 0 && (b.unreadCount || 0) === 0) return -1;
+      if ((a.unreadCount || 0) === 0 && (b.unreadCount || 0) > 0) return 1;
+
+      // Nếu cùng trạng thái tin nhắn, thì sắp xếp theo tên
+      return a.name.localeCompare(b.name);
+    });
+
+    setFilteredContacts(sorted);
   }, [contacts, searchTerm]);
 
   // Theo dõi trạng thái online của người dùng
@@ -31,10 +44,15 @@ const ContactList = ({ contacts, selectedContact, onSelectContact, currentUser, 
 
     const unsubscribe = onSnapshot(query(onlineStatusRef), (snapshot) => {
       const onlineStatusData = {};
+      const lastSeenData = {};
+
       snapshot.docs.forEach(doc => {
-        onlineStatusData[doc.id] = doc.data().online || false;
+        const data = doc.data();
+        onlineStatusData[doc.id] = data.online || false;
+        lastSeenData[doc.id] = data.lastSeen?.toDate() || null;
       });
       setOnlineUsers(onlineStatusData);
+      setLastSeenTimes(lastSeenData);
     });
 
     return () => unsubscribe();
@@ -56,11 +74,18 @@ const ContactList = ({ contacts, selectedContact, onSelectContact, currentUser, 
 
           // Cập nhật lại contacts với số tin nhắn chưa đọc mới
           setFilteredContacts(prev => {
-            return prev.map(c => {
+            const updated = prev.map(c => {
               if (c.id === contact.id) {
                 return { ...c, unreadCount };
               }
               return c;
+            });
+            
+            // Sắp xếp lại để người có tin nhắn mới lên đầu
+            return [...updated].sort((a, b) => {
+              if ((a.unreadCount || 0) > 0 && (b.unreadCount || 0) === 0) return -1;
+              if ((a.unreadCount || 0) === 0 && (b.unreadCount || 0) > 0) return 1;
+              return a.name.localeCompare(b.name);
             });
           });
         }
@@ -146,6 +171,10 @@ const ContactList = ({ contacts, selectedContact, onSelectContact, currentUser, 
                     <span className="badge bg-secondary me-1">{contact.role || 'Người dùng'}</span>
                   )}
 
+                  {/* Hiển thị số tin nhắn chưa đọc cạnh role */}
+                  {contact.unreadCount > 0 && (
+                    <span className="badge bg-danger ms-1">{contact.unreadCount} tin mới</span>
+                  )}
                 </p>
                 <p className="contact-status small mb-0">
                   {contact.studentCode
