@@ -251,6 +251,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
 
         try {
             Session session = this.factory.getObject().getCurrentSession();
+
             for (Score score : scores) {
                 // Kiểm tra xem điểm đã tồn tại chưa
                 Query query = session.createQuery(
@@ -268,9 +269,18 @@ public class ScoreRepositoryImpl implements ScoreRepository {
                     // Cập nhật điểm
                     Score existingScore = existingScores.get(0);
                     existingScore.setScoreValue(score.getScoreValue());
-                    existingScore.setIsDraft(score.getIsDraft());
-                    existingScore.setIsLocked(score.getIsLocked());
+
+                    // Chỉ cập nhật trạng thái nháp/khóa nếu trạng thái mới không mâu thuẫn với trạng thái hiện tại
+                    // Nguyên tắc: Nếu điểm đã khóa, không được chuyển thành nháp
+                    if (existingScore.getIsLocked() && score.getIsLocked() != null && !score.getIsLocked()) {
+                        // Giữ nguyên trạng thái đã khóa nếu điểm đang bị khóa và trạng thái mới là mở khóa
+                    } else {
+                        existingScore.setIsDraft(score.getIsDraft());
+                        existingScore.setIsLocked(score.getIsLocked());
+                    }
+
                     session.update(existingScore);
+
                 } else {
                     // Tạo mới điểm
                     session.save(score);
@@ -279,7 +289,6 @@ public class ScoreRepositoryImpl implements ScoreRepository {
             return true;
         } catch (Exception e) {
             e.printStackTrace();
-            // Đồng bộ với ScoreServiceImpl - không ném lại ngoại lệ
             return false;
         }
     }
@@ -315,25 +324,6 @@ public class ScoreRepositoryImpl implements ScoreRepository {
                 session.update(score);
             }
             return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
-    public boolean updateScoreLockStatus(int scoreId, boolean locked) {
-        try {
-            Session session = this.factory.getObject().getCurrentSession();
-            Score score = session.get(Score.class, scoreId);
-
-            if (score != null) {
-                score.setIsLocked(locked);
-                session.update(score);
-                return true;
-            } else {
-                return false;
-            }
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -950,41 +940,54 @@ public class ScoreRepositoryImpl implements ScoreRepository {
     }
 
     @Override
-    public boolean lockScores(int subjectTeacherId, int classId, int schoolYearId) {
-        List<Score> scores = this.scoreRepo.getScoresBySubjectTeacherIdAndClassIdAndSchoolYearId(
-                subjectTeacherId, classId, schoolYearId);
-
-        // Cập nhật trạng thái khóa cho tất cả điểm
-        for (Score score : scores) {
-            score.setIsLocked(true); // Sửa từ setStatus(1) thành setIsLocked(true)
-            score.setIsDraft(false); // Khi khoá thì không còn là nháp
-
-            // Gửi email thông báo cho sinh viên
-            Student student = score.getStudentID();
-            String email = student.getEmail();
-            String subject = "Thông báo có điểm môn học";
-
-            String message = "Xin chào " + student.getFirstName() + " " + student.getLastName() + ",\n\n"
-                    + "Điểm của bạn cho môn " + score.getSubjectTeacherID().getSubjectId().getSubjectName()
-                    + " đã được giảng viên cập nhật.\n"
-                    + "Vui lòng đăng nhập vào hệ thống để xem chi tiết.\n\n"
-                    + "Trân trọng,\nPhòng Đào tạo";
-
-            emailService.sendEmail(email, subject, message);
-        }
-
-        return scoreRepo.saveScores(scores);
-    }
-
-    @Override
     public boolean saveScoresDraft(List<Score> scores) {
-        // Đặt trạng thái nháp cho tất cả điểm
-        for (Score score : scores) {
-            score.setIsDraft(true); // Sửa từ setStatus(0) thành setIsDraft(true)
-            score.setIsLocked(false); // Đảm bảo không khoá
-        }
+        try {
+            Session session = this.factory.getObject().getCurrentSession();
 
-        return scoreRepo.saveScores(scores);
+            for (Score score : scores) {
+                // Kiểm tra xem điểm đã tồn tại chưa
+                Query query = session.createQuery(
+                        "FROM Score WHERE studentID.id = :studentId AND subjectTeacherID.id = :subjectTeacherId "
+                        + "AND scoreType.scoreType = :scoreType AND schoolYearId.id = :schoolYearId");
+
+                query.setParameter("studentId", score.getStudentID().getId());
+                query.setParameter("subjectTeacherId", score.getSubjectTeacherID().getId());
+                query.setParameter("scoreType", score.getScoreType().getScoreType());
+                query.setParameter("schoolYearId", score.getSchoolYearId().getId());
+
+                List<Score> existingScores = query.getResultList();
+
+                if (!existingScores.isEmpty()) {
+                    // Cập nhật điểm
+                    Score existingScore = existingScores.get(0);
+
+                    // Nếu điểm đã bị khóa, giữ nguyên trạng thái khóa
+                    if (existingScore.getIsLocked() != null && existingScore.getIsLocked()) {
+                        // Chỉ cập nhật giá trị điểm nếu điểm mới khác điểm cũ
+                        if (!existingScore.getScoreValue().equals(score.getScoreValue())) {
+                            existingScore.setScoreValue(score.getScoreValue());
+                            session.update(existingScore);
+                        }
+                    } else {
+                        // Điểm chưa bị khóa, cập nhật bình thường
+                        existingScore.setScoreValue(score.getScoreValue());
+                        existingScore.setIsDraft(true); // Luôn là nháp
+                        existingScore.setIsLocked(false); // Không khóa
+                        session.update(existingScore);
+                    }
+                } else {
+                    // Tạo mới điểm
+                    score.setIsDraft(true); // Luôn là nháp
+                    score.setIsLocked(false); // Không khóa
+                    session.save(score);
+                }
+            }
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override

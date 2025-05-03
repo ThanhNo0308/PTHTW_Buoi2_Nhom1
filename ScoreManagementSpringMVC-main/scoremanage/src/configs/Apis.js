@@ -9,21 +9,19 @@ export const endpoints = {
   "registerstudent": `${SERVER_CONTEXT}/api/register/student`,
   "profile": `${SERVER_CONTEXT}/api/profile`,
   "current-user": `${SERVER_CONTEXT}/api/current-user`,
+
   "teacher-classes": `${SERVER_CONTEXT}/api/teacher/classes`,
   "teacher-subject-teachers": `${SERVER_CONTEXT}/api/subject-teachers`,
   "teacher-class-detail": `${SERVER_CONTEXT}/api/teacher/classes`,  // + /{classId}
   "teacher-class-scores": `${SERVER_CONTEXT}/api/teacher/classes`,  // + /{classId}/scores
-  "teacher-save-scores": `${SERVER_CONTEXT}/api/teacher/classes`,
   "scores-type-list": `${SERVER_CONTEXT}/api/scores/score-types/list`,
   "scores-type-by-class": `${SERVER_CONTEXT}/api/scores/score-types/by-class`,
   "scores-weights": `${SERVER_CONTEXT}/api/scores/score-types/weights`,
   "scores-add-type": `${SERVER_CONTEXT}/api/scores/score-types/add`,
   "scores-remove-type": `${SERVER_CONTEXT}/api/scores/score-types/remove`,
   "scores-configure-weights": `${SERVER_CONTEXT}/api/scores/classes`,  // + /{classId}/scores/configure-weights
-  "scores-lock": `${SERVER_CONTEXT}/api/scores/lock`,
-  "scores-lock-all": `${SERVER_CONTEXT}/api/scores/lock-all`,
+  "scores-save-draft": `${SERVER_CONTEXT}/api/scores/save-scores-draft`,
   "scores-save": `${SERVER_CONTEXT}/api/scores/save-scores`,
-  "scores-notification": `${SERVER_CONTEXT}/api/scores/send-score-notification`,
 
   "scores-import-form": `${SERVER_CONTEXT}/api/scores/import-scores-form`,
   "scores-import": `${SERVER_CONTEXT}/api/scores/import-scores`,
@@ -74,7 +72,6 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// API User
 export const userApis = {
   // Đăng nhập người dùng
   login: (username, password, role) => {
@@ -91,8 +88,6 @@ export const userApis = {
 
   // Đăng ký sinh viên
   registerStudent: (data) => {
-    console.log("Gửi yêu cầu đăng ký:", endpoints["registerstudent"]);
-
     // Đảm bảo dữ liệu không có giá trị undefined hoặc null
     const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
       if (value !== null && value !== undefined) {
@@ -107,6 +102,7 @@ export const userApis = {
       }
     });
   },
+
   // Cập nhật thông tin cá nhân
   updateProfile: (profileData) => {
     return API.post(endpoints["profile"], profileData, {
@@ -115,10 +111,12 @@ export const userApis = {
       }
     });
   },
+
   // Đổi mật khẩu
   changePassword: (passwordData) => {
     return API.post(`${endpoints["profile"]}/change-password`, passwordData);
   },
+  
   // Lấy thông tin người dùng hiện tại
   getCurrentUser: () => {
     return API.get(endpoints["current-user"]);
@@ -165,15 +163,6 @@ export const teacherClassApis = {
     );
   },
 
-  // Lưu điểm
-  saveScores: (classId, subjectTeacherId, schoolYearId, saveMode, scoresData, username) => {
-    return API.post(
-      `${endpoints["teacher-save-scores"]}/${classId}/scores/save?` +
-      `subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}` +
-      `&saveMode=${saveMode}&username=${username}`,
-      scoresData
-    );
-  }
 };
 
 export const scoreApis = {
@@ -228,27 +217,19 @@ export const scoreApis = {
     );
   },
 
-  // Khóa/mở khóa điểm của sinh viên
-  lockScore: (studentId, subjectTeacherId, schoolYearId, lock) => {
-    return API.post(endpoints["scores-lock"], {
-      studentId,
-      subjectTeacherId,
-      schoolYearId,
-      lock
-    });
+  // Lưu điểm nháp 
+  saveScoresDraft: (subjectTeacherId, schoolYearId, scores) => {
+    return API.post(
+      endpoints["scores-save-draft"], 
+      {
+        subjectTeacherId,
+        schoolYearId,
+        scores
+      }
+    );
   },
 
-  // Khóa/mở khóa tất cả điểm
-  lockAllScores: (classId, subjectTeacherId, schoolYearId, lock) => {
-    return API.post(endpoints["scores-lock-all"], {
-      classId,
-      subjectTeacherId,
-      schoolYearId,
-      lock
-    });
-  },
-
-  // Lưu điểm
+  // Lưu điểm chính thức
   saveScores: (subjectTeacherId, schoolYearId, scores, locked = false) => {
     return API.post(
       endpoints["scores-save"],
@@ -261,14 +242,6 @@ export const scoreApis = {
     );
   },
 
-  // Gửi thông báo điểm
-  sendScoreNotification: (studentId, subjectName) => {
-    return API.post(
-      `${endpoints["scores-notification"]}?studentId=${studentId}` +
-      `&subjectName=${encodeURIComponent(subjectName)}`
-    );
-  },
-
   // Lấy dữ liệu form import điểm
   getImportScoresFormData: () => {
     return API.get(endpoints["scores-import-form"]);
@@ -276,8 +249,6 @@ export const scoreApis = {
 
   // Import điểm từ file CSV
   importScores: (file, subjectTeacherId, classId, schoolYearId) => {
-    console.log("Sending import with:", { subjectTeacherId, classId, schoolYearId });
-
     const formData = new FormData();
     formData.append('file', file);
     formData.append('subjectTeacherId', subjectTeacherId);
@@ -296,12 +267,14 @@ export const scoreApis = {
   getScoreTemplate: () => {
     return API.get(endpoints["scores-template"]);
   },
+
   // Xuất điểm ra PDF
   exportScoresToPdf: (classId, subjectTeacherId, schoolYearId) => {
     return API.get(
       `${endpoints["scores-export-pdf"]}/${classId}/export-pdf?subjectTeacherId=${subjectTeacherId}&schoolYearId=${schoolYearId}`
     );
   },
+
   // Xuất điểm ra CSV
   exportScoresToCsv: (classId, subjectTeacherId, schoolYearId) => {
     return API.get(
@@ -335,6 +308,7 @@ export const scoreApis = {
     return API.get(url);
   },
 
+  // Lấy danh sách năm học
   getAvailableSchoolYears: (subjectTeacherId, classId) => {
     return API.get(
       `${endpoints["scores-available-school-years"]}?subjectTeacherId=${subjectTeacherId}&classId=${classId}`
@@ -388,12 +362,16 @@ export const forumApis = {
     return API.delete(`${endpoints["forums"]}/comments/${commentId}`);
   },
 
+  // Cập nhật diễn đàn
   updateForum: (forumData) => API.post(`${endpoints['forums']}/update`, forumData),
+  
+  // Xóa diễn đàn
   deleteForum: (forumData) => API.post(`${endpoints['forums']}/delete`, forumData),
 
 };
 
 export const studentApis = {
+  // Lấy thông tin sinh viên hiện tại
   getCurrentStudent: () => {
     return API.get(endpoints["current-student"]);
   },

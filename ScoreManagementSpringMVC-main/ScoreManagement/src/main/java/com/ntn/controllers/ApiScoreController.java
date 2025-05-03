@@ -266,112 +266,13 @@ public class ApiScoreController {
         }
     }
 
-    /**
-     * Khóa/mở khóa điểm của sinh viên
-     */
-    @PostMapping("/lock")
-    public ResponseEntity<Map<String, Object>> lockScore(@RequestBody Map<String, Object> payload) {
-        Map<String, Object> response = new HashMap<>();
-
-        try {
-            Integer studentId = Integer.parseInt(payload.get("studentId").toString());
-            Integer subjectTeacherId = Integer.parseInt(payload.get("subjectTeacherId").toString());
-            Integer schoolYearId = Integer.parseInt(payload.get("schoolYearId").toString());
-            Boolean lock = Boolean.valueOf(payload.get("lock").toString());
-
-            // Lấy điểm của sinh viên
-            List<Score> scores = scoreService.getListScoreBySubjectTeacherIdAndSchoolYearIdAndStudentId(
-                    subjectTeacherId, schoolYearId, studentId);
-
-            int updatedCount = 0;
-            for (Score score : scores) {
-                if (score != null && score.getId() != null) {
-                    // Cập nhật trạng thái khóa
-                    score.setIsLocked(lock);
-                    score.setIsDraft(!lock); // Set draft ngược lại với lock
-
-                    boolean success = scoreService.saveScore(score);
-                    if (success) {
-                        updatedCount++;
-                    }
-                }
-            }
-
-            response.put("success", updatedCount > 0);
-            response.put("message", updatedCount > 0
-                    ? "Đã cập nhật " + updatedCount + " điểm"
-                    : "Không tìm thấy điểm nào để cập nhật");
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("success", false);
-            response.put("message", "Lỗi: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
-    /**
-     * Khóa/mở khóa tất cả điểm
-     */
-    @PostMapping("/lock-all")
-    public ResponseEntity<Map<String, Object>> lockAllScores(@RequestBody Map<String, Object> payload) {
-        Map<String, Object> response = new HashMap<>();
-
-        try {
-            Integer classId = Integer.parseInt(payload.get("classId").toString());
-            Integer subjectTeacherId = Integer.parseInt(payload.get("subjectTeacherId").toString());
-            Integer schoolYearId = Integer.parseInt(payload.get("schoolYearId").toString());
-            Boolean lock = Boolean.valueOf(payload.get("lock").toString());
-
-            // Lấy danh sách sinh viên trong lớp
-            List<Student> students = studentService.getStudentByClassId(classId);
-
-            int totalUpdated = 0;
-            int totalScores = 0;
-
-            for (Student student : students) {
-                // Lấy điểm của sinh viên
-                List<Score> scores = scoreService.getListScoreBySubjectTeacherIdAndSchoolYearIdAndStudentId(
-                        subjectTeacherId, schoolYearId, student.getId());
-
-                totalScores += scores.size();
-
-                for (Score score : scores) {
-                    if (score != null && score.getId() != null) {
-                        score.setIsLocked(lock);
-                        score.setIsDraft(!lock); // Cập nhật ngược lại với isLocked
-
-                        if (scoreService.saveScore(score)) {
-                            totalUpdated++;
-                        }
-                    }
-                }
-            }
-
-            response.put("success", totalUpdated > 0);
-            response.put("message", "Đã cập nhật " + totalUpdated + "/" + totalScores + " điểm");
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("success", false);
-            response.put("message", "Lỗi: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
-    /**
-     * Lưu điểm
-     */
-    @PostMapping("/save-scores")
-    public ResponseEntity<Map<String, Object>> saveScores(@RequestBody Map<String, Object> requestData) {
+    @PostMapping("/save-scores-draft")
+    public ResponseEntity<Map<String, Object>> saveScoresDraft(@RequestBody Map<String, Object> requestData) {
         Map<String, Object> response = new HashMap<>();
 
         try {
             Integer subjectTeacherId = Integer.parseInt(requestData.get("subjectTeacherId").toString());
             Integer schoolYearId = Integer.parseInt(requestData.get("schoolYearId").toString());
-            Boolean locked = Boolean.valueOf(requestData.get("locked").toString());
 
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> scoresData = (List<Map<String, Object>>) requestData.get("scores");
@@ -383,6 +284,10 @@ public class ApiScoreController {
                 String scoreType = (String) scoreData.get("scoreType");
                 Float scoreValue = Float.parseFloat(scoreData.get("scoreValue").toString());
 
+                // Lấy trạng thái khóa hiện tại
+                Boolean currentlyLocked = scoreData.containsKey("isLocked")
+                        ? Boolean.valueOf(scoreData.get("isLocked").toString()) : false;
+
                 // Kiểm tra giá trị điểm hợp lệ
                 if (scoreValue < 0 || scoreValue > 10) {
                     response.put("success", false);
@@ -391,18 +296,15 @@ public class ApiScoreController {
                 }
 
                 Score score;
-
-                // Kiểm tra ID để xác định đây là cập nhật hay tạo mới
-                if (scoreData.containsKey("id") && scoreData.get("id") != null) {
+                if (scoreData.containsKey("id") && scoreData.get("id") != null
+                        && !scoreData.get("id").toString().equals("null")) {
                     Integer scoreId = Integer.parseInt(scoreData.get("id").toString());
                     score = scoreService.getScoreById(scoreId);
 
                     if (score == null) {
-                        // Không tìm thấy điểm => tạo mới
                         score = new Score();
                     }
                 } else {
-                    // Tạo mới điểm
                     score = new Score();
                 }
 
@@ -430,8 +332,149 @@ public class ApiScoreController {
 
                 // Thiết lập giá trị và trạng thái
                 score.setScoreValue(scoreValue);
-                score.setIsLocked(locked);
-                score.setIsDraft(!locked);
+
+                // Luôn giữ nguyên trạng thái khóa nếu đã khóa
+                if (currentlyLocked) {
+                    score.setIsDraft(false);
+                    score.setIsLocked(true);
+                } else {
+                    score.setIsDraft(true); // Lưu nháp
+                    score.setIsLocked(false); // Không khóa
+                }
+
+                scoresToSave.add(score);
+            }
+
+            if (scoresToSave.isEmpty()) {
+                response.put("success", true);
+                response.put("message", "Không có điểm nào để lưu");
+                return ResponseEntity.ok(response);
+            }
+
+            // Sử dụng phương thức mới để lưu nháp (không gửi email)
+            boolean success = scoreService.saveScoresDraft(scoresToSave);
+
+            // Phần xử lý kết quả
+            response.put("success", success);
+            response.put("message", success ? "Lưu điểm nháp thành công!" : "Có lỗi khi lưu điểm nháp");
+
+            if (success) {
+                // Trả về thông tin điểm đã lưu
+                List<Map<String, Object>> savedScores = new ArrayList<>();
+                for (Score score : scoresToSave) {
+                    Map<String, Object> savedScore = new HashMap<>();
+                    savedScore.put("id", score.getId());
+                    savedScore.put("studentId", score.getStudentID().getId());
+                    savedScore.put("scoreType", score.getScoreType().getScoreType());
+                    savedScore.put("scoreValue", score.getScoreValue());
+                    savedScore.put("isLocked", score.getIsLocked());
+                    savedScores.add(savedScore);
+                }
+                response.put("scores", savedScores);
+            }
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Lỗi: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Lưu điểm
+     */
+    @PostMapping("/save-scores")
+    public ResponseEntity<Map<String, Object>> saveScores(@RequestBody Map<String, Object> requestData) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Integer subjectTeacherId = Integer.parseInt(requestData.get("subjectTeacherId").toString());
+            Integer schoolYearId = Integer.parseInt(requestData.get("schoolYearId").toString());
+            Boolean locked = Boolean.valueOf(requestData.get("locked").toString());
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> scoresData = (List<Map<String, Object>>) requestData.get("scores");
+
+            List<Score> scoresToSave = new ArrayList<>();
+            Set<Integer> studentIdsToNotify = new HashSet<>(); // Chỉ thông báo cho những sinh viên mới bị khóa
+
+            for (Map<String, Object> scoreData : scoresData) {
+                Integer studentId = Integer.parseInt(scoreData.get("studentId").toString());
+                String scoreType = (String) scoreData.get("scoreType");
+                Float scoreValue = Float.parseFloat(scoreData.get("scoreValue").toString());
+
+                // Lấy trạng thái khóa hiện tại
+                Boolean currentlyLocked = scoreData.containsKey("isLocked")
+                        ? Boolean.valueOf(scoreData.get("isLocked").toString()) : false;
+
+                // Kiểm tra giá trị điểm hợp lệ
+                if (scoreValue < 0 || scoreValue > 10) {
+                    response.put("success", false);
+                    response.put("message", "Điểm phải nằm trong khoảng từ 0 đến 10");
+                    return ResponseEntity.badRequest().body(response);
+                }
+
+                Score score;
+                // Kiểm tra ID để xác định đây là cập nhật hay tạo mới
+                if (scoreData.containsKey("id") && scoreData.get("id") != null
+                        && !scoreData.get("id").toString().equals("null")) {
+                    Integer scoreId = Integer.parseInt(scoreData.get("id").toString());
+                    score = scoreService.getScoreById(scoreId);
+
+                    if (score == null) {
+                        score = new Score();
+                    }
+                } else {
+                    score = new Score();
+                }
+
+                // Thiết lập các thuộc tính cho điểm
+                if (score.getStudentID() == null) {
+                    Student student = studentService.getStudentById(studentId);
+                    score.setStudentID(student);
+                }
+
+                if (score.getSubjectTeacherID() == null) {
+                    score.setSubjectTeacherID(subjectTeacherService.getSubjectTeacherById(subjectTeacherId));
+                }
+
+                if (score.getSchoolYearId() == null) {
+                    score.setSchoolYearId(schoolYearService.getSchoolYearById(schoolYearId));
+                }
+
+                // Thiết lập loại điểm
+                Typescore type = typeScoreService.getScoreTypeByName(scoreType);
+                if (type == null) {
+                    type = new Typescore(scoreType);
+                    typeScoreService.addScoreType(type);
+                }
+                score.setScoreType(type);
+
+                // Thiết lập giá trị và trạng thái
+                score.setScoreValue(scoreValue);
+
+                if (locked) {
+                    // Nếu đang lưu chính thức, set isDraft = false và isLocked = true
+                    score.setIsDraft(false);
+                    score.setIsLocked(true);
+
+                    // Chỉ gửi email thông báo cho sinh viên mới bị khóa điểm
+                    if (!currentlyLocked) {
+                        studentIdsToNotify.add(studentId);
+                    }
+                } else {
+                    // Nếu đang lưu nháp, CHỈ set isDraft = true nếu điểm chưa bị khóa
+                    if (!currentlyLocked) {
+                        score.setIsDraft(true);
+                        score.setIsLocked(false);
+                    } else {
+                        // Giữ nguyên trạng thái đã khóa nếu điểm đã bị khóa trước đó
+                        score.setIsDraft(false);
+                        score.setIsLocked(true);
+                    }
+                }
 
                 scoresToSave.add(score);
             }
@@ -449,8 +492,35 @@ public class ApiScoreController {
                     ? (locked ? "Lưu điểm chính thức thành công!" : "Lưu điểm nháp thành công!")
                     : "Có lỗi khi lưu điểm");
 
+            // Thông báo email chỉ cho sinh viên mới bị khóa điểm
+            if (success && locked && !studentIdsToNotify.isEmpty()) {
+                Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
+                Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
+
+                if (subjectTeacher != null && schoolYear != null) {
+                    String subjectName = subjectTeacher.getSubjectId().getSubjectName();
+                    String teacherName = subjectTeacher.getTeacherId().getTeacherName();
+                    String schoolYearStr = schoolYear.getNameYear() + " " + schoolYear.getSemesterName();
+                    String major = "";
+
+                    if (subjectTeacher.getClassId() != null && subjectTeacher.getClassId().getMajorId() != null) {
+                        major = subjectTeacher.getClassId().getMajorId().getMajorName();
+                    }
+
+                    // Chuyển Set sang List
+                    List<Integer> studentIdsList = new ArrayList<>(studentIdsToNotify);
+
+                    // Gửi thông báo email cho những sinh viên mới bị khóa điểm
+                    emailService.sendScoreNotificationsToClass(
+                            studentIdsList, subjectName, teacherName, schoolYearStr, major);
+
+                    response.put("emailsTriggered", true);
+                    response.put("emailCount", studentIdsToNotify.size());
+                }
+            }
+
             if (success) {
-                // Trả về danh sách điểm đã được lưu với ID mới
+                // Trả về thông tin điểm đã lưu
                 List<Map<String, Object>> savedScores = new ArrayList<>();
                 for (Score score : scoresToSave) {
                     Map<String, Object> savedScore = new HashMap<>();
@@ -459,36 +529,10 @@ public class ApiScoreController {
                     savedScore.put("scoreType", score.getScoreType().getScoreType());
                     savedScore.put("scoreValue", score.getScoreValue());
                     savedScore.put("isLocked", score.getIsLocked());
-                    savedScore.put("isDraft", score.getIsDraft());
                     savedScores.add(savedScore);
                 }
                 response.put("scores", savedScores);
             }
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("success", false);
-            response.put("message", "Lỗi: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
-    /**
-     * Gửi thông báo điểm qua email
-     */
-    @PostMapping("/send-score-notification")
-    public ResponseEntity<Map<String, Object>> sendScoreNotification(
-            @RequestParam("studentId") int studentId,
-            @RequestParam("subjectName") String subjectName) {
-
-        Map<String, Object> response = new HashMap<>();
-
-        try {
-            boolean success = emailService.sendScoreNotification(studentId, subjectName);
-
-            response.put("success", success);
-            response.put("message", success ? "Đã gửi thông báo điểm" : "Không thể gửi thông báo");
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -507,9 +551,6 @@ public class ApiScoreController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // Log để debug
-            System.out.println("Fetching school years for subjectTeacherId=" + subjectTeacherId + ", classId=" + classId);
-
             // Lấy trực tiếp SubjectTeacher từ ID
             Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
 
@@ -561,7 +602,7 @@ public class ApiScoreController {
     }
 
     @GetMapping("/students/search")
-    @Transactional 
+    @Transactional
     public ResponseEntity<Map<String, Object>> searchStudents(
             @RequestParam(value = "query", required = false) String query,
             @RequestParam(value = "type", defaultValue = "name") String searchType) {
@@ -1168,6 +1209,26 @@ public class ApiScoreController {
                     response.put("missingScoreTypes", missingScoreColumns);
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
+            } catch (org.apache.commons.csv.CSVException csvEx) {
+                // Xử lý lỗi định dạng CSV cụ thể
+                String userFriendlyMessage = "File CSV không đúng định dạng. ";
+
+                if (csvEx.getMessage().contains("Invalid character between encapsulated token and delimiter")) {
+                    userFriendlyMessage += "Có ký tự không hợp lệ giữa dữ liệu được đặt trong dấu ngoặc kép và dấu phân cách. "
+                            + "Vấn đề có thể ở dòng: " + extractLineNumber(csvEx.getMessage());
+                    userFriendlyMessage += "\n\nGợi ý: "
+                            + "\n1. Kiểm tra các ô chứa dấu phẩy hoặc dấu ngoặc kép trong Excel"
+                            + "\n2. Đảm bảo khi lưu file CSV, các ô có chứa dấu phẩy được đặt trong dấu ngoặc kép"
+                            + "\n3. Loại bỏ các ký tự đặc biệt không cần thiết trong dữ liệu"
+                            + "\n4. Thử mở file bằng Notepad để kiểm tra định dạng";
+                } else {
+                    userFriendlyMessage += "Lỗi: " + csvEx.getMessage();
+                }
+
+                response.put("success", false);
+                response.put("message", userFriendlyMessage);
+                response.put("error", "csv_format_error");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
             // Nếu tất cả các điều kiện đều thoả mãn, tiến hành import điểm
@@ -1185,11 +1246,44 @@ public class ApiScoreController {
             }
         } catch (Exception e) {
             e.printStackTrace();
+
+            // Cải thiện thông báo lỗi chung
+            String errorMessage = "Lỗi khi import điểm: " + e.getMessage();
+
+            // Kiểm tra nếu là lỗi CSV format
+            if (e instanceof org.apache.commons.csv.CSVException
+                    || (e.getMessage() != null && e.getMessage().contains("Invalid character"))) {
+
+                errorMessage = "File CSV không đúng định dạng. Vui lòng kiểm tra lại file và đảm bảo: "
+                        + "\n- File được lưu với mã UTF-8"
+                        + "\n- Không có ký tự đặc biệt không hợp lệ"
+                        + "\n- Dữ liệu chứa dấu phẩy đã được đặt trong dấu ngoặc kép"
+                        + "\n- Định dạng CSV đúng chuẩn"
+                        + "\n\nHãy thử tải file mẫu và làm theo đúng định dạng.";
+            }
+
             response.put("success", false);
-            response.put("message", "Lỗi: " + e.getMessage());
+            response.put("message", errorMessage);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+    
+    private String extractLineNumber(String errorMessage) {
+    if (errorMessage == null) return "không xác định";
+    
+    // Tìm số dòng từ thông báo lỗi
+    if (errorMessage.contains("at line:")) {
+        String[] parts = errorMessage.split("at line:");
+        if (parts.length > 1) {
+            String[] lineParts = parts[1].trim().split(",");
+            if (lineParts.length > 0) {
+                return lineParts[0].trim();
+            }
+        }
+    }
+    
+    return "không xác định";
+}
 
 // Hàm chuẩn hóa chuỗi cho việc so sánh không phân biệt hoa/thường và khoảng trắng
     private String normalizeString(String input) {

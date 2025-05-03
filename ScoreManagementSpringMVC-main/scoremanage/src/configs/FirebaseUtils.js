@@ -3,6 +3,7 @@ import {collection, doc, setDoc, getDoc, addDoc, query, where, orderBy,
   getDocs, updateDoc, serverTimestamp, onSnapshot,deleteDoc} from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { API, endpoints } from './Apis';
+import defaultAvatar from '../assets/images/logo.png';
 
 
 // Lưu thông tin người dùng vào Firestore
@@ -15,7 +16,6 @@ export const saveUserToFirestore = async (user) => {
     try {
       const response = await API.get(endpoints["current-user"]);
       if (response.data) {
-        console.log("Dữ liệu từ API current-user:", response.data);
         fullUserData = response.data;
       }
     } catch (apiError) {
@@ -32,6 +32,7 @@ export const saveUserToFirestore = async (user) => {
       email: user.email || "",
       role: user.role || "",
       lastSeen: serverTimestamp(),
+      image: user.image || user.avatar || defaultAvatar,
     };
 
     // Nếu có dữ liệu đầy đủ từ API, bổ sung vào
@@ -43,7 +44,7 @@ export const saveUserToFirestore = async (user) => {
         userData.hometown = fullUserData.user.hometown || "";
         userData.birthdate = fullUserData.user.birthdate || null;
         userData.phone = fullUserData.user.phone || "";
-        userData.image = fullUserData.user.image || userData.avatar;
+        userData.image = fullUserData.user.image || userData.avatar || defaultAvatar || "";
         userData.active = fullUserData.user.active || "Active";
       }
       

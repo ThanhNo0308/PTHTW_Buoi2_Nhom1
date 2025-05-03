@@ -41,8 +41,6 @@ public interface ScoreRepository {
 
     boolean saveScore(Score score);
 
-    boolean updateScoreLockStatus(int scoreId, boolean locked);
-
     boolean deleteScore(Integer scoreId);
 
     boolean importScoresFromCsv(MultipartFile file, int subjectTeacherId, int classId, int schoolYearId) throws Exception;
@@ -50,8 +48,6 @@ public interface ScoreRepository {
     byte[] exportScoresToCsv(int subjectTeacherId, int classId, int schoolYearId) throws Exception;
 
     byte[] exportScoresToPdf(int subjectTeacherId, int classId, int schoolYearId) throws Exception;
-
-    boolean lockScores(int subjectTeacherId, int classId, int schoolYearId);
 
     boolean saveScoresDraft(List<Score> scores);
 

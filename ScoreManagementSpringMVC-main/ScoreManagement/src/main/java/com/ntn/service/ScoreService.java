@@ -34,8 +34,6 @@ public interface ScoreService {
 
     byte[] exportScoresToPdf(int subjectTeacherId, int classId, int schoolYearId) throws Exception;
 
-    boolean lockScores(int subjectTeacherId, int classId, int schoolYearId);
-
     boolean saveScoresDraft(List<Score> scores);
 
     boolean addScoreColumn(String columnName, int subjectTeacherId, int schoolYearId);
@@ -48,8 +46,6 @@ public interface ScoreService {
             int studentId, int subjectTeacherId, int schoolYearId, String scoreType);
 
     boolean saveScore(Score score);
-
-    boolean updateScoreLockStatus(int scoreId, boolean locked);
 
     boolean saveScores(List<Score> scores);
 

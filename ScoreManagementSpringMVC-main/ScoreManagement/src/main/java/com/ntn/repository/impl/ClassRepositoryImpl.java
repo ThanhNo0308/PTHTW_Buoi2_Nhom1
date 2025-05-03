@@ -4,10 +4,8 @@
  */
 package com.ntn.repository.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ntn.pojo.Class;
 import com.ntn.pojo.Major;
-import com.ntn.pojo.Student;
 import com.ntn.pojo.Teacher;
 import com.ntn.repository.ClassRepository;
 import java.util.List;
@@ -16,12 +14,8 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import java.util.HashMap;
-import java.util.Map;
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -89,7 +83,6 @@ public class ClassRepositoryImpl implements ClassRepository {
     }
 
     @Override
-    @Transactional
     public boolean addOrUpdateClass(Class classObj) {
         Session session = this.factory.getObject().getCurrentSession();
         try {

@@ -3,7 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Container, Card, Form, Table, Button, Modal, Alert, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faArrowLeft, faPlus, faCog, faLock, faUnlock, faSave, faEdit,
+  faArrowLeft, faPlus, faCog, faSave, faEdit, faLock,
   faExclamationCircle, faCheckCircle, faTimes, faFilePdf, faFileCsv, faFileExport
 } from '@fortawesome/free-solid-svg-icons';
 import { scoreApis, teacherClassApis } from '../configs/Apis';
@@ -33,7 +33,6 @@ const ScoreManagement = () => {
   const [subjectTeacherId, setSubjectTeacherId] = useState(null);
   const [schoolYearId, setSchoolYearId] = useState(null);
 
-  // Modals
   const [showAddScoreTypeModal, setShowAddScoreTypeModal] = useState(false);
   const [showWeightsModal, setShowWeightsModal] = useState(false);
   const [newScoreType, setNewScoreType] = useState("");
@@ -41,6 +40,7 @@ const ScoreManagement = () => {
   const [scoreTypesList, setScoreTypesList] = useState([]);
   const [tempWeights, setTempWeights] = useState({});
   const [exportLoading, setExportLoading] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   // Maximum score types
   const MAX_SCORE_TYPES = 5;
@@ -386,103 +386,6 @@ const ScoreManagement = () => {
     }
   };
 
-  const handleToggleLock = async (studentId, isLocked) => {
-    try {
-      // Check if student has any scores
-      const studentData = studentScores[studentId] || {};
-      const hasScores = Object.values(studentData).some(score => score.value);
-
-      if (!hasScores && !isLocked) {
-        setError("Hiện tại chưa có điểm để khóa.");
-        return;
-      }
-
-      const response = await scoreApis.lockScore(
-        studentId, subjectTeacherId, schoolYearId, !isLocked
-      );
-
-      if (response.data && response.data.success) {
-        // Update student scores lock status
-        const newStudentScores = { ...studentScores };
-        if (newStudentScores[studentId]) {
-          Object.keys(newStudentScores[studentId]).forEach(type => {
-            if (newStudentScores[studentId][type]) {
-              newStudentScores[studentId][type].isLocked = !isLocked;
-            }
-          });
-        }
-        setStudentScores(newStudentScores);
-
-        setSuccess(response.data.message || "Đã cập nhật trạng thái khóa");
-      } else {
-        setError(response.data?.message || "Không thể cập nhật trạng thái");
-      }
-    } catch (err) {
-      console.error("Error toggling lock status:", err);
-      setError(`Lỗi khi cập nhật trạng thái khóa: ${err.message}`);
-    }
-  };
-
-  const handleLockAll = async () => {
-    if (window.confirm('Bạn có chắc chắn muốn khóa tất cả điểm?')) {
-      try {
-        const response = await scoreApis.lockAllScores(
-          classId, subjectTeacherId, schoolYearId, true
-        );
-
-        if (response.data && response.data.success) {
-          // Update all students' scores lock status
-          const newStudentScores = { ...studentScores };
-          Object.keys(newStudentScores).forEach(studentId => {
-            Object.keys(newStudentScores[studentId] || {}).forEach(type => {
-              if (newStudentScores[studentId][type]) {
-                newStudentScores[studentId][type].isLocked = true;
-              }
-            });
-          });
-          setStudentScores(newStudentScores);
-
-          setSuccess(response.data.message || "Đã khóa tất cả điểm thành công!");
-        } else {
-          setError(response.data?.message || "Không thể khóa tất cả điểm");
-        }
-      } catch (err) {
-        console.error("Error locking all scores:", err);
-        setError(`Lỗi khi khóa tất cả điểm: ${err.message}`);
-      }
-    }
-  };
-
-  const handleUnlockAll = async () => {
-    if (window.confirm('Bạn có chắc chắn muốn mở khóa tất cả điểm?')) {
-      try {
-        const response = await scoreApis.lockAllScores(
-          classId, subjectTeacherId, schoolYearId, false
-        );
-
-        if (response.data && response.data.success) {
-          // Update all students' scores lock status
-          const newStudentScores = { ...studentScores };
-          Object.keys(newStudentScores).forEach(studentId => {
-            Object.keys(newStudentScores[studentId] || {}).forEach(type => {
-              if (newStudentScores[studentId][type]) {
-                newStudentScores[studentId][type].isLocked = false;
-              }
-            });
-          });
-          setStudentScores(newStudentScores);
-
-          setSuccess(response.data.message || "Đã mở khóa tất cả điểm thành công!");
-        } else {
-          setError(response.data?.message || "Không thể mở khóa tất cả điểm");
-        }
-      } catch (err) {
-        console.error("Error unlocking all scores:", err);
-        setError(`Lỗi khi mở khóa tất cả điểm: ${err.message}`);
-      }
-    }
-  };
-
   const validateScores = () => {
     // Check if any score is entered
     let hasInputs = false;
@@ -531,21 +434,42 @@ const ScoreManagement = () => {
               studentId: parseInt(studentId),
               scoreType: type,
               scoreValue: parseFloat(studentScores[studentId][type].value),
-              id: studentScores[studentId][type].id || null
+              id: studentScores[studentId][type].id || null,
+              isLocked: studentScores[studentId][type].isLocked || false
             });
           }
         }
       }
 
-      const response = await scoreApis.saveScores(
-        subjectTeacherId,
-        schoolYearId,
-        formattedScores,
-        saveMode === 'final'
-      );
+      let response;
+
+      if (saveMode === 'draft') {
+        // Sử dụng API lưu nháp - không gửi email
+        response = await scoreApis.saveScoresDraft(
+          subjectTeacherId,
+          schoolYearId,
+          formattedScores
+        );
+      } else {
+        // Sử dụng API lưu điểm chính thức - có gửi email
+        setSendingEmail(true);
+        response = await scoreApis.saveScores(
+          subjectTeacherId,
+          schoolYearId,
+          formattedScores,
+          true
+        );
+      }
+
 
       if (response.data && response.data.success) {
-        setSuccess(saveMode === 'final' ? 'Lưu điểm chính thức thành công!' : 'Lưu điểm nháp thành công!');
+        // Nếu lưu chính thức thành công và có thông báo gửi email
+        if (saveMode === 'final' && response.data.emailsTriggered) {
+          const emailCount = response.data.emailCount || "tất cả";
+          setSuccess(`Lưu điểm chính thức thành công và đã gửi email thông báo tới ${emailCount} sinh viên!`);
+        } else {
+          setSuccess(saveMode === 'final' ? 'Lưu điểm chính thức thành công!' : 'Lưu điểm nháp thành công!');
+        }
 
         // Update scores with new IDs and lock status
         if (response.data.scores) {
@@ -554,13 +478,14 @@ const ScoreManagement = () => {
           response.data.scores.forEach(score => {
             if (updatedScores[score.studentId] && updatedScores[score.studentId][score.scoreType]) {
               updatedScores[score.studentId][score.scoreType].id = score.id;
+
+              // Luôn cập nhật trạng thái khóa từ kết quả backend, bất kể chế độ lưu là gì
               updatedScores[score.studentId][score.scoreType].isLocked = score.isLocked;
             }
           });
 
           setStudentScores(updatedScores);
         } else {
-          // If no scores data returned, refresh from server
           loadClassDetails();
         }
       } else {
@@ -569,6 +494,8 @@ const ScoreManagement = () => {
     } catch (err) {
       console.error("Error saving scores:", err);
       setError(`Lỗi khi lưu điểm: ${err.message}`);
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -616,6 +543,7 @@ const ScoreManagement = () => {
     }
   };
 
+  // Xuất CSV
   const handleExportCSV = async () => {
     try {
       setExportLoading(true);
@@ -687,6 +615,13 @@ const ScoreManagement = () => {
         </div>
       )}
 
+      {sendingEmail && (
+        <div className="position-fixed top-50 start-50 translate-middle bg-white p-4 rounded shadow text-center" style={{ zIndex: 9999 }}>
+          <Spinner animation="border" variant="primary" />
+          <p className="mt-2 mb-0">Đang gửi email thông báo điểm tới sinh viên...</p>
+        </div>
+      )}
+
       {error && (
         <Alert variant="danger" dismissible onClose={() => setError("")}>
           <FontAwesomeIcon icon={faExclamationCircle} className="me-2" />
@@ -750,7 +685,6 @@ const ScoreManagement = () => {
                     </th>
                   ))}
                   <th>Điểm TB</th>
-                  <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -777,23 +711,7 @@ const ScoreManagement = () => {
                       <td>
                         <span>{calculateAverage(student.id)}</span>
                       </td>
-                      <td className="text-center">
-                        <Button
-                          variant="outline-primary"
-                          size="sm"
-                          onClick={() => handleToggleLock(student.id, isLocked)}
-                        >
-                          {isLocked ? (
-                            <>
-                              <FontAwesomeIcon icon={faLock} className="me-1" /> Mở khóa
-                            </>
-                          ) : (
-                            <>
-                              <FontAwesomeIcon icon={faUnlock} className="me-1" /> Khóa
-                            </>
-                          )}
-                        </Button>
-                      </td>
+
                     </tr>
                   );
                 })}
@@ -802,20 +720,7 @@ const ScoreManagement = () => {
           </div>
 
           <div className="d-flex justify-content-end mt-3">
-            <Button
-              variant="danger"
-              className="me-2"
-              onClick={handleLockAll}
-            >
-              <FontAwesomeIcon icon={faLock} className="me-2" /> Khóa tất cả
-            </Button>
-            <Button
-              variant="info"
-              className="me-2"
-              onClick={handleUnlockAll}
-            >
-              <FontAwesomeIcon icon={faUnlock} className="me-2" /> Mở khóa tất cả
-            </Button>
+
             <Button
               variant="secondary"
               className="me-2"
@@ -827,8 +732,9 @@ const ScoreManagement = () => {
               variant="primary"
               className="me-2"
               onClick={() => saveScores('final')}
+              disabled={sendingEmail}
             >
-              <FontAwesomeIcon icon={faSave} className="me-2" /> Lưu chính thức
+              <FontAwesomeIcon icon={faSave} className="me-2" /> {sendingEmail ? 'Đang lưu...' : 'Lưu chính thức'}
             </Button>
             <Button
               variant="success"

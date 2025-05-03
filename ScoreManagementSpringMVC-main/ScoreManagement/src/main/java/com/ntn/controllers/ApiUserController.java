@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -159,41 +158,6 @@ public class ApiUserController {
         } else {
             response.put("status", "error");
             response.put("message", "Đăng ký thất bại");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * Đăng ký giảng viên (chỉ cho Admin)
-     */
-    @PostMapping("/register/teacher")
-    public ResponseEntity<?> registerTeacher(@RequestBody Map<String, String> params) {
-        String email = params.get("email");
-        Map<String, Object> response = new HashMap<>();
-
-        // Kiểm tra xem email có nằm trong bảng Teacher
-        if (!userService.isTeacherEmailExists(email)) {
-            response.put("status", "error");
-            response.put("message", "Email giảng viên không tồn tại trong hệ thống");
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
-
-        // Kiểm tra xem email có đúng đuôi "@dh.edu.vn"
-        if (!email.endsWith("@dh.edu.vn")) {
-            response.put("status", "error");
-            response.put("message", "Email phải có định dạng @dh.edu.vn");
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
-
-        // Thực hiện đăng ký người dùng giáo viên
-        User user = userService.addTeacherUser(params);
-        if (user != null) {
-            response.put("status", "success");
-            response.put("message", "Đăng ký giảng viên thành công");
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
-        } else {
-            response.put("status", "error");
-            response.put("message", "Đăng ký giảng viên thất bại");
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

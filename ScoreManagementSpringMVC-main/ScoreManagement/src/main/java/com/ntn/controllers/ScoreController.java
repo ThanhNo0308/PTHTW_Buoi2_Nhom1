@@ -275,29 +275,6 @@ public class ScoreController {
         }
     }
 
-    /**
-     * Gửi thông báo điểm đến sinh viên
-     */
-    @PreAuthorize("hasAuthority('Teacher') or hasAuthority('Admin')")
-    @PostMapping("/api/send-score-notification")
-    @ResponseBody
-    public ResponseEntity<String> sendScoreNotification(
-            @RequestParam("studentId") int studentId,
-            @RequestParam("subjectName") String subjectName) {
-
-        try {
-            boolean success = emailService.sendScoreNotification(studentId, subjectName);
-
-            if (success) {
-                return new ResponseEntity<>("Đã gửi thông báo điểm", HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>("Không thể gửi thông báo", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        } catch (Exception e) {
-            return new ResponseEntity<>("Lỗi: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
     @GetMapping("/show-search")
     public String showSearchForm(Model model) {
         model.addAttribute("schoolYears", schoolYearService.getAllSchoolYears());

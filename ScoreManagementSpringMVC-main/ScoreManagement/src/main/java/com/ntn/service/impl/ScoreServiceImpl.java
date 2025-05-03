@@ -89,11 +89,6 @@ public class ScoreServiceImpl implements ScoreService {
     }
 
     @Override
-    public boolean lockScores(int subjectTeacherId, int classId, int schoolYearId) {
-        return this.scoreRepo.lockScores(subjectTeacherId, classId, schoolYearId);
-    }
-
-    @Override
     public boolean saveScoresDraft(List<Score> scores) {
         return this.scoreRepo.saveScoresDraft(scores);
     }
@@ -121,11 +116,6 @@ public class ScoreServiceImpl implements ScoreService {
     @Override
     public boolean saveScore(Score score) {
         return this.scoreRepo.saveScore(score);
-    }
-
-    @Override
-    public boolean updateScoreLockStatus(int scoreId, boolean locked) {
-        return this.scoreRepo.updateScoreLockStatus(scoreId, locked);
     }
 
     @Override

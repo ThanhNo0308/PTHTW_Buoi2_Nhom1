@@ -10,6 +10,7 @@ import { saveUserToFirestore, setupPresence } from '../configs/FirebaseUtils';
 import '../assets/css/FireBase.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faComments } from '@fortawesome/free-solid-svg-icons';
+import defaultAvatar from '../assets/images/logo.png';
 
 const ChatPage = () => {
   const [user] = useContext(MyUserContext);
@@ -77,7 +78,7 @@ const ChatPage = () => {
           fullName: user.fullName || user.name || "",
           email: user.email || "",
           role: user.role || "",
-          avatar: user.avatar || null
+          avatar: user.avatar || user.image || defaultAvatar
         };
 
         // Nếu là sinh viên, thêm mã sinh viên
@@ -98,6 +99,7 @@ const ChatPage = () => {
         return setupPresence(userId);
       } catch (error) {
         console.error('Error ensuring user in Firestore:', error);
+        return () => {}; 
       }
     };
 

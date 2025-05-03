@@ -232,7 +232,7 @@ const ScoreImport = () => {
     if (selectedFile) {
       setFile(selectedFile);
       setFileName(selectedFile.name);
-  
+
       // Reset thông báo
       setError('');
       setSuccess('');
@@ -240,64 +240,64 @@ const ScoreImport = () => {
       setInvalidStudents([]);
       setShowMissingScoreTypesAlert(true);
       setShowInvalidStudentsAlert(true);
-  
+
       // Preview nội dung CSV
       const reader = new FileReader();
       reader.onload = (event) => {
         const csvContent = event.target.result;
         const rows = csvContent.split('\n');
         const csvData = [];
-  
+
         // Chỉ lấy tối đa 5 dòng để preview
         for (let i = 0; i < Math.min(rows.length, 6); i++) {
           if (rows[i].trim()) {
             csvData.push(rows[i].split(','));
           }
         }
-  
+
         setCsvPreview(csvData);
         setShowCsvPreview(true);
-  
+
         // Kiểm tra header của CSV
         if (csvData.length > 0) {
           const headers = csvData[0].map(header => header.trim());
-          
+
           // Tìm vị trí của cột MSSV
           const mssvIndex = headers.findIndex(
             h => h === 'MSSV' || h === 'Mã SV' || h.toLowerCase().includes('mssv') || h.toLowerCase().includes('mã sv')
           );
-          
+
           // Tìm vị trí của cột Cuối kỳ
           const finalExamIndex = headers.findIndex(
             h => h === 'Cuối kỳ' || h.toLowerCase().includes('cuối kỳ') || h.toLowerCase().includes('cuoi ky')
           );
-  
+
           // Kiểm tra xem có cột STT trước MSSV không
           let hasSTTColumn = false;
           if (mssvIndex > 0) {
             for (let i = 0; i < mssvIndex; i++) {
-              if (headers[i].toLowerCase().includes('stt') || 
-                  headers[i].toLowerCase() === 'tt' || 
-                  headers[i].toLowerCase() === 'id') {
+              if (headers[i].toLowerCase().includes('stt') ||
+                headers[i].toLowerCase() === 'tt' ||
+                headers[i].toLowerCase() === 'id') {
                 hasSTTColumn = true;
                 break;
               }
             }
           }
-  
+
           // Kiểm tra xem có cột Điểm TB sau Cuối kỳ không
           let hasAvgColumn = false;
           if (finalExamIndex >= 0 && finalExamIndex < headers.length - 1) {
             for (let i = finalExamIndex + 1; i < headers.length; i++) {
-              if (headers[i].toLowerCase().includes('tb') || 
-                  headers[i].toLowerCase().includes('trung bình') ||
-                  headers[i].toLowerCase().includes('average')) {
+              if (headers[i].toLowerCase().includes('tb') ||
+                headers[i].toLowerCase().includes('trung bình') ||
+                headers[i].toLowerCase().includes('average')) {
                 hasAvgColumn = true;
                 break;
               }
             }
           }
-  
+
           // Hiển thị cảnh báo nếu phát hiện cột STT hoặc Điểm TB
           if (hasSTTColumn || hasAvgColumn) {
             let warningMsg = 'Vui lòng xóa ';
@@ -305,12 +305,12 @@ const ScoreImport = () => {
             if (hasSTTColumn && hasAvgColumn) warningMsg += ' và ';
             if (hasAvgColumn) warningMsg += 'cột Điểm TB sau cột Cuối kỳ';
             warningMsg += ' trong file CSV trước khi import. Hệ thống sẽ tự động bỏ qua các cột này, nhưng có thể gây nhầm lẫn cho quá trình import.';
-            
+
             setError(warningMsg);
           }
         }
       };
-  
+
       reader.readAsText(selectedFile);
     } else {
       setFile(null);
@@ -406,11 +406,38 @@ const ScoreImport = () => {
       console.error("Error importing scores:", err);
       // Trường hợp lỗi từ API
       if (err.response && err.response.data) {
-        setError(err.response.data.message || 'Có lỗi xảy ra khi import điểm');
+        const errorMessage = err.response.data.message || 'Có lỗi xảy ra khi import điểm';
+
+        // Kiểm tra nếu là lỗi định dạng CSV
+        if (err.response.data.error === "csv_format_error") {
+          // Hiển thị thông báo lỗi định dạng CSV với định dạng đặc biệt
+          setError(
+            <div>
+              <p className="mb-2">{errorMessage.split('\n\n')[0]}</p>
+              {errorMessage.includes('\n\n') && (
+                <div className="mt-2 p-2 bg-light border rounded">
+                  <p className="fw-bold mb-1">Gợi ý:</p>
+                  <ul className="mb-0 ps-3">
+                    {errorMessage
+                      .split('\n\n')[1]
+                      .replace('Gợi ý:', '')
+                      .split('\n')
+                      .filter(line => line.trim())
+                      .map((suggestion, index) => (
+                        <li key={index}>{suggestion.replace(/^\d+\.\s/, '')}</li>
+                      ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          );
+        } else {
+          // Lỗi thông thường
+          setError(errorMessage);
+        }
 
         // Xử lý các sinh viên không hợp lệ từ response error
         if (err.response.data.invalidStudents && err.response.data.invalidStudents.length > 0) {
-          console.log("Invalid students from error:", err.response.data.invalidStudents);
           setInvalidStudents(err.response.data.invalidStudents);
         }
 
@@ -707,6 +734,26 @@ const ScoreImport = () => {
                     <li>Định dạng điểm có phù hợp không (số từ 0-10)</li>
                     <li>File CSV có đúng định dạng không</li>
                     <li>Các loại điểm trong file CSV đã được cấu hình trong hệ thống chưa</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="accordion-item">
+              <h2 className="accordion-header">
+                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                  Làm thế nào để khắc phục lỗi định dạng CSV?
+                </button>
+              </h2>
+              <div id="collapseThree" className="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div className="accordion-body">
+                  <p>Nếu bạn gặp lỗi định dạng CSV, hãy thử các cách sau:</p>
+                  <ul>
+                    <li><strong>Kiểm tra Encoding</strong>: Lưu file với encoding UTF-8</li>
+                    <li><strong>Dấu phẩy trong nội dung</strong>: Nếu dữ liệu có chứa dấu phẩy, phải đặt trong dấu ngoặc kép</li>
+                    <li><strong>Dấu ngoặc kép trong nội dung</strong>: Nếu dữ liệu có chứa dấu ngoặc kép, phải escape bằng cách thêm một dấu ngoặc kép nữa (ví dụ: "" thay vì ")</li>
+                    <li><strong>Kiểm tra bằng Notepad</strong>: Mở file CSV bằng Notepad để kiểm tra định dạng thô</li>
+                    <li><strong>Xuất lại từ Excel</strong>: Khi xuất từ Excel, chọn "CSV (Comma delimited) (*.csv)" và kiểm tra cài đặt vùng miền</li>
+                    <li><strong>Tải file mẫu</strong>: Sử dụng file mẫu từ hệ thống để đảm bảo định dạng chuẩn</li>
                   </ul>
                 </div>
               </div>
