@@ -2,7 +2,6 @@ package com.ntn.service.impl;
 
 import com.ntn.pojo.Student;
 import com.ntn.repository.StudentRepository;
-import com.ntn.service.EmailService;
 import com.ntn.service.StudentService;
 import java.util.List;
 import java.util.Optional;
@@ -14,9 +13,6 @@ public class StudentServiceImpl implements StudentService {
 
     @Autowired
     private StudentRepository studRepo;
-
-    @Autowired
-    private EmailService emailService;
 
     @Override
     public List<Student> getStudentByClassId(int classId) {

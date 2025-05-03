@@ -1,8 +1,12 @@
 package com.ntn.service.impl;
 
 import com.ntn.pojo.Student;
+import com.ntn.pojo.Teacher;
 import com.ntn.repository.StudentRepository;
+import com.ntn.repository.TeacherRepository;
 import com.ntn.service.EmailService;
+import com.ntn.service.StudentService;
+import com.ntn.service.TeacherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;
@@ -17,9 +21,12 @@ public class EmailServiceImpl implements EmailService {
 
     @Autowired
     private JavaMailSender emailSender;
-
+    
     @Autowired
-    private StudentRepository studentRepo;
+    private StudentRepository studentRepository;
+    
+    @Autowired
+    private TeacherRepository teacherRepository;
 
     @Override
     public boolean sendEmail(String to, String subject, String text) {
@@ -47,7 +54,7 @@ public class EmailServiceImpl implements EmailService {
     public boolean sendScoreNotification(int studentId, String subjectName, String teacherName, 
                                        String schoolYear, String major) {
         try {
-            Student student = this.studentRepo.getStudentById(studentId);
+            Student student = this.studentRepository.getStudentById(studentId);
 
             if (student == null || student.getEmail() == null) {
                 return false;
@@ -98,4 +105,85 @@ public class EmailServiceImpl implements EmailService {
         
         System.out.println("Tổng kết gửi email: Thành công: " + successCount + ", Thất bại: " + failCount);
     }
+    
+    // Phương thức sinh viên
+    @Override
+    public boolean sendToStudent(int studentId, String subject, String message) {
+        try {
+            Student student = studentRepository.getStudentById(studentId);
+            if (student == null || student.getEmail() == null || student.getEmail().isEmpty()) {
+                return false;
+            }
+            
+            String fullName = student.getLastName() + " " + student.getFirstName();
+            String emailContent = "Xin chào " + fullName + ",\n\n" + message + "\n\nTrân trọng,\nPhòng Đào tạo";
+            
+            return sendEmail(student.getEmail(), subject, emailContent);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public int sendToStudentsByClass(int classId, String subject, String message) {
+        List<Student> students = studentRepository.getStudentByClassId(classId);
+        int sentCount = 0;
+        
+        for (Student student : students) {
+            if (sendToStudent(student.getId(), subject, message)) {
+                sentCount++;
+            }
+        }
+        
+        return sentCount;
+    }
+
+    @Override
+    public int sendToAllStudents(String subject, String message) {
+        List<Student> students = studentRepository.getStudents();
+        int sentCount = 0;
+        
+        for (Student student : students) {
+            if (sendToStudent(student.getId(), subject, message)) {
+                sentCount++;
+            }
+        }
+        
+        return sentCount;
+    }
+
+    // Phương thức giảng viên
+    @Override
+    public boolean sendToTeacher(int teacherId, String subject, String message) {
+        try {
+            Teacher teacher = teacherRepository.getTeacherById(teacherId);
+            if (teacher == null || teacher.getEmail() == null || teacher.getEmail().isEmpty()) {
+                return false;
+            }
+            
+            String emailContent = "Xin chào " + teacher.getTeacherName() + ",\n\n" + message + "\n\nTrân trọng,\nPhòng Đào tạo";
+            
+            return sendEmail(teacher.getEmail(), subject, emailContent);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public int sendToAllTeachers(String subject, String message) {
+        List<Teacher> teachers = teacherRepository.getTeachers();
+        int sentCount = 0;
+        
+        for (Teacher teacher : teachers) {
+            if (sendToTeacher(teacher.getId(), subject, message)) {
+                sentCount++;
+            }
+        }
+        
+        return sentCount;
+    }
+    
+    
 }

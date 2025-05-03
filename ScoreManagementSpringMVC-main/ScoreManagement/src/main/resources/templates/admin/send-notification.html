@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>Gửi Thông Báo</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+    
+    <div class="container mt-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-bell"></i> Gửi Thông Báo</h5>
+            </div>
+            <div class="card-body">
+                <!-- Thông báo thành công -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                
+                <!-- Form gửi thông báo -->
+                <form th:action="@{/admin/send-notification}" method="post">
+                    <!-- Chọn loại người nhận -->
+                    <div class="mb-3">
+                        <label class="form-label">Loại người nhận</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="recipientType" id="typeStudent" value="student" checked onchange="toggleRecipientOptions()">
+                            <label class="form-check-label" for="typeStudent">
+                                Sinh viên
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="recipientType" id="typeTeacher" value="teacher" onchange="toggleRecipientOptions()">
+                            <label class="form-check-label" for="typeTeacher">
+                                Giảng viên
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Chọn sinh viên (hiển thị khi chọn loại người nhận là sinh viên) -->
+                    <div id="studentOptions" class="mb-3">
+                        <label for="studentRecipient" class="form-label">Gửi đến sinh viên</label>
+                        <select class="form-select" id="studentRecipient" name="studentRecipient">
+                            <option value="all">Tất cả sinh viên</option>
+                            <optgroup label="Theo lớp">
+                                <option th:each="class : ${classes}" th:value="${'class-' + class.id}" th:text="${class.className}"></option>
+                            </optgroup>
+                            <optgroup label="Sinh viên cá nhân">
+                                <option th:each="student : ${students}" th:value="${'student-' + student.id}" 
+                                        th:text="${student.studentCode + ' - ' + student.lastName + ' ' + student.firstName}"></option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    
+                    <!-- Chọn giảng viên (hiển thị khi chọn loại người nhận là giảng viên) -->
+                    <div id="teacherOptions" class="mb-3" style="display: none;">
+                        <label for="teacherRecipient" class="form-label">Gửi đến giảng viên</label>
+                        <select class="form-select" id="teacherRecipient" name="teacherRecipient">
+                            <option value="all">Tất cả giảng viên</option>
+                            <option th:each="teacher : ${teachers}" th:value="${teacher.id}" th:text="${teacher.teacherName}"></option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="subject" name="subject" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Nội dung <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                    </div>
+                    
+                    <div class="text-end mt-3">
+                        <a th:href="@{/admin/pageAdmin}" class="btn btn-secondary">Hủy</a>
+                        <button type="submit" class="btn btn-primary">Gửi thông báo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
+    
+    <script>
+        function toggleRecipientOptions() {
+            const studentType = document.getElementById('typeStudent').checked;
+            document.getElementById('studentOptions').style.display = studentType ? 'block' : 'none';
+            document.getElementById('teacherOptions').style.display = studentType ? 'none' : 'block';
+        }
+    </script>
+</body>
+</html>

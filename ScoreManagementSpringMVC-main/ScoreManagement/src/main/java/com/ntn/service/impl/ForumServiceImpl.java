@@ -54,8 +54,5 @@ public class ForumServiceImpl implements ForumService {
     public Forum getForumById(int id) {
         return this.forumRepo.getForumById(id);
     }
-
-    
-    
     
 }
