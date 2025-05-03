@@ -442,44 +442,6 @@ public class ApiScoreController {
         }
     }
 
-    // Lấy danh sách lớp dựa trên môn học
-    @GetMapping("/classes/by-subject")
-    public ResponseEntity<Map<String, Object>> getClassesBySubject(
-            @RequestParam("subjectId") Integer subjectId) {
-        Map<String, Object> response = new HashMap<>();
-
-        try {
-            // Lấy tất cả Subjectteacher có subjectId trùng khớp
-            List<Subjectteacher> subjectTeachers = subjectTeacherService.getSubjectTeachersBySubjectId(subjectId);
-
-            // Lấy danh sách lớp từ các Subjectteacher
-            List<Map<String, Object>> classes = new ArrayList<>();
-            Set<Integer> uniqueClassIds = new HashSet<>();
-
-            for (Subjectteacher st : subjectTeachers) {
-                if (st.getClassId() != null && !uniqueClassIds.contains(st.getClassId().getId())) {
-                    uniqueClassIds.add(st.getClassId().getId());
-
-                    // Convert Class entity to map để trả về
-                    Map<String, Object> classInfo = new HashMap<>();
-                    classInfo.put("id", st.getClassId().getId());
-                    classInfo.put("className", st.getClassId().getClassName());
-
-                    classes.add(classInfo);
-                }
-            }
-
-            response.put("success", true);
-            response.put("classes", classes);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("success", false);
-            response.put("message", "Lỗi khi lấy danh sách lớp: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
     // Lấy dữ liệu cho form nhập điểm từ file
     @GetMapping("/import-scores-form")
     public ResponseEntity<Map<String, Object>> getImportScoresFormData(Authentication authentication) {
