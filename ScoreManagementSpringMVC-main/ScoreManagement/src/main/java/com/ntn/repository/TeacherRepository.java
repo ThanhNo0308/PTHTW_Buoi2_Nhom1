@@ -9,20 +9,11 @@ import java.util.List;
 
 public interface TeacherRepository {
 
-    int getidTeacherByEmail(String email);
-
-    int getidStudentByEmail(String email);
-    int getTeacherIdByUsername(String username);
-
     boolean addOrUpdateTeacher(Teacher teacher);
 
     boolean deleteTeacher(int teacherId);
 
     Teacher getTeacherByUserId(int userId);
-
-    List<Class> getClassesByTeacherId(int teacherId);
-
-    int getSubjectTeacherIdByTeacherAndClass(int teacherId, int classId);
 
     List<Teacher> getTeachers();
 

@@ -13,14 +13,10 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.beans.PropertyEditorSupport;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
-import org.springframework.beans.propertyeditors.CustomDateEditor;
 
 @Controller
+@PreAuthorize("hasAuthority('Admin')")
 public class SchoolYearController {
 
     @Autowired
@@ -61,7 +57,6 @@ public class SchoolYearController {
         return "admin/school-years";
     }
 
-    @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/admin/school-years/add")
     public String schoolYearAdd(
             @ModelAttribute("schoolYear") Schoolyear schoolYear,
@@ -104,7 +99,6 @@ public class SchoolYearController {
         }
     }
 
-    @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/admin/school-years/update")
     public String schoolYearUpdate(
             @ModelAttribute("schoolYear") Schoolyear schoolYear,
@@ -147,7 +141,6 @@ public class SchoolYearController {
         }
     }
 
-    @PreAuthorize("hasAuthority('Admin')")
     @GetMapping("/admin/school-years/delete/{id}")
     public String schoolYearDelete(@PathVariable("id") int schoolYearId, RedirectAttributes redirectAttributes) {
         try {

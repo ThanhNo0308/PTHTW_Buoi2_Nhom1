@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
+// Controller báo cáo thống kê biểu đồ
 @Controller
 @RequestMapping("/admin/statistics")
 @PreAuthorize("hasAuthority('Admin')")

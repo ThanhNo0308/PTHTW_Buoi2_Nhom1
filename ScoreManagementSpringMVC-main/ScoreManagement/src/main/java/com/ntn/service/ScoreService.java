@@ -1,9 +1,7 @@
 package com.ntn.service;
 
 import com.ntn.pojo.Score;
-import com.ntn.pojo.Student;
 import java.util.List;
-import java.util.Map;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface ScoreService {
@@ -12,15 +10,7 @@ public interface ScoreService {
 
     Float getScoreWeight(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType);
 
-    List<Score> getScores();
-
     Score getScoreById(int id);
-
-    List<Score> getScoreByStudentCode(String studentCode);
-
-    List<Score> getScoreByStudentFullName(String firstName, String lastName);
-
-    List<Score> getSubjectScoresByStudentCode(String studentCode);
 
     List<Score> getSubjectScoresByStudentCodeAndSchoolYear(String studentCode, int schoolYearId);
 
@@ -36,26 +26,9 @@ public interface ScoreService {
 
     boolean saveScoresDraft(List<Score> scores);
 
-    boolean addScoreColumn(String columnName, int subjectTeacherId, int schoolYearId);
-
-    List<Score> findByStudent(Student student);
-
     List<Score> getScoresBySubjectTeacherIdAndClassIdAndSchoolYearId(int subjectTeacherId, int classId, int schoolYearId);
 
-    Score getScoreByStudentSubjectSchoolYearAndType(
-            int studentId, int subjectTeacherId, int schoolYearId, String scoreType);
-
-    boolean saveScore(Score score);
-
     boolean saveScores(List<Score> scores);
-
-    List<Score> getScoresByClassAndSubjectAndSchoolYear(
-            int classId, int subjectTeacherId, int schoolYearId);
-
-    boolean saveScoreWeights(Integer subjectTeacherId, Integer schoolYearId, Map<String, Double> weights);
-
-    Map<String, Double> getScoreWeights(Integer subjectTeacherId, Integer schoolYearId);
-
+    
     boolean deleteScore(Integer scoreId);
-
 }

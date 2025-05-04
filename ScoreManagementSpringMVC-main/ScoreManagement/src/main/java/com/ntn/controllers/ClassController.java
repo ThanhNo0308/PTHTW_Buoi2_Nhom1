@@ -2,13 +2,10 @@ package com.ntn.controllers;
 
 import com.ntn.pojo.Class;
 import com.ntn.pojo.Major;
-import com.ntn.pojo.Student;
 import com.ntn.pojo.Teacher;
 import com.ntn.service.ClassService;
 import com.ntn.service.MajorService;
-import com.ntn.service.StudentService;
 import com.ntn.service.TeacherService;
-import com.ntn.service.TrainingTypeService;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,11 +16,11 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import jakarta.validation.Valid;
-import java.beans.PropertyEditorSupport;
 import org.springframework.dao.DataIntegrityViolationException;
 
+// Controller Lớp học
 @Controller
+@PreAuthorize("hasAuthority('Admin')")
 public class ClassController {
 
     @Autowired
@@ -35,13 +32,6 @@ public class ClassController {
     @Autowired
     private TeacherService teacherService;
 
-    @Autowired
-    private StudentService studentService;
-
-    @Autowired
-    private TrainingTypeService trainingTypeService;
-
-    @PreAuthorize("hasAuthority('Admin')")
     @GetMapping("/admin/classes")
     public String getClasses(
             @RequestParam(name = "majorId", required = false) Integer majorId,
@@ -63,8 +53,7 @@ public class ClassController {
         model.addAttribute("teachers", teacherService.getTeachers());
         return "/admin/classes";
     }
-
-    @PreAuthorize("hasAuthority('Admin')")
+    
     @PostMapping("/admin/class-add")
     public String addClass(
             @ModelAttribute("class") Class classObj,
@@ -110,7 +99,6 @@ public class ClassController {
         }
     }
 
-    @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/admin/class-update")
     public String classUpdate(
             @ModelAttribute("class") Class classObj,
@@ -134,7 +122,6 @@ public class ClassController {
         }
     }
 
-    @PreAuthorize("hasAuthority('Admin')")
     @GetMapping("/admin/class-delete/{id}")
     public String deleteClass(@PathVariable("id") int id, RedirectAttributes redirectAttributes) {
         try {

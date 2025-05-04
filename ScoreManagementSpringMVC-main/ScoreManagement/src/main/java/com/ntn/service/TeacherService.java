@@ -8,20 +8,9 @@ import com.ntn.pojo.Teacher;
 import java.util.List;
 
 public interface TeacherService {
-
-    int getIdTeacherByEmail(String email);
-
-    int getidStudentByEmail(String email);
-
     boolean addOrUpdateTeacher(Teacher teacher);
 
     boolean deleteTeacher(int teacherId);
-
-    int getTeacherIdByUsername(String username);
-
-    List<Class> getClassesByTeacher(int teacherId);
-
-    int getSubjectTeacherIdByTeacherAndClass(int teacherId, int classId);
 
     List<Teacher> getTeachers();
 

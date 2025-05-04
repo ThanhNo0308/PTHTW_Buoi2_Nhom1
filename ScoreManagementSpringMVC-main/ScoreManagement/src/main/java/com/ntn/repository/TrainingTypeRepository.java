@@ -6,7 +6,6 @@ package com.ntn.repository;
 
 import com.ntn.pojo.Trainingtype;
 import java.util.List;
-import java.util.Map;
 
 public interface TrainingTypeRepository {
 
@@ -25,8 +24,4 @@ public interface TrainingTypeRepository {
     boolean hasRelatedMajors(int trainingTypeId);
 
     int countTrainingTypes();
-
-    int countMajorsByTrainingType(int trainingTypeId);
-
-    Map<Integer, Integer> getMajorsCountByTrainingType();
 }

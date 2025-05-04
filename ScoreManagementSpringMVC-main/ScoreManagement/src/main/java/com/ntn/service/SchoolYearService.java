@@ -9,8 +9,6 @@ import java.util.List;
 
 public interface SchoolYearService {
 
-    List<Schoolyear> getListSchoolYear(String currentYear);
-
     int getCurrentSchoolYearId();
 
     List<Schoolyear> getAllSchoolYears();

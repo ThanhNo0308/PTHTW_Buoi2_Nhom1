@@ -4,7 +4,6 @@
  */
 package com.ntn.repository;
 
-import com.ntn.pojo.Score;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Typescore;
 import java.util.List;
@@ -19,8 +18,6 @@ public interface TypeScoreRepository {
     Typescore getScoreTypeByName(String name);
 
     int countScoreTypesBySubjectTeacher(int subjectTeacherId);
-
-    boolean addScoreType(String typeName, int subjectTeacherId);
 
     Student getStudentByCode(String studentCode);
 

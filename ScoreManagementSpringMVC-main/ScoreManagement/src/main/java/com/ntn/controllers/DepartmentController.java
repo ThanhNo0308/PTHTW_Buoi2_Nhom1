@@ -15,7 +15,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
 
+// Controller Khoa 
 @Controller
+@PreAuthorize("hasAuthority('Admin')")
 public class DepartmentController {
 
     @Autowired
@@ -30,7 +32,6 @@ public class DepartmentController {
         return "admin/departments";
     }
 
-    @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/admin/departments/add")
     public String departmentAdd(@Valid @ModelAttribute("department") Department department,
             BindingResult bindingResult,
@@ -52,7 +53,6 @@ public class DepartmentController {
         return "redirect:/admin/departments";
     }
 
-    @PreAuthorize("hasAuthority('Admin')")
     @GetMapping("/admin/departments/{id}")
     @ResponseBody
     public ResponseEntity<Department> getDepartment(@PathVariable int id) {
@@ -64,7 +64,6 @@ public class DepartmentController {
         }
     }
 
-    @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/admin/departments/update")
     public String departmentUpdate(@Valid @ModelAttribute("department") Department department,
             BindingResult bindingResult,
@@ -86,7 +85,6 @@ public class DepartmentController {
         return "redirect:/admin/departments";
     }
 
-    @PreAuthorize("hasAuthority('Admin')")
     @GetMapping("/admin/departments/delete/{id}")
     public String departmentDelete(@PathVariable("id") int departmentId, RedirectAttributes redirectAttributes) {
         try {

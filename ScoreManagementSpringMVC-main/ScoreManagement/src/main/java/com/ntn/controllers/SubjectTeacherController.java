@@ -1,19 +1,16 @@
 package com.ntn.controllers;
 
-import com.ntn.pojo.Department;
 import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Subject;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.Class;
-import com.ntn.pojo.Trainingtype;
 import com.ntn.service.ClassService;
 import com.ntn.service.DepartmentService;
 import com.ntn.service.SchoolYearService;
 import com.ntn.service.SubjectService;
 import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TeacherService;
-import com.ntn.service.TrainingTypeService;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +21,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.beans.PropertyEditorSupport;
-
+// Controller Phân công giảng dạy
 @Controller
 @PreAuthorize("hasAuthority('Admin')")
 public class SubjectTeacherController {
@@ -41,9 +37,6 @@ public class SubjectTeacherController {
 
     @Autowired
     private DepartmentService departmentService;
-
-    @Autowired
-    private TrainingTypeService trainingTypeService;
     
     @Autowired
     private SchoolYearService schoolYearService;
@@ -84,9 +77,7 @@ public class SubjectTeacherController {
             subjectTeachers = subjectTeacherService.getAllSubjectTeachers();
         }
 
-        // Thêm danh sách học kỳ vào model
         model.addAttribute("schoolYears", schoolYearService.getAllSchoolYears());
-
         model.addAttribute("classes", classService.getClasses());
         model.addAttribute("teachers", teacherService.getTeachers());
         model.addAttribute("subjects", subjectService.getSubjects());

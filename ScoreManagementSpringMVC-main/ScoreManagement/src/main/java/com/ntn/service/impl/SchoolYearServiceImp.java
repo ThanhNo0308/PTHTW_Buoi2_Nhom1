@@ -18,11 +18,6 @@ public class SchoolYearServiceImp implements SchoolYearService {
     private SchoolYearRepository schoolYearRepo;
 
     @Override
-    public List<Schoolyear> getListSchoolYear(String currentYear) {
-        return this.schoolYearRepo.getListSchoolYear(currentYear);
-    }
-
-    @Override
     public int getCurrentSchoolYearId() {
         return this.schoolYearRepo.getCurrentSchoolYearId();
     }

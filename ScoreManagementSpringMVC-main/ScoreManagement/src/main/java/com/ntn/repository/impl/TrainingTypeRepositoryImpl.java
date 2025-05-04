@@ -9,8 +9,6 @@ import com.ntn.repository.TrainingTypeRepository;
 import java.util.List;
 import org.hibernate.query.Query;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -134,43 +132,6 @@ public class TrainingTypeRepositoryImpl implements TrainingTypeRepository {
         } catch (HibernateException ex) {
             ex.printStackTrace();
             return 0;
-        }
-    }
-
-    @Override
-    public int countMajorsByTrainingType(int trainingTypeId) {
-        Session session = this.factory.getObject().getCurrentSession();
-        try {
-            Query<Long> query = session.createQuery(
-                    "SELECT COUNT(m) FROM Major m WHERE m.trainingTypeId.id = :trainingTypeId", Long.class);
-            query.setParameter("trainingTypeId", trainingTypeId);
-            return query.getSingleResult().intValue();
-        } catch (HibernateException ex) {
-            ex.printStackTrace();
-            return 0;
-        }
-    }
-
-    @Override
-    public Map<Integer, Integer> getMajorsCountByTrainingType() {
-        Session session = this.factory.getObject().getCurrentSession();
-        try {
-            Map<Integer, Integer> results = new HashMap<>();
-
-            Query<Object[]> query = session.createQuery(
-                    "SELECT t.id, COUNT(m) FROM Trainingtype t LEFT JOIN t.majorSet m GROUP BY t.id", Object[].class);
-
-            List<Object[]> rows = query.getResultList();
-            for (Object[] row : rows) {
-                Integer trainingTypeId = (Integer) row[0];
-                Long count = (Long) row[1];
-                results.put(trainingTypeId, count.intValue());
-            }
-
-            return results;
-        } catch (HibernateException ex) {
-            ex.printStackTrace();
-            return new HashMap<>();
         }
     }
 

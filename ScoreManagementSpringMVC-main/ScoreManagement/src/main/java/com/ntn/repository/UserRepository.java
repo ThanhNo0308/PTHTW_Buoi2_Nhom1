@@ -4,7 +4,6 @@
  */
 package com.ntn.repository;
 
-import com.ntn.pojo.Student;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
 import java.util.List;
@@ -16,8 +15,6 @@ public interface UserRepository {
     User getUserByEmail(String email);
     
     boolean isEmailExistsInUserTable(String email);
-
-    boolean authUser(String username, String password);
 
     User addUser(User user);
     boolean saveUser(User user);

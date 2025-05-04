@@ -10,8 +10,6 @@ import java.util.List;
 
 public interface SubjectTeacherRepository {
 
-    List<Subjectteacher> getSubjectTeachers();
-
     List<Subjectteacher> getAllSubjectTeachers();
 
     Subjectteacher getSubjectTeacherById(int id);
@@ -25,12 +23,6 @@ public interface SubjectTeacherRepository {
     List<Subjectteacher> getSubjectTeachersBySubjectId(Integer subjectId);
 
     List<Subjectteacher> getSubjectTeachersByDepartmentId(int departmentId);
-
-    Subjectteacher getSubJectTeacherById(int id);
-
-    List<Subjectteacher> getSubjectTeacherByTeacherID(int TeacherID);
-
-    List<Subjectteacher> getSubjectTeacherByListSubjectTeacherId(List<Studentsubjectteacher> listStudentSubjectTeacher);
 
     List<Subjectteacher> getSubjectTeachersBySchoolYearId(int schoolYearId);
 

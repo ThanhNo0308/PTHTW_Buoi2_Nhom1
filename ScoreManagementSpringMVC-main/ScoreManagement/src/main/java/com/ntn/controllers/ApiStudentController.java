@@ -5,14 +5,11 @@ import com.ntn.pojo.Score;
 import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Studentsubjectteacher;
-import com.ntn.pojo.Subject;
 import com.ntn.pojo.User;
-import com.ntn.service.ClassService;
 import com.ntn.service.SchoolYearService;
 import com.ntn.service.ScoreService;
 import com.ntn.service.StudentService;
 import com.ntn.service.StudentSubjectTeacherService;
-import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.UserService;
 
 import java.security.Principal;

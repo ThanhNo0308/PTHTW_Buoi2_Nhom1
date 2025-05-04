@@ -12,23 +12,11 @@ public interface StudentService {
 
     boolean deleteStudent(int studentId);
 
-    Optional<Student> findByStudentId(String studentId);
-
-    List<Student> findByFullNameContaining(String name);
-
-    List<Student> getStudentsByTeacherId(int teacherId);
-
-    List<Student> getStudentsBySubjectTeacherId(int subjectTeacherId);
-
-    List<Student> getStudentsBySubjectTeacherAndSchoolYear(int subjectTeacherId, int schoolYearId);
+    Optional<Student> findByStudentCode(String studentId);
 
     List<Student> getStudents();
 
-    Student getStudentByUsername(String username);
-
     Student getStudentById(int studentId);
-
-    Student getStudentByStudentCode(String studentCode);
 
     int countStudents();
 

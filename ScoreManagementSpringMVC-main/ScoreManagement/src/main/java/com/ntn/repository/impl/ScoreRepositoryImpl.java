@@ -12,19 +12,14 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
-import com.ntn.pojo.Classscoretypes;
 import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Score;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Typescore;
-import com.ntn.repository.ClassScoreTypeRepository;
 import com.ntn.repository.ScoreRepository;
-import com.ntn.repository.SubjectTeacherRepository;
-import com.ntn.repository.TypeScoreRepository;
 import com.ntn.service.ClassScoreTypeService;
 import com.ntn.service.ClassService;
-import com.ntn.service.EmailService;
 import com.ntn.service.SchoolYearService;
 import com.ntn.service.ScoreService;
 import com.ntn.service.SubjectTeacherService;
@@ -42,9 +37,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -105,90 +98,11 @@ public class ScoreRepositoryImpl implements ScoreRepository {
     }
 
     @Override
-    public List<Score> getScores() {
-        Session session = this.factory.getObject().getCurrentSession();
-        Query q = session.createQuery("FROM Score");
-        return q.getResultList();
-    }
-
-    @Override
     public Score getScoreById(int id) {
         Session session = this.factory.getObject().getCurrentSession();
         return session.get(Score.class, id);
     }
-
-    @Override
-    public boolean deleteScore(Integer scoreId) {
-        try {
-            Session session = this.factory.getObject().getCurrentSession();
-            Score score = session.get(Score.class, scoreId);
-            if (score != null) {
-                session.delete(score);
-                return true;
-            }
-            return false;
-        } catch (HibernateException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
-    public List<Score> getScoreByStudentCode(String studentCode) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Score> query = builder.createQuery(Score.class);
-        Root<Score> root = query.from(Score.class);
-
-        query.where(builder.equal(root.get("studentID").get("studentCode"), studentCode));
-
-        Query q = session.createQuery(query);
-        return q.getResultList();
-    }
-
-    @Override
-    public List<Score> getScoreByStudentFullName(String firstName, String lastName) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Score> query = builder.createQuery(Score.class);
-        Root<Score> root = query.from(Score.class);
-
-        Predicate firstNamePredicate = builder.like(root.get("studentID").get("firstName"), "%" + firstName + "%");
-        Predicate lastNamePredicate = builder.like(root.get("studentID").get("lastName"), "%" + lastName + "%");
-
-        query.where(builder.and(firstNamePredicate, lastNamePredicate));
-
-        Query q = session.createQuery(query);
-        return q.getResultList();
-    }
-
-    @Override
-    public List<Score> findByStudent(Student student) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Score> query = builder.createQuery(Score.class);
-        Root<Score> root = query.from(Score.class);
-
-        query.where(builder.equal(root.get("studentID"), student));
-
-        Query q = session.createQuery(query);
-        return q.getResultList();
-    }
-
-    @Override
-    public List<Score> getSubjectScoresByStudentCode(String studentCode) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Score> query = builder.createQuery(Score.class);
-        Root<Score> root = query.from(Score.class);
-
-        query.where(builder.equal(root.get("studentID").get("studentCode"), studentCode));
-        query.orderBy(builder.asc(root.get("subjectTeacherID").get("subjectId").get("subjectName")));
-
-        Query q = session.createQuery(query);
-        return q.getResultList();
-    }
-
+    
     @Override
     public List<Score> getSubjectScoresByStudentCodeAndSchoolYear(String studentCode, int schoolYearId) {
         Session session = this.factory.getObject().getCurrentSession();
@@ -311,45 +225,6 @@ public class ScoreRepositoryImpl implements ScoreRepository {
         return q.getResultList();
     }
 
-    @Override
-    public boolean saveScore(Score score) {
-        Session session = this.factory.getObject().getCurrentSession();
-        try {
-            if (score.getId() == null) {
-                session.save(score);
-            } else {
-                session.update(score);
-            }
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
-    public Score getScoreByStudentSubjectSchoolYearAndType(int studentId, int subjectTeacherId, int schoolYearId, String scoreType) {
-        Session session = this.factory.getObject().getCurrentSession();
-
-        String hql = "FROM Score s WHERE s.studentID.id = :studentId AND "
-                + "s.subjectTeacherID.id = :subjectTeacherId AND "
-                + "s.schoolYearId.id = :schoolYearId AND "
-                + "s.scoreType.scoreType = :scoreType";
-
-        Query<Score> query = session.createQuery(hql, Score.class);
-        query.setParameter("studentId", studentId);
-        query.setParameter("subjectTeacherId", subjectTeacherId);
-        query.setParameter("schoolYearId", schoolYearId);
-        query.setParameter("scoreType", scoreType);
-
-        List<Score> results = query.getResultList();
-        if (results.isEmpty()) {
-            return null;
-        } else {
-            // Nếu có nhiều kết quả, trả về kết quả đầu tiên
-            return results.get(0);
-        }
-    }
 
     @Override
     public boolean importScoresFromCsv(MultipartFile file, int subjectTeacherId, int classId, int schoolYearId) throws Exception {
@@ -366,7 +241,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
 
             if (subjectTeacher == null) {
                 // Nếu không tìm thấy với 3 tiêu chí, thử tìm chỉ với ID
-                subjectTeacher = subjectTeacherService.getSubJectTeacherById(subjectTeacherId);
+                subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
 
                 // Log cảnh báo nếu classId không khớp
                 if (subjectTeacher != null && subjectTeacher.getClassId() != null
@@ -517,7 +392,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
 
         try {
             // Lấy thông tin chi tiết
-            Subjectteacher subjectTeacher = subjectTeacherService.getSubJectTeacherById(subjectTeacherId);
+            Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
             com.ntn.pojo.Class classInfo = classService.getClassById(classId);
             Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
 
@@ -681,7 +556,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
             Font smallFont = new Font(unicodeFont, 9, Font.NORMAL);
 
             // Lấy thông tin chi tiết
-            Subjectteacher subjectTeacher = subjectTeacherService.getSubJectTeacherById(subjectTeacherId);
+            Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
             com.ntn.pojo.Class classInfo = classService.getClassById(classId);
             Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
 
@@ -986,98 +861,22 @@ public class ScoreRepositoryImpl implements ScoreRepository {
             return false;
         }
     }
-
+    
     @Override
-    public boolean addScoreColumn(String columnName, int subjectTeacherId, int schoolYearId) {
-        // Kiểm tra số lượng cột điểm hiện tại (không quá 5)
-        int currentColumnCount = typeScoreService.countScoreTypesBySubjectTeacher(subjectTeacherId);
-
-        if (currentColumnCount >= 5) {
-            return false;
-        }
-
-        // Thêm cột điểm mới
-        return typeScoreService.addScoreType(columnName, subjectTeacherId);
-    }
-
-    @Override
-    public boolean saveScoreWeights(Integer subjectTeacherId, Integer schoolYearId, Map<String, Double> weights) {
+    public boolean deleteScore(Integer scoreId) {
         try {
-            // Lưu trọng số cho tất cả các lớp sử dụng môn học này
-            Set<Integer> classIds = new HashSet<>();
-
-            // Lấy danh sách các lớp từ điểm hiện tại
-            List<Score> existingScores = scoreService.getListScoreBySubjectTeacherIdAndSchoolYearId(
-                    subjectTeacherId, schoolYearId);
-
-            for (Score score : existingScores) {
-                if (score.getStudentID() != null && score.getStudentID().getClassId() != null) {
-                    classIds.add(score.getStudentID().getClassId().getId());
-                }
+            Session session = this.factory.getObject().getCurrentSession();
+            Score score = session.get(Score.class, scoreId);
+            if (score != null) {
+                session.delete(score);
+                return true;
             }
-
-            // Lưu cấu hình trọng số cho từng lớp
-            for (Integer classId : classIds) {
-                Map<String, Float> floatWeights = new HashMap<>();
-                for (Map.Entry<String, Double> entry : weights.entrySet()) {
-                    floatWeights.put(entry.getKey(), entry.getValue().floatValue());
-                }
-
-                ClassScoreTypeService.updateScoreTypeWeights(
-                        classId, subjectTeacherId, schoolYearId, floatWeights);
-            }
-
-            // Không cần cập nhật trọng số trong các điểm hiện có vì đã đánh dấu là @Transient
-            return true;
-        } catch (Exception e) {
+            return false;
+        } catch (HibernateException e) {
             e.printStackTrace();
             return false;
         }
     }
 
-    @Override
-    public Map<String, Double> getScoreWeights(Integer subjectTeacherId, Integer schoolYearId) {
-        Map<String, Double> weights = new HashMap<>();
-
-        try {
-            // Lấy một lớp học bất kỳ cho môn học này
-            String hql = "SELECT DISTINCT s.studentID.classId.id FROM Score s WHERE "
-                    + "s.subjectTeacherID.id = :subjectTeacherId AND "
-                    + "s.schoolYearId.id = :schoolYearId";
-
-            Session session = factory.getObject().getCurrentSession();
-            Query query = session.createQuery(hql);
-            query.setParameter("subjectTeacherId", subjectTeacherId);
-            query.setParameter("schoolYearId", schoolYearId);
-            query.setMaxResults(1);
-
-            Integer classId = (Integer) query.uniqueResult();
-
-            if (classId != null) {
-                // Lấy trọng số từ ClassScoreType
-                List<Classscoretypes> classScoreTypes = ClassScoreTypeService.getScoreTypesByClass(
-                        classId, subjectTeacherId, schoolYearId);
-
-                for (Classscoretypes cst : classScoreTypes) {
-                    weights.put(cst.getScoreType().getScoreType(), cst.getWeight().doubleValue());
-                }
-            }
-
-            // Nếu không có dữ liệu, sử dụng giá trị mặc định
-            if (weights.isEmpty()) {
-                weights.put("Giữa kỳ", 0.4);
-                weights.put("Cuối kỳ", 0.6);
-            }
-
-            return weights;
-        } catch (Exception e) {
-            e.printStackTrace();
-
-            // Giá trị mặc định
-            weights.put("Giữa kỳ", 0.4);
-            weights.put("Cuối kỳ", 0.6);
-            return weights;
-        }
-    }
 
 }

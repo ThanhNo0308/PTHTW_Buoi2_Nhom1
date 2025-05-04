@@ -12,9 +12,14 @@ import java.util.List;
  * @author Admin
  */
 public interface ForumCommentRepository {
+
     List<Forumcomment> getCommentsByForumId(Integer forumId);
+
     Forumcomment getCommentById(Integer commentId);
+
     boolean addComment(Forumcomment comment);
+
     boolean updateComment(Forumcomment comment);
+
     boolean deleteComment(Integer commentId);
 }

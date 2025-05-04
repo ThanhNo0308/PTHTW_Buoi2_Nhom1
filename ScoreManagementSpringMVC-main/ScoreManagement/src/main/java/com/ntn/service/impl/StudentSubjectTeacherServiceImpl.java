@@ -23,11 +23,6 @@ public class StudentSubjectTeacherServiceImpl implements StudentSubjectTeacherSe
     private StudentSubjectTeacherRepository studentSubjectTeacherRepository;
 
     @Override
-    public List<Studentsubjectteacher> getStudsubjteachs() {
-        return this.studentSubjectTeacherRepository.getStudsubjteachs();
-    }
-
-    @Override
     public List<Studentsubjectteacher> getBySchoolYearIdThroughSubjectTeacher(int schoolYearId) {
         return this.studentSubjectTeacherRepository.getBySchoolYearId(schoolYearId);
     }
@@ -100,21 +95,6 @@ public class StudentSubjectTeacherServiceImpl implements StudentSubjectTeacherSe
     @Override
     public long countEnrollments() {
         return this.studentSubjectTeacherRepository.countEnrollments();
-    }
-
-    @Override
-    public List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher) {
-        return this.studentSubjectTeacherRepository.getStudentsubjectteacherBySubjectTeacherID(listsubjectteacher);
-    }
-
-    @Override
-    public List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID) {
-        return this.studentSubjectTeacherRepository.getListStudentsubjectteacher(subjectteacherID);
-    }
-
-    @Override
-    public List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID) {
-        return this.studentSubjectTeacherRepository.getListStudentsubjectteacherByStudentID(studentID);
     }
 
     @Override

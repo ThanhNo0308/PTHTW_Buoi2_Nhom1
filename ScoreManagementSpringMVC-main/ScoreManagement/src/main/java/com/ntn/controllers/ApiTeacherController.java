@@ -68,7 +68,7 @@ public class ApiTeacherController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            Optional<Student> student = studentService.findByStudentId(studentCode);
+            Optional<Student> student = studentService.findByStudentCode(studentCode);
 
             if (student.isPresent()) {
                 response.put("success", true);
@@ -215,7 +215,7 @@ public class ApiTeacherController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            Optional<Student> studentOpt = studentService.findByStudentId(studentCode);
+            Optional<Student> studentOpt = studentService.findByStudentCode(studentCode);
 
             if (studentOpt.isPresent()) {
                 Student student = studentOpt.get();

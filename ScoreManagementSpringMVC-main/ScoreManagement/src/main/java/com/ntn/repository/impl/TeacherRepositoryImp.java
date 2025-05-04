@@ -39,40 +39,6 @@ public class TeacherRepositoryImp implements TeacherRepository {
     private UserService userService;
 
     @Override
-    public int getidTeacherByEmail(String email) {
-        Session s = this.factory.getObject().getCurrentSession();
-        Query q = s.createQuery("SELECT id FROM Teacher WHERE Email = :email");
-        q.setParameter("email", email);
-
-        List<Integer> results = q.getResultList();
-
-        // Kiểm tra nếu danh sách kết quả không rỗng và chỉ lấy phần tử đầu tiên
-        if (!results.isEmpty()) {
-            return results.get(0);
-        } else {
-            // Hoặc bạn có thể trả về một giá trị mặc định khác nếu không tìm thấy
-            return -1; // Ví dụ: -1 để biểu thị rằng không tìm thấy giáo viên
-        }
-    }
-
-    @Override
-    public int getidStudentByEmail(String email) {
-        Session s = this.factory.getObject().getCurrentSession();
-        Query q = s.createQuery("SELECT id FROM Student WHERE Email = :email");
-        q.setParameter("email", email);
-
-        List<Integer> results = q.getResultList();
-
-        // Kiểm tra nếu danh sách kết quả không rỗng và chỉ lấy phần tử đầu tiên
-        if (!results.isEmpty()) {
-            return results.get(0);
-        } else {
-            // Hoặc bạn có thể trả về một giá trị mặc định khác nếu không tìm thấy
-            return -1; // Ví dụ: -1 để biểu thị rằng không tìm thấy giáo viên
-        }
-    }
-
-    @Override
     public boolean addOrUpdateTeacher(Teacher teacher) {
         Session s = this.factory.getObject().getCurrentSession();
         try {
@@ -134,45 +100,6 @@ public class TeacherRepositoryImp implements TeacherRepository {
             return (Teacher) query.getSingleResult();
         } catch (NoResultException ex) {
             return null;
-        }
-    }
-
-    @Override
-    public List<Class> getClassesByTeacherId(int teacherId) {
-        Session session = this.factory.getObject().getCurrentSession();
-
-        // Kiểm tra xem có lớp nào được gán cho giáo viên này không
-        String hql = "FROM Class c WHERE c.teacherId.id = :teacherId";
-        Query query = session.createQuery(hql);
-        query.setParameter("teacherId", teacherId);
-
-        List<Class> classes = query.getResultList();
-        return classes;
-    }
-
-    @Override
-    public int getSubjectTeacherIdByTeacherAndClass(int teacherId, int classId) {
-        Session s = this.factory.getObject().getCurrentSession();
-
-        // Lấy danh sách sinh viên của lớp
-        String hql = "SELECT st.id FROM Subjectteacher st "
-                + "JOIN st.teacherId t "
-                + "JOIN st.subjectId s "
-                + "JOIN s.majorId m "
-                + "JOIN Class c ON c.majorId = m "
-                + "WHERE t.id = :teacherId AND c.id = :classId";
-
-        Query query = s.createQuery(hql);
-        query.setParameter("teacherId", teacherId);
-        query.setParameter("classId", classId);
-        query.setMaxResults(1);
-
-        List<Integer> results = query.getResultList();
-
-        if (!results.isEmpty()) {
-            return results.get(0);
-        } else {
-            return 0;
         }
     }
 
@@ -291,23 +218,6 @@ public class TeacherRepositoryImp implements TeacherRepository {
         query.orderBy(builder.asc(root.get("teacherName")));
 
         return session.createQuery(query).getResultList();
-    }
-    
-    @Override
-    public int getTeacherIdByUsername(String username) {
-        // Lấy User từ username
-        User user = userService.getUserByUn(username);
-        if (user == null) {
-            return 0;
-        }
-
-        // Lấy teacher từ user
-        Teacher teacher = teacherRepo.getTeacherByUserId(user.getId());
-        if (teacher == null) {
-            return 0;
-        }
-
-        return teacher.getId();
     }
 
 }

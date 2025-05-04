@@ -10,8 +10,6 @@ import java.util.List;
 
 public interface StudentSubjectTeacherRepository {
 
-    List<Studentsubjectteacher> getStudsubjteachs();
-
     List<Studentsubjectteacher> getAll();
 
     Studentsubjectteacher getById(int id);
@@ -41,12 +39,6 @@ public interface StudentSubjectTeacherRepository {
     int batchEnrollStudents(int classId, int subjectTeacherId);
 
     long countEnrollments();
-
-    List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher);
-
-    List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID);
-
-    List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID);
     
     List<Studentsubjectteacher> getEnrollmentsByStudentCode(String studentCode);
 }

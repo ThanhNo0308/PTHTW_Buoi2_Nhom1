@@ -8,7 +8,6 @@ import com.ntn.pojo.Trainingtype;
 import com.ntn.repository.TrainingTypeRepository;
 import com.ntn.service.TrainingTypeService;
 import java.util.List;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -57,16 +56,6 @@ public class TrainingTypeServiceImpl implements TrainingTypeService {
     @Override
     public int countTrainingTypes() {
         return trainingTypeRepository.countTrainingTypes();
-    }
-
-    @Override
-    public int countMajorsByTrainingType(int trainingTypeId) {
-        return trainingTypeRepository.countMajorsByTrainingType(trainingTypeId);
-    }
-
-    @Override
-    public Map<Integer, Integer> getMajorsCountByTrainingType() {
-        return trainingTypeRepository.getMajorsCountByTrainingType();
     }
 
 }

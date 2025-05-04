@@ -42,33 +42,6 @@ public class SubjectRepositoryImpl implements SubjectRepository {
     }
 
     @Override
-    public List<Subject> getListSubjectById(List<Integer> listSubjectID) {
-        Session s = this.factory.getObject().getCurrentSession();
-
-        // Xây dựng một danh sách các chuỗi thể hiện danh sách Subject.id
-        List<String> parameterStrings = new ArrayList<>();
-        for (int i = 0; i < listSubjectID.size(); i++) {
-            parameterStrings.add(":subjectId" + i);
-        }
-
-        // Tạo chuỗi HQL động cho phần WHERE, sử dụng IN để so sánh danh sách Subject.id
-        String parameterHql = "id IN (" + String.join(", ", parameterStrings) + ")";
-
-        // Tạo câu truy vấn HQL hoàn chỉnh
-        String queryString = "FROM Subject WHERE " + parameterHql;
-
-        Query q = s.createQuery(queryString);
-
-        // Đặt giá trị cho từng tham số subjectId
-        for (int i = 0; i < listSubjectID.size(); i++) {
-            q.setParameter("subjectId" + i, listSubjectID.get(i));
-        }
-
-        List<Subject> resultList = q.getResultList();
-        return resultList;
-    }
-
-    @Override
     public List<Subject> getSubjectsByDepartmentId(Integer departmentId) {
         Session session = this.factory.getObject().getCurrentSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();
@@ -162,49 +135,6 @@ public class SubjectRepositoryImpl implements SubjectRepository {
         query.orderBy(builder.asc(root.get("subjectName")));
 
         return session.createQuery(query).getResultList();
-    }
-
-    @Override
-    public List<Integer> getSubjectTeacherId(List<Studentsubjectteacher> studentSubjectTeacher) {
-        // Sử dụng một Set để lưu trữ các SubjectTeacherId.id duy nhất
-        Set<Integer> uniqueSubjectTeacherIds = new HashSet<>();
-
-        // Duyệt qua danh sách studentSubjectTeacher
-        for (Studentsubjectteacher studentSubject : studentSubjectTeacher) {
-            // Lấy SubjectTeacherId.id từ mỗi phần tử và thêm vào Set
-            uniqueSubjectTeacherIds.add(studentSubject.getSubjectTeacherId().getId());
-        }
-
-        List<Integer> uniqueSubjectTeacherIdList = new ArrayList<>(uniqueSubjectTeacherIds);
-
-        return uniqueSubjectTeacherIdList;
-    }
-
-    @Override
-    public List<Integer> getSubjectIdByListSubjectTeacherId(List<Integer> listSubjectTeacherId) {
-        Session s = this.factory.getObject().getCurrentSession();
-
-        // Xây dựng một danh sách các chuỗi thể hiện danh sách Subjectteacher.id
-        List<String> parameterStrings = new ArrayList<>();
-        for (int i = 0; i < listSubjectTeacherId.size(); i++) {
-            parameterStrings.add(":teacherId" + i);
-        }
-
-        // Tạo chuỗi HQL động cho phần WHERE, sử dụng IN để so sánh danh sách Subjectteacher.id
-        String parameterHql = "id IN (" + String.join(", ", parameterStrings) + ")";
-
-        // Tạo câu truy vấn HQL hoàn chỉnh
-        String queryString = "SELECT DISTINCT subjectId.id FROM Subjectteacher WHERE " + parameterHql;
-
-        Query q = s.createQuery(queryString);
-
-        // Đặt giá trị cho từng tham số teacherId
-        for (int i = 0; i < listSubjectTeacherId.size(); i++) {
-            q.setParameter("teacherId" + i, listSubjectTeacherId.get(i));
-        }
-
-        List<Integer> resultList = q.getResultList();
-        return resultList;
     }
 
     @Override

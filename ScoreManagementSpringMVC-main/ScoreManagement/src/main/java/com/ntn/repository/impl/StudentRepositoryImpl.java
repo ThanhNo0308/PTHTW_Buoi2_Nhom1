@@ -119,83 +119,6 @@ public class StudentRepositoryImpl implements StudentRepository {
     }
 
     @Override
-    public List<Student> findByFullNameContaining(String name) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Student> query = builder.createQuery(Student.class);
-        Root<Student> root = query.from(Student.class);
-
-        String searchName = "%" + name.toLowerCase() + "%";
-        Predicate firstNamePredicate = builder.like(builder.lower(root.get("firstName")), searchName);
-        Predicate lastNamePredicate = builder.like(builder.lower(root.get("lastName")), searchName);
-
-        query.where(builder.or(firstNamePredicate, lastNamePredicate));
-
-        return session.createQuery(query).getResultList();
-    }
-
-    @Override
-    public List<Student> getStudentsByTeacherId(int teacherId) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Student> query = builder.createQuery(Student.class);
-        Root<Student> root = query.from(Student.class);
-
-        // Tạo join từ Student -> Class -> Teacher
-        Join classJoin = root.join("classId");
-
-        query.where(builder.equal(classJoin.get("teacherId").get("id"), teacherId));
-        query.select(root);
-        query.distinct(true);
-
-        return session.createQuery(query).getResultList();
-    }
-
-    @Override
-    public List<Student> getStudentsBySubjectTeacherId(int subjectTeacherId) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Student> query = builder.createQuery(Student.class);
-        Root<Student> root = query.from(Student.class);
-
-        // Tạo join từ Student -> Studentsubjectteacher -> Subjectteacher
-        Join studentSubjectTeacherJoin = root.join("studentsubjectteacherSet");
-
-        query.where(builder.equal(studentSubjectTeacherJoin.get("subjectTeacherId").get("id"), subjectTeacherId));
-        query.select(root);
-        query.distinct(true);
-
-        return session.createQuery(query).getResultList();
-    }
-
-    @Override
-    public List<Student> getStudentsBySubjectTeacherAndSchoolYear(int subjectTeacherId, int schoolYearId) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Student> query = builder.createQuery(Student.class);
-        Root<Student> root = query.from(Student.class);
-
-        // Tạo join từ Student -> Studentsubjectteacher
-        Join studentSubjectTeacherJoin = root.join("studentsubjectteacherSet");
-
-        // Thêm điều kiện cho subjectTeacherId và schoolYearId
-        Predicate subjectTeacherPredicate = builder.equal(
-                studentSubjectTeacherJoin.get("subjectTeacherId").get("id"),
-                subjectTeacherId
-        );
-        Predicate schoolYearPredicate = builder.equal(
-                studentSubjectTeacherJoin.get("schoolYearId").get("id"),
-                schoolYearId
-        );
-
-        query.where(builder.and(subjectTeacherPredicate, schoolYearPredicate));
-        query.select(root);
-        query.distinct(true);
-
-        return session.createQuery(query).getResultList();
-    }
-
-    @Override
     public int countStudents() {
         Session s = this.factory.getObject().getCurrentSession();
         Query query = s.createQuery("SELECT COUNT(s) FROM Student s");
@@ -214,40 +137,6 @@ public class StudentRepositoryImpl implements StudentRepository {
     }
 
     @Override
-    public Student getStudentByUsername(String username) {
-        Session session = this.factory.getObject().getCurrentSession();
-
-        try {
-            // Tìm User dựa trên username
-            String userHql = "FROM User u WHERE u.username = :username";
-            Query userQuery = session.createQuery(userHql);
-            userQuery.setParameter("username", username);
-            User user = (User) userQuery.getSingleResult();
-
-            if (user == null) {
-                return null;
-            }
-
-            // Sử dụng email từ User để tìm Student thay vì userId
-            if (user.getEmail() != null && !user.getEmail().isEmpty()) {
-                String studentHql = "FROM Student s WHERE s.email = :email";
-                Query studentQuery = session.createQuery(studentHql);
-                studentQuery.setParameter("email", user.getEmail());
-
-                try {
-                    return (Student) studentQuery.getSingleResult();
-                } catch (NoResultException ex) {
-                    return null;
-                }
-            }
-
-            return null;
-        } catch (NoResultException ex) {
-            return null;
-        }
-    }
-
-    @Override
     public int countStudentsByClassId(int classId) {
         Session session = this.factory.getObject().getCurrentSession();
 
@@ -260,7 +149,27 @@ public class StudentRepositoryImpl implements StudentRepository {
         query.select(builder.count(root)).where(predicate);
 
         return session.createQuery(query).getSingleResult().intValue();
+    }
+    
+    @Override
+    public List<Student> findStudentsByCode(String code) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Student> query = builder.createQuery(Student.class);
+        Root<Student> root = query.from(Student.class);
 
+        // Tìm chính xác mã sinh viên (không phân biệt hoa thường)
+        Predicate codePredicate = builder.like(
+                builder.lower(root.get("studentCode")),
+                "%" + code.toLowerCase() + "%"
+        );
+
+        query.where(codePredicate);
+        query.orderBy(builder.asc(root.get("classId").get("className")),
+                builder.asc(root.get("lastName")),
+                builder.asc(root.get("firstName")));
+
+        return session.createQuery(query).getResultList();
     }
 
     @Override
@@ -332,27 +241,6 @@ public class StudentRepositoryImpl implements StudentRepository {
 
         // Kiểm tra xem danh sách có phần tử nào không
         return students;
-    }
-
-    @Override
-    public List<Student> findStudentsByCode(String code) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Student> query = builder.createQuery(Student.class);
-        Root<Student> root = query.from(Student.class);
-
-        // Tìm chính xác mã sinh viên (không phân biệt hoa thường)
-        Predicate codePredicate = builder.like(
-                builder.lower(root.get("studentCode")),
-                "%" + code.toLowerCase() + "%"
-        );
-
-        query.where(codePredicate);
-        query.orderBy(builder.asc(root.get("classId").get("className")),
-                builder.asc(root.get("lastName")),
-                builder.asc(root.get("firstName")));
-
-        return session.createQuery(query).getResultList();
     }
 
     @Override

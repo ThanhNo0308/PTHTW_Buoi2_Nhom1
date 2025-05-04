@@ -6,7 +6,6 @@ package com.ntn.service;
 
 import com.ntn.pojo.Trainingtype;
 import java.util.List;
-import java.util.Map;
 
 public interface TrainingTypeService {
 
@@ -26,7 +25,4 @@ public interface TrainingTypeService {
 
     int countTrainingTypes();
 
-    int countMajorsByTrainingType(int trainingTypeId);
-
-    Map<Integer, Integer> getMajorsCountByTrainingType();
 }

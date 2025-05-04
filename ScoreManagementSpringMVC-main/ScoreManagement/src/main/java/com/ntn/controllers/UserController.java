@@ -7,7 +7,6 @@ package com.ntn.controllers;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import org.springframework.beans.propertyeditors.CustomDateEditor;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.ntn.pojo.Student;
@@ -132,22 +131,22 @@ public class UserController {
 
     @GetMapping("/registerStudent")
     public String showRegistrationStudentForm(Model model) {
-        return "registerStudent"; // Trả về trang đăng ký
+        return "registerStudent"; 
     }
 
     @GetMapping("/login")
     public String showLoginForm() {
-        return "login"; // Trả về trang đăng nhập
+        return "login";
     }
 
     @GetMapping("/pageTeacher")
     public String pageTeacher() {
-        return "/teacher/dashboard";
+        return "teacherDashboard";
     }
 
     @GetMapping("/pageStudent")
     public String pageStudent() {
-        return "/student/dashboard";
+        return "studentDashboard";
     }
 
     @PostMapping("/login")
@@ -221,23 +220,17 @@ public class UserController {
         String email = params.get("email");
         String username = params.get("username");
 
-        // In ra log để kiểm tra
-        System.out.println("Processing registration for email: " + email);
-
         // Kiểm tra email có nằm trong danh sách sinh viên không
         if (!userService.isEmailExists(email)) {
-            System.out.println("Email không tồn tại trong danh sách sinh viên");
             return "redirect:/registerStudent?error=invalid-email";
         }
 
         // Kiểm tra định dạng email
         if (!email.endsWith("@dh.edu.vn")) {
-            System.out.println("Email không đúng định dạng @dh.edu.vn");
             return "redirect:/registerStudent?error=email-format";
         }
 
         if (userService.isEmailExistsInUserTable(email)) {
-            System.out.println("Email đã tồn tại trong bảng User");
             return "redirect:/registerStudent?error=email-exists";
         }
 
@@ -245,14 +238,11 @@ public class UserController {
         String password = params.get("password");
         String confirmPassword = params.get("confirmPassword");
         if (password == null || !password.equals(confirmPassword) || password.length() < 6) {
-            System.out.println("Lỗi mật khẩu: " + (password == null ? "null"
-                    : (!password.equals(confirmPassword) ? "không khớp" : "độ dài < 6")));
             return "redirect:/registerStudent?error=password";
         }
 
         // Kiểm tra avatar đã chọn chưa
         if (params.get("avatar") == null || params.get("avatar").isEmpty()) {
-            System.out.println("Avatar chưa được chọn");
             return "redirect:/registerStudent?error=avatar-required";
         }
 

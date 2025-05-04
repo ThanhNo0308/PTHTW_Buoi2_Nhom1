@@ -1,33 +1,21 @@
 package com.ntn.controllers;
 
-import com.ntn.pojo.Major;
-import com.ntn.pojo.Score;
 import com.ntn.pojo.Student;
-import com.ntn.pojo.Teacher;
 import com.ntn.service.ClassService;
-import com.ntn.service.MajorService;
-import com.ntn.service.SchoolYearService;
-import com.ntn.service.ScoreService;
 import com.ntn.service.StudentService;
-import com.ntn.service.TeacherService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import java.beans.PropertyEditorSupport;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+// Controller xử lý Sinh viên trong lớp
 @Controller
+@PreAuthorize("hasAuthority('Admin')")
 public class StudentController {
 
     @Autowired
@@ -35,18 +23,6 @@ public class StudentController {
 
     @Autowired
     private ClassService classService;
-
-    @Autowired
-    private ScoreService scoreService;
-
-    @Autowired
-    private SchoolYearService schoolYearService;
-
-    @Autowired
-    private MajorService majorService;
-
-    @Autowired
-    private TeacherService teacherService;
 
     @GetMapping("/admin/students")
     public String getStudents(
@@ -77,8 +53,7 @@ public class StudentController {
 
         return "admin/students";
     }
-
-    @PreAuthorize("hasAuthority('Admin')")
+ 
     @GetMapping("/admin/class-students/{classId}")
     public String getStudentsByClass(
             @PathVariable("classId") int classId,
@@ -106,7 +81,6 @@ public class StudentController {
         return "admin/class-students";
     }
 
-    @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/admin/student-add")
     public String studentAdd(
             @ModelAttribute("student") Student student,
@@ -131,12 +105,9 @@ public class StudentController {
                     student.setClassId(cls);
                 }
             }
-
-            // Đảm bảo các trường buộc phải có được thiết lập
             if (student.getStatus() == null) {
                 student.setStatus("Active");
             }
-
             boolean success = studentService.addOrUpdateStudent(student);
 
             if (success) {
@@ -153,7 +124,6 @@ public class StudentController {
         }
     }
 
-    @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/admin/student-update")
     public String studentUpdate(
             @ModelAttribute("student") Student student,
@@ -192,7 +162,6 @@ public class StudentController {
         }
     }
 
-    @PreAuthorize("hasAuthority('Admin')")
     @GetMapping("/admin/student-delete/{id}")
     public String deleteStudent(@PathVariable("id") int id, RedirectAttributes redirectAttributes) {
         Integer classId = null;
@@ -218,42 +187,5 @@ public class StudentController {
         } else {
             return "redirect:/admin/classes";
         }
-    }
-
-    @GetMapping("/student-scores")
-    public String viewMyScores(Model model, Authentication authentication) {
-        String username = authentication.getName();
-        Student student = studentService.getStudentByUsername(username);
-
-        if (student == null) {
-            return "redirect:/?error=student-not-found";
-        }
-
-        // Lấy năm học hiện tại
-        int currentSchoolYearId = schoolYearService.getCurrentSchoolYearId();
-
-        // Lấy danh sách điểm của sinh viên theo năm học
-        List<Score> scores = scoreService.getSubjectScoresByStudentCodeAndSchoolYear(
-                student.getStudentCode(), currentSchoolYearId);
-
-        model.addAttribute("student", student);
-        model.addAttribute("scores", scores);
-        model.addAttribute("currentSchoolYear", schoolYearService.getSchoolYearById(currentSchoolYearId));
-        model.addAttribute("schoolYears", schoolYearService.getAllSchoolYears());
-
-        return "student-scores";
-    }
-
-    /**
-     * API lấy điểm của sinh viên theo năm học
-     */
-    @GetMapping("/student-scores/by-schoolyear")
-    @ResponseBody
-    public ResponseEntity<List<Score>> getScoresBySchoolYear(
-            @RequestParam("studentCode") String studentCode,
-            @RequestParam("schoolYearId") int schoolYearId) {
-
-        List<Score> scores = scoreService.getSubjectScoresByStudentCodeAndSchoolYear(studentCode, schoolYearId);
-        return new ResponseEntity<>(scores, HttpStatus.OK);
     }
 }

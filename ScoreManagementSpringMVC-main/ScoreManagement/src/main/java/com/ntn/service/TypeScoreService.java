@@ -16,8 +16,6 @@ import java.util.Map;
 public interface TypeScoreService {
 
     Typescore getScoreTypeByName(String name);
-
-    boolean addScoreType(String typeName, int subjectTeacherId);
     
     int countScoreTypesBySubjectTeacher(int subjectTeacherId);
     

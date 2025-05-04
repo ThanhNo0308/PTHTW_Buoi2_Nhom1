@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+// Controller loại đào tạo
 @Controller
+@PreAuthorize("hasAuthority('Admin')")
 public class TrainingTypeController {
 
     @Autowired
@@ -27,7 +29,6 @@ public class TrainingTypeController {
     }
 
     @PostMapping("/admin/training-types/add")
-    @PreAuthorize("hasAuthority('Admin')")
     public String addTrainingType(@ModelAttribute Trainingtype trainingType, RedirectAttributes redirectAttributes) {
         try {
             // Kiểm tra trùng tên
@@ -52,7 +53,6 @@ public class TrainingTypeController {
     }
 
     @PostMapping("/admin/training-types/update")
-    @PreAuthorize("hasAuthority('Admin')")
     public String updateTrainingType(@ModelAttribute Trainingtype trainingType, RedirectAttributes redirectAttributes) {
         try {
             // Kiểm tra tên trùng với hệ đào tạo khác
@@ -78,7 +78,6 @@ public class TrainingTypeController {
     }
 
     @GetMapping("/admin/training-types/delete/{id}")
-    @PreAuthorize("hasAuthority('Admin')")
     public String deleteTrainingType(@PathVariable("id") int id, RedirectAttributes redirectAttributes) {
         try {
             // Kiểm tra xem có ngành nào đang sử dụng hệ đào tạo này không

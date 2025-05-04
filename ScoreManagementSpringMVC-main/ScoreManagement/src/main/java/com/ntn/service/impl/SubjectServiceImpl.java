@@ -24,11 +24,6 @@ public class SubjectServiceImpl implements SubjectService {
     }
 
     @Override
-    public List<Subject> getListSubjectById(List<Integer> listSubjectID) {
-        return this.subjRepo.getListSubjectById(listSubjectID);
-    }
-
-    @Override
     public List<Subject> getSubjectsByDepartmentId(Integer departmentId) {
         return this.subjRepo.getSubjectsByDepartmentId(departmentId);
     }
@@ -42,18 +37,6 @@ public class SubjectServiceImpl implements SubjectService {
     public List<Subject> getSubjectsByKeyword(String keyword) {
         return this.subjRepo.getSubjectsByKeyword(keyword);
     }
-
-    @Override
-    public List<Integer> getSubjectTeacherId(List<Studentsubjectteacher> studentSubjectTeacher) {
-        return this.subjRepo.getSubjectTeacherId(studentSubjectTeacher);
-    }
-
-    @Override
-    public List<Integer> getSubjectIdByListSubjectTeacherId(List<Integer> listSubjectTeacherId) {
-        return this.subjRepo.getSubjectIdByListSubjectTeacherId(listSubjectTeacherId);
-    }
-
-    
 
     @Override
     public boolean addOrUpdateSubject(Subject subject) {

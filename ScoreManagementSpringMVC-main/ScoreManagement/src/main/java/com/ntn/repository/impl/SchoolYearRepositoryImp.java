@@ -23,15 +23,6 @@ public class SchoolYearRepositoryImp implements SchoolYearRepository {
     private LocalSessionFactoryBean factory;
 
     @Override
-    public List<Schoolyear> getListSchoolYear(String currentYear) {
-        Session s = this.factory.getObject().getCurrentSession();
-        Query q = s.createQuery("FROM Schoolyear WHERE NameYear = :currentYear");
-        q.setParameter("currentYear", currentYear);
-        List<Schoolyear> schoolYears = q.getResultList();
-        return schoolYears;
-    }
-
-    @Override
     public Schoolyear getSchoolYearById(int schoolYearId) {
         Session session = this.factory.getObject().getCurrentSession();
         Query query = session.createQuery("FROM Schoolyear WHERE id = :schoolYearId");

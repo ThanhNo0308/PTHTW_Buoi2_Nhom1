@@ -4,13 +4,10 @@
  */
 package com.ntn.service;
 
-import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subjectteacher;
 import java.util.List;
 
 public interface SubjectTeacherService {
-
-    List<Subjectteacher> getSubjectTeachers();
 
     List<Subjectteacher> getAllSubjectTeachers();
 
@@ -25,12 +22,6 @@ public interface SubjectTeacherService {
     List<Subjectteacher> getSubjectTeachersBySubjectId(Integer subjectId);
 
     List<Subjectteacher> getSubjectTeachersByDepartmentId(int departmentId);
-
-    Subjectteacher getSubJectTeacherById(int id);
-
-    List<Subjectteacher> getSubjectTeacherByTeacherID(int TeacherID);
-
-    List<Subjectteacher> getSubjectTeacherByListSubjectTeacherId(List<Studentsubjectteacher> listStudentSubjectTeacher);
 
     List<Subjectteacher> getSubjectTeachersBySchoolYearId(int schoolYearId);
 

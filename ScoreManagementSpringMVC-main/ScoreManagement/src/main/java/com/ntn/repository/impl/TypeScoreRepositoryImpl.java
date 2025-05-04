@@ -85,58 +85,6 @@ public class TypeScoreRepositoryImpl implements TypeScoreRepository {
     }
 
     @Override
-    @Transactional
-    public boolean addScoreType(String typeName, int subjectTeacherId) {
-        Session session = this.factory.getObject().getCurrentSession();
-
-        try {
-            // Kiểm tra xem loại điểm đã tồn tại chưa
-            String checkHql = "FROM Typescore ts WHERE ts.scoreType = :typeName";
-            Query<Typescore> checkQuery = session.createQuery(checkHql, Typescore.class);
-            checkQuery.setParameter("typeName", typeName);
-            List<Typescore> existingTypes = checkQuery.getResultList();
-
-            Typescore typeScore;
-            if (existingTypes.isEmpty()) {
-                // Tạo loại điểm mới nếu chưa tồn tại
-                typeScore = new Typescore();
-                typeScore.setScoreType(typeName);
-                session.save(typeScore);
-            } else {
-                typeScore = existingTypes.get(0);
-            }
-
-            // Lấy danh sách sinh viên thuộc môn học của giảng viên
-            String studentHql = "SELECT DISTINCT s.studentID FROM Score s "
-                    + "WHERE s.subjectTeacherID.id = :subjectTeacherId";
-            Query<Student> studentQuery = session.createQuery(studentHql, Student.class);
-            studentQuery.setParameter("subjectTeacherId", subjectTeacherId);
-            List<Student> students = studentQuery.getResultList();
-
-            // Lấy thông tin Subjectteacher
-            Subjectteacher st = session.get(Subjectteacher.class, subjectTeacherId);
-
-            // Tạo điểm mới cho mỗi sinh viên với loại điểm mới
-            for (Student student : students) {
-                Score newScore = new Score();
-                newScore.setStudentID(student);
-                newScore.setSubjectTeacherID(st);
-                newScore.setScoreType(typeScore); // Sửa từ setTypeScoreID thành setScoreType
-                newScore.setScoreValue(0.0f); // Sửa từ setScore thành setScoreValue
-                newScore.setIsDraft(true); // Sửa từ setStatus(0) thành setIsDraft(true)
-                newScore.setIsLocked(false); // Sửa thêm isLocked = false
-
-                session.save(newScore);
-            }
-
-            return true;
-        } catch (HibernateException ex) {
-            ex.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
     public Student getStudentByCode(String studentCode) {
         Session session = this.factory.getObject().getCurrentSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();

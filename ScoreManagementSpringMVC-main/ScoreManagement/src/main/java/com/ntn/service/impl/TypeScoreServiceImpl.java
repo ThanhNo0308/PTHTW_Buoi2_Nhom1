@@ -39,20 +39,6 @@ public class TypeScoreServiceImpl implements TypeScoreService {
     }
 
     @Override
-    @Transactional
-    public boolean addScoreType(String typeName, int subjectTeacherId) {
-        // Kiểm tra số lượng cột điểm hiện tại (không quá 5)
-        int currentColumnCount = typeScoreRepository.countScoreTypesBySubjectTeacher(subjectTeacherId);
-
-        if (currentColumnCount >= 5) {
-            return false; // Đã đạt giới hạn 5 loại điểm
-        }
-
-        // Thêm loại điểm mới
-        return typeScoreRepository.addScoreType(typeName, subjectTeacherId);
-    }
-
-    @Override
     public List<Typescore> getAllScoreTypes() {
         return this.typeScoreRepository.getAllScoreTypes();
     }

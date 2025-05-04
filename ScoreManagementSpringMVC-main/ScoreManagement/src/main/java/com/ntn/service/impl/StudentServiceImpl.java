@@ -35,28 +35,8 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public Optional<Student> findByStudentId(String studentCode) {
+    public Optional<Student> findByStudentCode(String studentCode) {
         return this.studRepo.findByStudentCode(studentCode);
-    }
-
-    @Override
-    public List<Student> findByFullNameContaining(String name) {
-        return this.studRepo.findByFullNameContaining(name);
-    }
-
-    @Override
-    public List<Student> getStudentsByTeacherId(int teacherId) {
-        return this.studRepo.getStudentsByTeacherId(teacherId);
-    }
-
-    @Override
-    public List<Student> getStudentsBySubjectTeacherId(int subjectTeacherId) {
-        return this.studRepo.getStudentsBySubjectTeacherId(subjectTeacherId);
-    }
-
-    @Override
-    public List<Student> getStudentsBySubjectTeacherAndSchoolYear(int subjectTeacherId, int schoolYearId) {
-        return this.studRepo.getStudentsBySubjectTeacherAndSchoolYear(subjectTeacherId, schoolYearId);
     }
 
     @Override
@@ -65,19 +45,8 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public Student getStudentByUsername(String username) {
-        return this.studRepo.getStudentByUsername(username);
-    }
-
-    @Override
     public Student getStudentById(int studentId) {
         return this.studRepo.getStudentById(studentId);
-    }
-
-    @Override
-    public Student getStudentByStudentCode(String studentCode) {
-        Optional<Student> student = this.studRepo.findByStudentCode(studentCode);
-        return student.orElse(null);
     }
 
     @Override

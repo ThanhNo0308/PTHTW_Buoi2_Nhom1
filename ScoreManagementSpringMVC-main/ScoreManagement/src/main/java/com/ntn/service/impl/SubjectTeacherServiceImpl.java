@@ -23,11 +23,6 @@ public class SubjectTeacherServiceImpl implements SubjectTeacherService {
     private SubjectTeacherRepository subjectTeacherRepo;
 
     @Override
-    public List<Subjectteacher> getSubjectTeachers() {
-        return this.subjectTeacherRepo.getSubjectTeachers();
-    }
-
-    @Override
     public List<Subjectteacher> getAllSubjectTeachers() {
         return this.subjectTeacherRepo.getAllSubjectTeachers();
     }
@@ -60,21 +55,6 @@ public class SubjectTeacherServiceImpl implements SubjectTeacherService {
     @Override
     public List<Subjectteacher> getSubjectTeachersByDepartmentId(int departmentId) {
         return this.subjectTeacherRepo.getSubjectTeachersByDepartmentId(departmentId);
-    }
-
-    @Override
-    public Subjectteacher getSubJectTeacherById(int id) {
-        return this.subjectTeacherRepo.getSubJectTeacherById(id);
-    }
-
-    @Override
-    public List<Subjectteacher> getSubjectTeacherByTeacherID(int TeacherID) {
-        return this.subjectTeacherRepo.getSubjectTeacherByTeacherID(TeacherID);
-    }
-
-    @Override
-    public List<Subjectteacher> getSubjectTeacherByListSubjectTeacherId(List<Studentsubjectteacher> listStudentSubjectTeacher) {
-        return this.subjectTeacherRepo.getSubjectTeacherByListSubjectTeacherId(listStudentSubjectTeacher);
     }
 
     @Override

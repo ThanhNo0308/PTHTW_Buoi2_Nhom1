@@ -16,10 +16,11 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.beans.PropertyEditorSupport;
 import org.springframework.dao.DataIntegrityViolationException;
 
+// Controller Ngành học
 @Controller
+@PreAuthorize("hasAuthority('Admin')")
 public class MajorController {
 
     @Autowired
@@ -62,7 +63,6 @@ public class MajorController {
         return "admin/majors";
     }
 
-    @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/admin/major-add")
     public String majorAdd(
             @ModelAttribute("major") Major major,
@@ -105,7 +105,6 @@ public class MajorController {
         }
     }
 
-    @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/admin/major-update")
     public String majorUpdate(
             @ModelAttribute("major") Major major,
@@ -148,7 +147,6 @@ public class MajorController {
         }
     }
 
-    @PreAuthorize("hasAuthority('Admin')")
     @GetMapping("/admin/major-delete/{id}")
     public String majorDelete(@PathVariable("id") int majorId, RedirectAttributes redirectAttributes) {
         try {

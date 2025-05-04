@@ -24,16 +24,6 @@ public class TeacherServiceImp implements TeacherService {
     private UserRepository userRepo;
 
     @Override
-    public int getIdTeacherByEmail(String email) {
-        return this.teacherRepo.getidTeacherByEmail(email);
-    }
-
-    @Override
-    public int getidStudentByEmail(String email) {
-        return this.teacherRepo.getidStudentByEmail(email);
-    }
-
-    @Override
     public boolean addOrUpdateTeacher(Teacher teacher) {
         return this.teacherRepo.addOrUpdateTeacher(teacher);
     }
@@ -41,21 +31,6 @@ public class TeacherServiceImp implements TeacherService {
     @Override
     public boolean deleteTeacher(int teacherId) {
         return this.teacherRepo.deleteTeacher(teacherId);
-    }
-
-    @Override
-    public int getTeacherIdByUsername(String username) {
-        return this.teacherRepo.getTeacherIdByUsername(username);
-    }
-
-    @Override
-    public List<Class> getClassesByTeacher(int teacherId) {
-        return this.teacherRepo.getClassesByTeacherId(teacherId);
-    }
-
-    @Override
-    public int getSubjectTeacherIdByTeacherAndClass(int teacherId, int classId) {
-        return this.teacherRepo.getSubjectTeacherIdByTeacherAndClass(teacherId, classId);
     }
 
     @Override

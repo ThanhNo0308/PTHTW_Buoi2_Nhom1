@@ -36,17 +36,6 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
     private LocalSessionFactoryBean factory;
 
     @Override
-    public List<Studentsubjectteacher> getStudsubjteachs() {
-        Session s = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder b = s.getCriteriaBuilder();
-        CriteriaQuery<Studentsubjectteacher> q = b.createQuery(Studentsubjectteacher.class);
-        Root root = q.from(Studentsubjectteacher.class);
-        q.select(root);
-        Query query = s.createQuery(q);
-        return query.getResultList();
-    }
-
-    @Override
     public List<Studentsubjectteacher> getAll() {
         Session session = this.factory.getObject().getCurrentSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();
@@ -320,63 +309,6 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
         Session session = this.factory.getObject().getCurrentSession();
         Query query = session.createQuery("SELECT COUNT(*) FROM Studentsubjectteacher");
         return (long) query.getSingleResult();
-    }
-
-    @Override
-    public List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher) {
-        Session s = this.factory.getObject().getCurrentSession();
-
-        // Lấy danh sách id của teacher từ listsubjectteacher
-        List<Integer> teacherIds = listsubjectteacher.stream()
-                .map(subjectTeacher -> subjectTeacher.getId())
-                .collect(Collectors.toList());
-
-        // Tạo danh sách tham số
-        List<Integer> parameterList = new ArrayList<>();
-
-        // Tạo chuỗi HQL cho phần IN
-        String parameterHql = " WHERE subjectTeacherId.id IN (";
-        for (int i = 0; i < teacherIds.size(); i++) {
-            parameterList.add(teacherIds.get(i));
-            parameterHql += ":teacherId" + i;
-            if (i < teacherIds.size() - 1) {
-                parameterHql += ", ";
-            }
-        }
-        parameterHql += ")";
-
-        // Tạo câu truy vấn HQL hoàn chỉnh
-        String queryString = "FROM Studentsubjectteacher" + parameterHql;
-
-        Query q = s.createQuery(queryString);
-
-        // Đặt giá trị cho từng tham số teacherId
-        for (int i = 0; i < teacherIds.size(); i++) {
-            q.setParameter("teacherId" + i, teacherIds.get(i));
-        }
-
-        List<Studentsubjectteacher> resultList = q.getResultList();
-        return resultList;
-    }
-
-    @Override
-    public List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID) {
-        Session s = this.factory.getObject().getCurrentSession();
-        Query q = s.createQuery("FROM Studentsubjectteacher WHERE subjectTeacherId.id = :subjectteacherID");
-
-        q.setParameter("subjectteacherID", subjectteacherID);
-        List<Studentsubjectteacher> listStudentsubjectteacher = q.getResultList();
-        return listStudentsubjectteacher;
-    }
-
-    @Override
-    public List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID) {
-        Session s = this.factory.getObject().getCurrentSession();
-        // Sửa câu query
-        Query q = s.createQuery("FROM Studentsubjectteacher WHERE studentId.id = :studentID");
-        q.setParameter("studentID", studentID);
-        List<Studentsubjectteacher> listStudentsubjectteacher = q.getResultList();
-        return listStudentsubjectteacher;
     }
 
     @Override

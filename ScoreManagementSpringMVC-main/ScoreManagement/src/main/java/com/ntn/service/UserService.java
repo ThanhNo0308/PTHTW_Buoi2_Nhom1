@@ -15,8 +15,6 @@ public interface UserService extends UserDetailsService {
 
     User getUserByEmail(String email);
 
-    boolean authUser(String username, String password);
-
     User addUser(Map<String, String> params);
 
     boolean isEmailExists(String email);

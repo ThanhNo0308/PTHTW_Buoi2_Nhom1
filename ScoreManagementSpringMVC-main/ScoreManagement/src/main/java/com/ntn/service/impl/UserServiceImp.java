@@ -62,11 +62,6 @@ public class UserServiceImp implements UserService {
     public User getUserByEmail(String email) {
         return userRepo.getUserByEmail(email);
     }
-
-    @Override
-    public boolean authUser(String username, String password) {
-        return this.userRepo.authUser(username, password);
-    }
     
     @Override
     public boolean isEmailExistsInUserTable(String email) {

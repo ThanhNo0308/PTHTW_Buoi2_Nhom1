@@ -5,12 +5,9 @@
 package com.ntn.service;
 
 import com.ntn.pojo.Studentsubjectteacher;
-import com.ntn.pojo.Subjectteacher;
 import java.util.List;
 
 public interface StudentSubjectTeacherService {
-
-    List<Studentsubjectteacher> getStudsubjteachs();
 
     List<Studentsubjectteacher> getAll();
 
@@ -41,12 +38,6 @@ public interface StudentSubjectTeacherService {
     boolean hasRelatedScores(int enrollmentId);
 
     long countEnrollments();
-
-    List<Studentsubjectteacher> getStudentsubjectteacherBySubjectTeacherID(List<Subjectteacher> listsubjectteacher);
-
-    List<Studentsubjectteacher> getListStudentsubjectteacher(int subjectteacherID);
-
-    List<Studentsubjectteacher> getListStudentsubjectteacherByStudentID(int studentID);
 
     List<Studentsubjectteacher> getEnrollmentsByStudentCode(String studentCode);
 

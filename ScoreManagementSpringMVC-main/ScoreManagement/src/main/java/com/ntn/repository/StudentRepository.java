@@ -16,19 +16,9 @@ public interface StudentRepository {
 
     Optional<Student> findByStudentCode(String studentCode);
 
-    List<Student> findByFullNameContaining(String name);
-
-    List<Student> getStudentsByTeacherId(int teacherId);
-
-    List<Student> getStudentsBySubjectTeacherId(int subjectTeacherId);
-
-    List<Student> getStudentsBySubjectTeacherAndSchoolYear(int subjectTeacherId, int schoolYearId);
-
     int countStudents();
 
     List<Student> getStudents();
-
-    Student getStudentByUsername(String username);
 
     int countStudentsByClassId(int classId);
 

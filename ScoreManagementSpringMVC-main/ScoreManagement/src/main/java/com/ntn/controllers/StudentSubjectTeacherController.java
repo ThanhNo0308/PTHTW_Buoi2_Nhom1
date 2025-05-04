@@ -22,8 +22,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.beans.PropertyEditorSupport;
 
+// Controller Đăng ký môn học-giảng viên
 @Controller
 @PreAuthorize("hasAuthority('Admin')")
 public class StudentSubjectTeacherController {
