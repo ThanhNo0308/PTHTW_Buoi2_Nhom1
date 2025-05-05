@@ -36,4 +36,6 @@ public interface SubjectTeacherService {
     List<Subjectteacher> getSubjectTeachersBySubjectIdAndClassId(int subjectId, int classId);
     
     Subjectteacher findByIdClassIdAndSchoolYearId(int id, int classId, int schoolYearId);
+    
+    List<Subjectteacher> getSubjectTeachersByClassAndSchoolYear(int classId, int schoolYearId);
 }

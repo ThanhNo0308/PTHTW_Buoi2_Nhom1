@@ -14,10 +14,12 @@ import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
@@ -247,6 +249,37 @@ public class UserRepositoryImp implements UserRepository {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    @Override
+    public List<Map<String, Object>> getUsersByRole(String role) {
+        Session session = this.factory.getObject().getCurrentSession();
+
+        try {
+            // Chuyển đổi chuỗi role thành Enum User.Role
+            User.Role roleEnum = User.Role.valueOf(role);
+
+            String hql = "SELECT u.id, u.username, u.email FROM User u WHERE u.role = :role";
+            Query query = session.createQuery(hql);
+            query.setParameter("role", roleEnum);
+
+            List<Object[]> results = query.getResultList();
+            List<Map<String, Object>> users = new ArrayList<>();
+
+            for (Object[] row : results) {
+                Map<String, Object> user = new HashMap<>();
+                user.put("id", row[0]);
+                user.put("username", row[1]);
+                user.put("email", row[2]);
+
+                users.add(user);
+            }
+
+            return users;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
         }
     }
 

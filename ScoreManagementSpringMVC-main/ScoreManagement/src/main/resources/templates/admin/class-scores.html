@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head>
+        <meta charset="UTF-8">
+        <title>Quản lý điểm lớp</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+
+    <div class="container mt-4">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-chart-bar"></i> Quản lý điểm lớp
+                    <span th:text="${classroom != null ? classroom.className : ''}"></span>
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Thông báo -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <!-- Form lọc -->
+                <form th:action="@{'/scores/admin/class/' + ${classroom.id}}" method="get" class="mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="schoolYearId" class="form-label">Năm học:</label>
+                            <select class="form-select" id="schoolYearId" name="schoolYearId" onchange="this.form.submit()">
+                                <option value="">-- Chọn năm học --</option>
+                                <option th:each="year : ${schoolYears}" 
+                                        th:value="${year.id}" 
+                                        th:text="${year.nameYear + ' ' + year.semesterName}"
+                                        th:selected="${currentSchoolYear != null && currentSchoolYear.id == year.id}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="subjectTeacherId" class="form-label">Môn học:</label>
+                            <select class="form-select" id="subjectTeacherId" name="subjectTeacherId" onchange="this.form.submit()">
+                                <option value="">-- Chọn môn học --</option>
+                                <option th:each="subject : ${subjectTeachers}" 
+                                        th:value="${subject.id}" 
+                                        th:text="${subject.subjectId.subjectName + ' - ' + subject.teacherId.teacherName}"
+                                        th:selected="${param.subjectTeacherId != null && param.subjectTeacherId[0] == subject.id.toString()}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 align-self-end">
+                            <a th:href="@{/admin/classes}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Bảng điểm -->
+                <div th:if="${selectedSubject != null && !students.empty}" class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>STT</th>
+                                <th>MSSV</th>
+                                <th>Họ tên</th>
+                                <th th:each="type : ${scoreTypes}">
+                                    <span th:text="${type}"></span>
+                                    (<span th:text="${scoreWeights.get(type) != null ? #numbers.formatDecimal(scoreWeights.get(type)*100, 0, 0) + '%' : '0%'}"></span>)
+                                </th>
+                                <th>Điểm TB</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="student, status : ${students}">
+                                <td th:text="${status.count}"></td>
+                                <td th:text="${student.studentCode}"></td>
+                                <td th:text="${student.lastName + ' ' + student.firstName}"></td>
+                                <td th:each="type : ${scoreTypes}">
+                                    <div th:with="score=${studentScores.get(student.id) != null ? studentScores.get(student.id).get(type) : null}">
+                                        <span th:text="${score != null ? score.scoreValue : '-'}" 
+                                              th:class="${score != null && score.isLocked ? 'text-danger fw-bold' : ''}"></span>
+
+                                        <span th:if="${score != null && score.isLocked}" class="badge bg-danger ms-2">Khóa</span>
+                                        <span th:if="${score != null && score.isDraft}" class="badge bg-warning ms-2">Nháp</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="student-avg-score" th:data-student-id="${student.id}">-</span>
+                                </td>
+                                <td>
+                                    <div th:each="type : ${scoreTypes}" th:with="score=${studentScores.get(student.id) != null ? studentScores.get(student.id).get(type) : null}">
+                                        <form th:if="${score != null}" th:action="@{/scores/admin/toggle-lock}" method="post" class="d-inline">
+                                            <input type="hidden" name="scoreId" th:value="${score.id}">
+                                            <input type="hidden" name="classId" th:value="${classroom.id}">
+                                            <input type="hidden" name="schoolYearId" th:value="${currentSchoolYear.id}">
+                                            <input type="hidden" name="subjectTeacherId" th:value="${selectedSubject.id}">
+
+                                            <button th:if="${score.isLocked}" type="submit" name="unlock" value="true" class="btn btn-sm btn-outline-success mb-1">
+                                                <i class="fas fa-unlock"></i> Mở khóa <span th:text="${type}"></span>
+                                            </button>
+                                            <button th:unless="${score.isLocked}" type="submit" class="btn btn-sm btn-outline-danger mb-1">
+                                                <i class="fas fa-lock"></i> Khóa <span th:text="${type}"></span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div th:if="${selectedSubject == null && currentSchoolYear != null}" class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Vui lòng chọn môn học để xem điểm.
+                </div>
+
+                <div th:if="${currentSchoolYear == null}" class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Vui lòng chọn năm học.
+                </div>
+
+                <div th:if="${selectedSubject != null && students.empty}" class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> Lớp này không có sinh viên.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
+    <script th:inline="javascript">
+        // Lấy dữ liệu từ Thymeleaf
+        const scoreWeights = /*[[${scoreWeights}]]*/ {};
+        const scoreTypes = /*[[${scoreTypes}]]*/ [];
+        const studentScores = /*[[${studentScores}]]*/ {};
+
+        // Hàm tính điểm trung bình
+        function calculateAverage(studentId) {
+            const scores = studentScores[studentId] || {};
+            let totalWeightedScore = 0;
+            let totalWeight = 0;
+
+            // Kiểm tra xem có điểm giữa kỳ và cuối kỳ hay không
+            const hasMidTerm = scoreTypes.includes("Giữa kỳ") &&
+                    scores["Giữa kỳ"] &&
+                    scores["Giữa kỳ"].scoreValue !== null;
+
+            const hasFinalTerm = scoreTypes.includes("Cuối kỳ") &&
+                    scores["Cuối kỳ"] &&
+                    scores["Cuối kỳ"].scoreValue !== null;
+
+            // Chỉ tính điểm trung bình nếu có cả điểm giữa kỳ và cuối kỳ
+            if (!hasMidTerm || !hasFinalTerm) {
+                return "-"; // Không đủ điểm để tính trung bình
+            }
+
+            // Lặp qua từng loại điểm
+            for (const scoreType of scoreTypes) {
+                const score = scores[scoreType];
+                if (score && score.scoreValue !== null && scoreWeights[scoreType]) {
+                    const scoreValue = parseFloat(score.scoreValue);
+                    const weight = parseFloat(scoreWeights[scoreType]);
+                    if (!isNaN(scoreValue) && !isNaN(weight)) {
+                        totalWeightedScore += scoreValue * weight;
+                        totalWeight += weight;
+                    }
+                }
+            }
+
+            // Trả về điểm trung bình
+            if (totalWeight > 0) {
+                return (totalWeightedScore / totalWeight).toFixed(2);
+            }
+            return "-";
+        }
+
+        // Cập nhật điểm trung bình cho tất cả sinh viên
+        document.addEventListener('DOMContentLoaded', function () {
+            // Kiểm tra xem studentScores có dữ liệu không
+            if (Object.keys(studentScores).length === 0)
+                return;
+
+            // Lấy tất cả các ô hiển thị điểm trung bình
+            const avgCells = document.querySelectorAll('.student-avg-score');
+
+            // Cập nhật giá trị điểm trung bình
+            avgCells.forEach(cell => {
+                const studentId = cell.getAttribute('data-student-id');
+                if (studentId) {
+                    const avg = calculateAverage(studentId);
+                    cell.textContent = avg;
+
+                    // Đánh dấu đậm điểm trung bình nếu ≥ 5
+                    if (avg !== "-" && parseFloat(avg) >= 5.0) {
+                        cell.classList.add('text-success', 'fw-bold');
+                    } else if (avg !== "-") {
+                        cell.classList.add('text-danger');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

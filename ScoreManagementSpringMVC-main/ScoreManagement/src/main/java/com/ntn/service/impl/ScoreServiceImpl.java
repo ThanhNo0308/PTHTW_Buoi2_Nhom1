@@ -20,7 +20,7 @@ public class ScoreServiceImpl implements ScoreService {
 
     @Override
     public Float getScoreWeight(Score score) {
-      return this.scoreRepo.getScoreWeight(score);
+        return this.scoreRepo.getScoreWeight(score);
     }
 
     @Override
@@ -77,10 +77,15 @@ public class ScoreServiceImpl implements ScoreService {
     public boolean saveScores(List<Score> scores) {
         return this.scoreRepo.saveScores(scores);
     }
-    
+
     @Override
     public boolean deleteScore(Integer scoreId) {
         return this.scoreRepo.deleteScore(scoreId);
+    }
+
+    @Override
+    public boolean toggleScoreLock(int scoreId, boolean unlock) {
+        return this.scoreRepo.toggleScoreLock(scoreId, unlock);
     }
 
 }

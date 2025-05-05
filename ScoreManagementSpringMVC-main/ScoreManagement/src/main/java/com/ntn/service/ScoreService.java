@@ -31,4 +31,6 @@ public interface ScoreService {
     boolean saveScores(List<Score> scores);
     
     boolean deleteScore(Integer scoreId);
+    
+    boolean toggleScoreLock(int scoreId, boolean unlock);
 }

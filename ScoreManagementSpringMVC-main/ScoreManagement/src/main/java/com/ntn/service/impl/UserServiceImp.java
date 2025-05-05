@@ -187,4 +187,9 @@ public class UserServiceImp implements UserService {
     public boolean deleteUser(int id) {
         return this.userRepo.deleteUser(id);
     }
+    
+    @Override
+    public List<Map<String, Object>> getUsersByRole(String role) {
+        return this.userRepo.getUsersByRole(role);
+    }
 }

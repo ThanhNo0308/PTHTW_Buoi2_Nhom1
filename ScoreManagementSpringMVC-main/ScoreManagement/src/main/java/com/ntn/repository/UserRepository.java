@@ -7,16 +7,18 @@ package com.ntn.repository;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
 import java.util.List;
+import java.util.Map;
 
 public interface UserRepository {
 
     User getUserByUsername(String username);
 
     User getUserByEmail(String email);
-    
+
     boolean isEmailExistsInUserTable(String email);
 
     User addUser(User user);
+
     boolean saveUser(User user);
 
     User addTeacherUser(User user);
@@ -38,5 +40,8 @@ public interface UserRepository {
     User getUserById(int id);
 
     boolean updateUser(User user);
+
     boolean deleteUser(int id);
+
+    List<Map<String, Object>> getUsersByRole(String role);
 }

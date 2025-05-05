@@ -272,4 +272,24 @@ public class SubjectTeacherRepositoryImpl implements SubjectTeacherRepository {
         }
     }
 
+    @Override
+    public List<Subjectteacher> getSubjectTeachersByClassAndSchoolYear(int classId, int schoolYearId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Subjectteacher> query = builder.createQuery(Subjectteacher.class);
+        Root<Subjectteacher> root = query.from(Subjectteacher.class);
+
+        query.where(
+                builder.and(
+                        builder.equal(root.get("classId").get("id"), classId),
+                        builder.equal(root.get("schoolYearId").get("id"), schoolYearId)
+                )
+        );
+
+        query.orderBy(builder.asc(root.get("subjectId").get("subjectName")));
+
+        Query q = session.createQuery(query);
+        return q.getResultList();
+    }
+
 }

@@ -14,14 +14,14 @@ export const endpoints = {
   "teacher-classes": `${SERVER_CONTEXT}/api/teacherclass/classes`,
   "teacher-class-detail": `${SERVER_CONTEXT}/api/teacherclass/classes`,  // + /{classId}
   "teacher-class-scores": `${SERVER_CONTEXT}/api/teacherclass/classes`,  // + /{classId}/scores
-  
+
   // API TypeScores
   "scores-type-list": `${SERVER_CONTEXT}/api/typescores/score-types/list`,
   "scores-type-by-class": `${SERVER_CONTEXT}/api/typescores/score-types/by-class`,
   "scores-weights": `${SERVER_CONTEXT}/api/typescores/score-types/weights`,
   "scores-add-type": `${SERVER_CONTEXT}/api/typescores/score-types/add`,
   "scores-remove-type": `${SERVER_CONTEXT}/api/typescores/score-types/remove`,
-  
+
   // API Scores
   "scores-configure-weights": `${SERVER_CONTEXT}/api/scores/classes`,  // + /{classId}/scores/configure-weights
   "scores-save-draft": `${SERVER_CONTEXT}/api/scores/save-scores-draft`,
@@ -32,13 +32,15 @@ export const endpoints = {
   "scores-import": `${SERVER_CONTEXT}/api/scores/import-scores`,
   "scores-export-csv": `${SERVER_CONTEXT}/api/scores/classes`,  // + /{classId}/export-csv
   "scores-export-pdf": `${SERVER_CONTEXT}/api/scores/classes`,  // + /{classId}/export-pdf
- 
+
   //API Teacher 
   "scores-students-assigned": `${SERVER_CONTEXT}/api/teacher/students/assigned`,
   "scores-students-search": `${SERVER_CONTEXT}/api/teacher/students/search`,
   "scores-student-detail": `${SERVER_CONTEXT}/api/teacher/students`,  // + /{studentCode}/detail
   "scores-student-scores": `${SERVER_CONTEXT}/api/teacher/students`, // + /{studentId}/scores?schoolYearId=...
-  
+  "admin-users": `${SERVER_CONTEXT}/api/teacher/admin-users`,
+  "send-unlock-request": `${SERVER_CONTEXT}/api/teacher/send-unlock-request`,
+
   // API Forum
   "forums": `${SERVER_CONTEXT}/api/forums`,
   "forum-detail": `${SERVER_CONTEXT}/api/forums`,  // + /{forumId}
@@ -123,7 +125,7 @@ export const userApis = {
   changePassword: (passwordData) => {
     return API.post(`${endpoints["profile"]}/change-password`, passwordData);
   },
-  
+
   // Lấy thông tin người dùng hiện tại
   getCurrentUser: () => {
     return API.get(endpoints["current-user"]);
@@ -225,7 +227,7 @@ export const scoreApis = {
   // Lưu điểm nháp 
   saveScoresDraft: (subjectTeacherId, schoolYearId, scores) => {
     return API.post(
-      endpoints["scores-save-draft"], 
+      endpoints["scores-save-draft"],
       {
         subjectTeacherId,
         schoolYearId,
@@ -313,7 +315,7 @@ export const scoreApis = {
     return API.get(url);
   },
 
-   // Lấy danh sách năm học-học kì khi import điểm
+  // Lấy danh sách năm học-học kì khi import điểm
   getAvailableSchoolYears: (subjectTeacherId, classId) => {
     return API.get(
       `${endpoints["scores-available-school-years"]}?subjectTeacherId=${subjectTeacherId}&classId=${classId}`
@@ -364,7 +366,7 @@ export const forumApis = {
 
   // Cập nhật diễn đàn
   updateForum: (forumData) => API.post(`${endpoints['forums']}/update`, forumData),
-  
+
   // Xóa diễn đàn
   deleteForum: (forumData) => API.post(`${endpoints['forums']}/delete`, forumData),
 

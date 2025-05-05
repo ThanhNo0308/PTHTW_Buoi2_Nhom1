@@ -3,14 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { MyUserContext } from "../App";
 import axios from 'axios';
 import { endpoints, authApi, SERVER, API } from '../configs/Apis';
-import { Alert, Spinner, Col, Card, Button } from 'react-bootstrap';
+import { Alert, Spinner, Col, Card, Button, Modal, Form } from 'react-bootstrap';
 import "../assets/css/base.css";
 import "../assets/css/dashboard.css";
 import defaultAvatar from '../assets/images/logo.png';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faComments, faChalkboardTeacher, faExclamationCircle, faCheckCircle, faUserEdit, faUsers, faGraduationCap, faFileImport, faSearch, faUser,
-  faChalkboard, faSchool, faPaperPlane
+  faChalkboard, faSchool, faPaperPlane, faUnlock, faEnvelope
 } from '@fortawesome/free-solid-svg-icons';
 
 const TeacherDashboard = () => {
@@ -20,6 +20,10 @@ const TeacherDashboard = () => {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [teacherInfo, setTeacherInfo] = useState(null);
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [adminUsers, setAdminUsers] = useState([]);
+  const [loadingAdmins, setLoadingAdmins] = useState(false);
+  const [sendingRequest, setSendingRequest] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -50,6 +54,121 @@ const TeacherDashboard = () => {
 
     loadTeacherInfo();
   }, [user, navigate]);
+
+  useEffect(() => {
+    if (teacherInfo?.roleSpecificInfo?.departmentId?.departmentName) {
+      setUnlockRequest(prev => ({
+        ...prev,
+        department: teacherInfo.roleSpecificInfo.departmentId.departmentName
+      }));
+    }
+  }, [teacherInfo]);
+
+  const [unlockRequest, setUnlockRequest] = useState({
+    adminEmail: '',
+    schoolYearInfo: '',
+    department: teacherInfo?.roleSpecificInfo?.departmentId?.departmentName || '',
+    major: '',
+    classOrStudent: '',
+    subject: '',
+    reason: ''
+  });
+
+  useEffect(() => {
+    if (showUnlockModal) {
+      loadAdminUsers();
+    }
+  }, [showUnlockModal]);
+
+  // Hàm để load danh sách admin users
+  const loadAdminUsers = async () => {
+    try {
+      setLoadingAdmins(true);
+      const response = await API.get(endpoints["admin-users"]);
+
+      if (response.data && response.data.success) {
+        setAdminUsers(response.data.adminUsers || []);
+      } else {
+        setError("Không thể tải danh sách quản trị viên");
+      }
+    } catch (err) {
+      console.error("Lỗi khi tải danh sách admin:", err);
+      setError("Không thể tải danh sách quản trị viên: " + err.message);
+    } finally {
+      setLoadingAdmins(false);
+    }
+  };
+
+  // Hàm xử lý thay đổi form
+  const handleUnlockRequestChange = (e) => {
+    const { name, value } = e.target;
+    setUnlockRequest(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Hàm xử lý gửi yêu cầu
+  const handleSendUnlockRequest = async (e) => {
+    e.preventDefault();
+
+    // Validate form
+    if (!unlockRequest.adminEmail) {
+      setError("Vui lòng chọn quản trị viên nhận yêu cầu");
+      return;
+    }
+
+    if (!unlockRequest.schoolYearInfo) {
+      setError("Vui lòng nhập thông tin năm học/học kỳ");
+      return;
+    }
+
+    if (!unlockRequest.subject) {
+      setError("Vui lòng nhập tên môn học cần mở khóa");
+      return;
+    }
+
+    if (!unlockRequest.classOrStudent) {
+      setError("Vui lòng nhập thông tin lớp hoặc sinh viên cần mở khóa");
+      return;
+    }
+
+    if (!unlockRequest.reason) {
+      setError("Vui lòng nhập lý do yêu cầu mở khóa");
+      return;
+    }
+
+    try {
+      setSendingRequest(true);
+
+      const response = await API.post(endpoints["send-unlock-request"], {
+        ...unlockRequest,
+        teacherId: parseInt(teacherInfo?.roleSpecificInfo?.id) || 0
+      });
+
+      if (response.data && response.data.success) {
+        setSuccessMessage("Yêu cầu mở khóa điểm đã được gửi thành công!");
+        setShowUnlockModal(false);
+        setUnlockRequest({
+          adminEmail: '',
+          schoolYearInfo: '',
+          department: teacherInfo?.roleSpecificInfo?.departmentId?.departmentName || '',
+          major: '',
+          classOrStudent: '',
+          subject: '',
+          reason: ''
+        });
+      } else {
+        setError(response.data?.message || "Không thể gửi yêu cầu mở khóa điểm");
+      }
+    } catch (err) {
+      console.error("Lỗi khi gửi yêu cầu mở khóa:", err);
+      setError("Lỗi khi gửi yêu cầu: " + err.message);
+    } finally {
+      setSendingRequest(false);
+    }
+  };
+
 
 
   if (loading) {
@@ -135,6 +254,44 @@ const TeacherDashboard = () => {
                   </Card.Body>
                 </div>
               </div>
+              <div className="col-md-6 mb-3">
+                <div className="feature-card">
+                  <div className="card-header-custom bg-soft-warning">
+                    <FontAwesomeIcon icon={faUnlock} className="card-header-icon" />
+                    Yêu cầu mở khóa điểm
+                  </div>
+                  <Card.Body>
+                    <Card.Text>
+                      Gửi yêu cầu mở khóa điểm đến quản trị viên khi cần chỉnh sửa điểm đã khóa.
+                    </Card.Text>
+                    <Button
+                      variant="warning"
+                      className="feature-btn w-100"
+                      onClick={() => setShowUnlockModal(true)}
+                    >
+                      <FontAwesomeIcon icon={faEnvelope} className="me-2" />
+                      Gửi yêu cầu mở khóa
+                    </Button>
+                  </Card.Body>
+                </div>
+              </div>
+              <div className="col-md-6 mb-3">
+                <div className="feature-card">
+                  <div className="card-header-custom bg-soft-danger">
+                    <FontAwesomeIcon icon={faPaperPlane} className="card-header-icon" />
+                    Tin nhắn
+                  </div>
+                  <Card.Body>
+                    <Card.Text>
+                      Gửi và nhận tin nhắn với sinh viên và đồng nghiệp. Trao đổi thông tin nhanh chóng.
+                    </Card.Text>
+                    <Link to="/chat" className="btn btn-outline-danger feature-btn w-100">
+                      <FontAwesomeIcon icon={faPaperPlane} className="me-2" />
+                      Truy cập tin nhắn
+                    </Link>
+                  </Card.Body>
+                </div>
+              </div>
             </div>
 
             <div className="row mb-4">
@@ -173,23 +330,7 @@ const TeacherDashboard = () => {
                   </Card.Body>
                 </div>
               </div>
-              <div className="col-md-12 mb-3">
-                <div className="feature-card mb-4">
-                  <div className="card-header-custom bg-soft-danger">
-                    <FontAwesomeIcon icon={faPaperPlane} className="card-header-icon" />
-                    Tin nhắn
-                  </div>
-                  <Card.Body>
-                    <Card.Text>
-                      Gửi và nhận tin nhắn với sinh viên và đồng nghiệp. Trao đổi thông tin nhanh chóng.
-                    </Card.Text>
-                    <Link to="/chat" className="btn btn-outline-danger feature-btn w-100">
-                      <FontAwesomeIcon icon={faPaperPlane} className="me-2" />
-                      Truy cập tin nhắn
-                    </Link>
-                  </Card.Body>
-                </div>
-              </div>
+
             </div>
           </div>
 
@@ -224,6 +365,140 @@ const TeacherDashboard = () => {
 
         </div>
       </div>
+
+      <Modal show={showUnlockModal} onHide={() => setShowUnlockModal(false)} size="lg">
+        <Modal.Header closeButton className="bg-warning text-white">
+          <Modal.Title><FontAwesomeIcon icon={faUnlock} className="me-2" /> Yêu cầu mở khóa điểm</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Vui lòng điền đầy đủ thông tin để gửi yêu cầu mở khóa điểm đến quản trị viên.</p>
+
+          {error && (
+            <Alert variant="danger" dismissible onClose={() => setError("")}>
+              <FontAwesomeIcon icon={faExclamationCircle} className="me-2" />
+              {error}
+            </Alert>
+          )}
+
+          <Form onSubmit={handleSendUnlockRequest}>
+            <Form.Group className="mb-3">
+              <Form.Label>Gửi đến quản trị viên: <span className="text-danger">*</span></Form.Label>
+              <Form.Select
+                name="adminEmail"
+                value={unlockRequest.adminEmail}
+                onChange={handleUnlockRequestChange}
+                required
+                disabled={loadingAdmins}
+              >
+                <option value="">-- Chọn quản trị viên --</option>
+                {loadingAdmins ? (
+                  <option value="" disabled>Đang tải danh sách...</option>
+                ) : (
+                  adminUsers.map((admin, index) => (
+                    <option key={index} value={admin.email}>
+                      {admin.username} ({admin.email})
+                    </option>
+                  ))
+                )}
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Năm học/Học kỳ: <span className="text-danger">*</span></Form.Label>
+              <Form.Control
+                type="text"
+                name="schoolYearInfo"
+                value={unlockRequest.schoolYearInfo}
+                onChange={handleUnlockRequestChange}
+                placeholder="Ví dụ: 2024-2025 Học kỳ 1"
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Khoa:</Form.Label>
+              <Form.Control
+                type="text"
+                name="department"
+                value={unlockRequest.department}
+                onChange={handleUnlockRequestChange}
+                placeholder="Nhập tên khoa"
+                readOnly={!!teacherInfo?.roleSpecificInfo?.departmentId?.departmentName}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Ngành:</Form.Label>
+              <Form.Control
+                type="text"
+                name="major"
+                value={unlockRequest.major}
+                onChange={handleUnlockRequestChange}
+                placeholder="Nhập tên ngành"
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Môn học cần mở khóa: <span className="text-danger">*</span></Form.Label>
+              <Form.Control
+                type="text"
+                name="subject"
+                value={unlockRequest.subject}
+                onChange={handleUnlockRequestChange}
+                placeholder="Ví dụ: Lập trình Java, Cơ sở dữ liệu,..."
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Lớp/Sinh viên cần mở khóa: <span className="text-danger">*</span></Form.Label>
+              <Form.Control
+                type="text"
+                name="classOrStudent"
+                value={unlockRequest.classOrStudent}
+                onChange={handleUnlockRequestChange}
+                placeholder="Ví dụ: DHKTPM17A hoặc Nguyễn Văn A - 2051050123"
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Lý do yêu cầu mở khóa: <span className="text-danger">*</span></Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                name="reason"
+                value={unlockRequest.reason}
+                onChange={handleUnlockRequestChange}
+                placeholder="Vui lòng nêu rõ lý do cần mở khóa điểm"
+                required
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowUnlockModal(false)}>
+            Hủy
+          </Button>
+          <Button
+            variant="warning"
+            onClick={handleSendUnlockRequest}
+            disabled={sendingRequest}
+          >
+            {sendingRequest ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Đang gửi...
+              </>
+            ) : (
+              <>
+                <FontAwesomeIcon icon={faEnvelope} className="me-2" />
+                Gửi yêu cầu
+              </>
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

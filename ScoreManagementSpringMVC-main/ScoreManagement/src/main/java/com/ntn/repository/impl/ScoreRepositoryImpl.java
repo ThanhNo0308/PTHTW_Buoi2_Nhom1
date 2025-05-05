@@ -102,7 +102,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
         Session session = this.factory.getObject().getCurrentSession();
         return session.get(Score.class, id);
     }
-    
+
     @Override
     public List<Score> getSubjectScoresByStudentCodeAndSchoolYear(String studentCode, int schoolYearId) {
         Session session = this.factory.getObject().getCurrentSession();
@@ -224,7 +224,6 @@ public class ScoreRepositoryImpl implements ScoreRepository {
         Query q = session.createQuery(query);
         return q.getResultList();
     }
-
 
     @Override
     public boolean importScoresFromCsv(MultipartFile file, int subjectTeacherId, int classId, int schoolYearId) throws Exception {
@@ -861,7 +860,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
             return false;
         }
     }
-    
+
     @Override
     public boolean deleteScore(Integer scoreId) {
         try {
@@ -878,5 +877,26 @@ public class ScoreRepositoryImpl implements ScoreRepository {
         }
     }
 
+    @Override
+    public boolean toggleScoreLock(int scoreId, boolean unlock) {
+        try {
+            Session session = this.factory.getObject().getCurrentSession();
+            Score score = session.get(Score.class, scoreId);
+
+            if (score != null) {
+                // Cập nhật trạng thái khóa
+                score.setIsLocked(!unlock); // true = khóa, false = mở khóa
+
+                score.setIsDraft(unlock);
+
+                session.update(score);
+                return true;
+            }
+            return false;
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
 
 }

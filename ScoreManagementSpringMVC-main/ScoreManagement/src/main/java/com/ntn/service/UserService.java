@@ -38,4 +38,6 @@ public interface UserService extends UserDetailsService {
     boolean deleteUser(int id);
     
     boolean isEmailExistsInUserTable(String email);
+    
+    List<Map<String, Object>> getUsersByRole(String role);
 }

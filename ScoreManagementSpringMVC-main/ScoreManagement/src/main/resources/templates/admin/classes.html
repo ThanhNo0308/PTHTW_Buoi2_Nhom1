@@ -95,6 +95,10 @@
                                         <a th:href="@{'/admin/class-students/' + ${class.id}}" class="btn btn-sm btn-info">
                                             <i class="fas fa-users"></i> Sinh viên
                                         </a>
+                                        </a>
+                                        <a th:href="@{'/scores/admin/class/' + ${class.id}}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-chart-bar"></i> Xem điểm
+                                        </a>
                                         <div sec:authorize="hasAuthority('Admin')">
                                             <button class="btn btn-sm btn-primary" onclick="openEditModal(this)"
                                                     th:data-id="${class.id}"
@@ -234,7 +238,7 @@
         }
 
         // Hiển thị modal thêm khi có lỗi validation
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('error') && urlParams.get('error') === 'validation') {
                 const addModal = new bootstrap.Modal(document.getElementById('addClassModal'));

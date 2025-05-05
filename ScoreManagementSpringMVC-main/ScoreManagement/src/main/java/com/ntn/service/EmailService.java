@@ -20,6 +20,8 @@ public interface EmailService {
     int sendToAllStudents(String subject, String message);
 
     // Gửi cho giảng viên 
+    boolean sendNotificationToTeacher(int teacherId, String subject, String message);
+    
     boolean sendToTeacher(int teacherId, String subject, String message);
 
     int sendToAllTeachers(String subject, String message);

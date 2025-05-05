@@ -38,6 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/scores")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class ApiScoreController {
 
     @Autowired

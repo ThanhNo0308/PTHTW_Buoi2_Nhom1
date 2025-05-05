@@ -5,13 +5,18 @@
 package com.ntn.controllers;
 
 import com.ntn.pojo.Forum;
+import com.ntn.pojo.Forumcomment;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.User;
+import com.ntn.service.ForumCommentService;
 import com.ntn.service.ForumService;
 import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.UserService;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -38,6 +43,9 @@ public class ForumController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private ForumCommentService forumCommentService;
 
     @GetMapping("/admin/forum")
     public String showForumPage(Model model) {
@@ -150,7 +158,118 @@ public class ForumController {
 
         return "redirect:/admin/forum";
     }
-    
+
+    @GetMapping("/admin/forum-comments/{forumId}")
+    public String showForumComments(@PathVariable("forumId") int forumId, Model model) {
+        try {
+            // Lấy thông tin diễn đàn
+            Forum forum = forumService.getForumById(forumId);
+            if (forum == null) {
+                model.addAttribute("errorMessage", "Không tìm thấy diễn đàn yêu cầu.");
+                return "redirect:/admin/forum";
+            }
+
+            // Lấy danh sách bình luận
+            List<Forumcomment> comments = forumCommentService.getCommentsByForumId(forumId);
+
+            // Phân loại bình luận thành gốc và con
+            List<Forumcomment> rootComments = new ArrayList<>();
+            Map<Integer, List<Forumcomment>> childComments = new HashMap<>();
+
+            for (Forumcomment comment : comments) {
+                if (comment.getParentCommentId() == null) {
+                    // Đây là bình luận gốc
+                    rootComments.add(comment);
+                } else {
+                    // Đây là bình luận con (phản hồi)
+                    int parentId = comment.getParentCommentId().getId();
+                    if (!childComments.containsKey(parentId)) {
+                        childComments.put(parentId, new ArrayList<>());
+                    }
+                    childComments.get(parentId).add(comment);
+                }
+            }
+
+            model.addAttribute("forum", forum);
+            model.addAttribute("comments", comments);
+            model.addAttribute("rootComments", rootComments);
+            model.addAttribute("childComments", childComments);
+
+            return "admin/forum-comments";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            return "redirect:/admin/forum";
+        }
+    }
+
+    @PostMapping("/admin/forum-comments/add")
+    public String addComment(
+            @RequestParam("forumId") int forumId,
+            @RequestParam(value = "parentCommentId", required = false) Integer parentCommentId,
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            Forumcomment comment = new Forumcomment();
+            comment.setTitle(title);
+            comment.setContent(content);
+            comment.setCreatedAt(new Date());
+
+            // Thiết lập forum
+            Forum forum = new Forum();
+            forum.setId(forumId);
+            comment.setForumId(forum);
+
+            // Thiết lập parentComment nếu có
+            if (parentCommentId != null) {
+                Forumcomment parentComment = new Forumcomment();
+                parentComment.setId(parentCommentId);
+                comment.setParentCommentId(parentComment);
+            }
+
+            // Thiết lập người dùng
+            if (authentication != null) {
+                UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+                User currentUser = userService.getUserByUn(userDetails.getUsername());
+                comment.setUserId(currentUser);
+            }
+
+            // Lưu bình luận
+            boolean success = forumCommentService.addComment(comment);
+            if (success) {
+                redirectAttributes.addFlashAttribute("successMessage", "Bình luận đã được thêm thành công.");
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể thêm bình luận.");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+        }
+
+        return "redirect:/admin/forum-comments/" + forumId;
+    }
+
+    @PostMapping("/admin/forum-comments/delete")
+    public String deleteComment(
+            @RequestParam("commentId") int commentId,
+            @RequestParam("forumId") int forumId,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            boolean success = forumCommentService.deleteComment(commentId);
+            if (success) {
+                redirectAttributes.addFlashAttribute("successMessage", "Bình luận đã được xóa thành công.");
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa bình luận.");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+        }
+
+        return "redirect:/admin/forum-comments/" + forumId;
+    }
+
     @GetMapping("/admin/forum/{id}")
     public Forum getForumById(@PathVariable("id") int forumId) {
         return forumService.getForumById(forumId);

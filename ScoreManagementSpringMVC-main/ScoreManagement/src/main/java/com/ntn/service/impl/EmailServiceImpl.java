@@ -21,10 +21,10 @@ public class EmailServiceImpl implements EmailService {
 
     @Autowired
     private JavaMailSender emailSender;
-    
+
     @Autowired
     private StudentRepository studentRepository;
-    
+
     @Autowired
     private TeacherRepository teacherRepository;
 
@@ -49,10 +49,10 @@ public class EmailServiceImpl implements EmailService {
             return false;
         }
     }
-    
+
     @Override
-    public boolean sendScoreNotification(int studentId, String subjectName, String teacherName, 
-                                       String schoolYear, String major) {
+    public boolean sendScoreNotification(int studentId, String subjectName, String teacherName,
+            String schoolYear, String major) {
         try {
             Student student = this.studentRepository.getStudentById(studentId);
 
@@ -78,14 +78,14 @@ public class EmailServiceImpl implements EmailService {
             return false;
         }
     }
-    
+
     @Override
     @Async
-    public void sendScoreNotificationsToClass(List<Integer> studentIds, String subjectName, 
-                                           String teacherName, String schoolYear, String major) {
+    public void sendScoreNotificationsToClass(List<Integer> studentIds, String subjectName,
+            String teacherName, String schoolYear, String major) {
         int successCount = 0;
         int failCount = 0;
-        
+
         for (Integer studentId : studentIds) {
             try {
                 boolean sent = sendScoreNotification(studentId, subjectName, teacherName, schoolYear, major);
@@ -102,10 +102,10 @@ public class EmailServiceImpl implements EmailService {
                 failCount++;
             }
         }
-        
+
         System.out.println("Tổng kết gửi email: Thành công: " + successCount + ", Thất bại: " + failCount);
     }
-    
+
     // Phương thức sinh viên
     @Override
     public boolean sendToStudent(int studentId, String subject, String message) {
@@ -114,10 +114,10 @@ public class EmailServiceImpl implements EmailService {
             if (student == null || student.getEmail() == null || student.getEmail().isEmpty()) {
                 return false;
             }
-            
+
             String fullName = student.getLastName() + " " + student.getFirstName();
             String emailContent = "Xin chào " + fullName + ",\n\n" + message + "\n\nTrân trọng,\nPhòng Đào tạo";
-            
+
             return sendEmail(student.getEmail(), subject, emailContent);
         } catch (Exception e) {
             e.printStackTrace();
@@ -129,13 +129,13 @@ public class EmailServiceImpl implements EmailService {
     public int sendToStudentsByClass(int classId, String subject, String message) {
         List<Student> students = studentRepository.getStudentByClassId(classId);
         int sentCount = 0;
-        
+
         for (Student student : students) {
             if (sendToStudent(student.getId(), subject, message)) {
                 sentCount++;
             }
         }
-        
+
         return sentCount;
     }
 
@@ -143,13 +143,13 @@ public class EmailServiceImpl implements EmailService {
     public int sendToAllStudents(String subject, String message) {
         List<Student> students = studentRepository.getStudents();
         int sentCount = 0;
-        
+
         for (Student student : students) {
             if (sendToStudent(student.getId(), subject, message)) {
                 sentCount++;
             }
         }
-        
+
         return sentCount;
     }
 
@@ -161,10 +161,25 @@ public class EmailServiceImpl implements EmailService {
             if (teacher == null || teacher.getEmail() == null || teacher.getEmail().isEmpty()) {
                 return false;
             }
-            
+
             String emailContent = "Xin chào " + teacher.getTeacherName() + ",\n\n" + message + "\n\nTrân trọng,\nPhòng Đào tạo";
-            
+
             return sendEmail(teacher.getEmail(), subject, emailContent);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean sendNotificationToTeacher(int teacherId, String subject, String message) {
+        try {
+            Teacher teacher = teacherRepository.getTeacherById(teacherId);
+            if (teacher == null || teacher.getEmail() == null || teacher.getEmail().isEmpty()) {
+                return false;
+            }
+
+            return sendEmail(teacher.getEmail(), subject, message);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -175,15 +190,14 @@ public class EmailServiceImpl implements EmailService {
     public int sendToAllTeachers(String subject, String message) {
         List<Teacher> teachers = teacherRepository.getTeachers();
         int sentCount = 0;
-        
+
         for (Teacher teacher : teachers) {
             if (sendToTeacher(teacher.getId(), subject, message)) {
                 sentCount++;
             }
         }
-        
+
         return sentCount;
     }
-    
-    
+
 }

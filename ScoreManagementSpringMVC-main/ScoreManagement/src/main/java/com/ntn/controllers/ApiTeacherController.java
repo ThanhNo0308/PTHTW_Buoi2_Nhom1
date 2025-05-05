@@ -6,16 +6,19 @@ package com.ntn.controllers;
 
 import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Score;
+import com.ntn.pojo.User;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Teacher;
+import com.ntn.service.EmailService;
 import com.ntn.service.SchoolYearService;
 import com.ntn.service.ScoreService;
 import com.ntn.service.StudentService;
 import com.ntn.service.StudentSubjectTeacherService;
 import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TeacherService;
+import com.ntn.service.UserService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,8 +33,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,6 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/teacher")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class ApiTeacherController {
 
     @Autowired
@@ -61,6 +68,12 @@ public class ApiTeacherController {
 
     @Autowired
     private ScoreService scoreService;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private EmailService emailService;
 
     // Xem chi tiết sinh viên
     @GetMapping("/students/{studentCode}/detail")
@@ -410,6 +423,116 @@ public class ApiTeacherController {
             e.printStackTrace();
             response.put("success", false);
             response.put("message", "Lỗi khi lấy danh sách sinh viên: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // API lấy danh sách admin để gửi mail
+    @GetMapping("/admin-users")
+    public ResponseEntity<Map<String, Object>> getAdminUsers() {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Nếu không muốn sửa phương thức trong UserRepositoryImp
+            // có thể sử dụng trực tiếp từ bảng user và lọc trong code
+            List<User> allUsers = userService.getUsers();
+            List<Map<String, Object>> adminUsers = allUsers.stream()
+                    .filter(user -> user.getRole() == User.Role.Admin)
+                    .map(user -> {
+                        Map<String, Object> userMap = new HashMap<>();
+                        userMap.put("id", user.getId());
+                        userMap.put("username", user.getUsername());
+                        userMap.put("email", user.getEmail());
+                        return userMap;
+                    })
+                    .collect(Collectors.toList());
+
+            response.put("success", true);
+            response.put("adminUsers", adminUsers);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace(); // Log lỗi để debug
+            response.put("success", false);
+            response.put("message", "Lỗi khi lấy danh sách admin: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // API gửi yêu cầu mở khóa điểm
+    @PostMapping("/send-unlock-request")
+    public ResponseEntity<Map<String, Object>> sendUnlockRequest(@RequestBody Map<String, Object> requestData) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            String adminEmail = (String) requestData.get("adminEmail");
+            // Xử lý teacherId an toàn hơn
+            Integer teacherId;
+            try {
+                if (requestData.get("teacherId") instanceof Integer) {
+                    teacherId = (Integer) requestData.get("teacherId");
+                } else {
+                    teacherId = Integer.parseInt(requestData.get("teacherId").toString());
+                }
+            } catch (Exception e) {
+                response.put("success", false);
+                response.put("message", "teacherId không hợp lệ");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            String schoolYearInfo = (String) requestData.get("schoolYearInfo");
+            String department = (String) requestData.get("department");
+            String major = (String) requestData.get("major");
+            String subjectName = (String) requestData.get("subject");
+            String classOrStudent = (String) requestData.get("classOrStudent");
+            String reason = (String) requestData.get("reason");
+
+            // Kiểm tra email không rỗng
+            if (adminEmail == null || adminEmail.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Email quản trị viên không được để trống");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Lấy thông tin giảng viên
+            Teacher teacher = teacherService.getTeacherById(teacherId);
+
+            if (teacher == null) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy thông tin giảng viên");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Tạo nội dung email
+            String subject = "Yêu cầu mở khóa điểm";
+            String body = String.format(
+                    "Kính gửi Quản trị viên,\n\n"
+                    + "Tôi là %s,\n"
+                    + "Năm học/Học kỳ: %s\n"
+                    + "Khoa: %s\n"
+                    + "Ngành: %s\n"
+                    + "Môn học: %s\n"
+                    + "Lớp/Sinh viên cần mở khóa: %s\n"
+                    + "Lý do yêu cầu mở khóa: %s\n\n"
+                    + "Xin cảm ơn.",
+                    teacher.getTeacherName(), schoolYearInfo, department, major, subjectName, classOrStudent, reason
+            );
+
+            // Gửi email
+            boolean emailSent = emailService.sendEmail(adminEmail, subject, body);
+
+            if (emailSent) {
+                response.put("success", true);
+                response.put("message", "Yêu cầu mở khóa đã được gửi thành công");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("message", "Không thể gửi email yêu cầu");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Lỗi khi gửi yêu cầu: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

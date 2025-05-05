@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/teacherclass")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class ApiTeacherClassController {
 
     @Autowired
