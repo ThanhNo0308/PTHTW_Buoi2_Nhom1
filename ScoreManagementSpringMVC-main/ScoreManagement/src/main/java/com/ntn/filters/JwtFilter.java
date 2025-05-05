@@ -27,6 +27,8 @@ public class JwtFilter implements Filter {
 
         // Luôn thêm CORS headers trước khi xử lý logic
         httpResponse.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+        httpResponse.setHeader("Access-Control-Allow-Origin", httpRequest.getHeader("Origin"));
+        httpResponse.setHeader("Vary", "Origin");
         httpResponse.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         httpResponse.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
         httpResponse.setHeader("Access-Control-Allow-Credentials", "true");
