@@ -1,6 +1,7 @@
 package com.ntn.repository.impl;
 
 import com.ntn.pojo.Student;
+import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
 import com.ntn.repository.StudentRepository;
 import java.util.List;
@@ -77,6 +78,26 @@ public class StudentRepositoryImpl implements StudentRepository {
             ex.printStackTrace();
             System.err.println("Error saving student: " + ex.getMessage());
             return false;
+        }
+    }
+    
+    @Override
+    public Student getStudentByEmail(String email) {
+        Session session = this.factory.getObject().getCurrentSession();
+
+        if (email == null || email.isEmpty()) {
+            return null;
+        }
+
+        String hql = "FROM Student t WHERE t.email = :email";
+        Query query = session.createQuery(hql);
+        query.setParameter("email", email);
+
+        try {
+            return (Student) query.getSingleResult();
+        } catch (NoResultException ex) {
+            System.out.println("Không tìm thấy sinh viên với email: " + email);
+            return null;
         }
     }
 

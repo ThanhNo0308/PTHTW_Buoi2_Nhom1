@@ -56,13 +56,12 @@ public class UserServiceImp implements UserService {
     public User getUserByUn(String username) {
         return this.userRepo.getUserByUsername(username);
     }
-    
 
     @Override
     public User getUserByEmail(String email) {
         return userRepo.getUserByEmail(email);
     }
-    
+
     @Override
     public boolean isEmailExistsInUserTable(String email) {
         return this.userRepo.isEmailExistsInUserTable(email);
@@ -187,9 +186,25 @@ public class UserServiceImp implements UserService {
     public boolean deleteUser(int id) {
         return this.userRepo.deleteUser(id);
     }
-    
+
     @Override
     public List<Map<String, Object>> getUsersByRole(String role) {
         return this.userRepo.getUsersByRole(role);
+    }
+
+    @Override
+    public User saveOAuth2User(User user) {
+        // Kiểm tra email
+        if (user.getEmail() == null || user.getEmail().isEmpty()) {
+            return null;
+        }
+
+        // Thiết lập các giá trị mặc định nếu cần
+        if (user.getActive() == null) {
+            user.setActive("Active");
+        }
+
+        // Lưu người dùng vào cơ sở dữ liệu
+        return this.userRepo.addUser(user);
     }
 }

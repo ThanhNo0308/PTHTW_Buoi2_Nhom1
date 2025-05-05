@@ -40,4 +40,6 @@ public interface UserService extends UserDetailsService {
     boolean isEmailExistsInUserTable(String email);
     
     List<Map<String, Object>> getUsersByRole(String role);
+    
+    User saveOAuth2User(User user);
 }

@@ -26,6 +26,11 @@ import java.util.List;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.multipart.support.MultipartFilter;
+import com.ntn.configs.CustomOAuth2UserService;
+import com.ntn.configs.OAuth2LoginSuccessHandler;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 @Configuration
 @Order(2)
@@ -68,6 +73,16 @@ public class SpringSecurityConfig {
     public CustomLoginSuccessHandler loginSuccessHandler() {
         return new CustomLoginSuccessHandler();
     }
+    
+    @Bean
+    public OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService() {
+        return new CustomOAuth2UserService();
+    }
+    
+    @Bean
+    public AuthenticationSuccessHandler oAuth2LoginSuccessHandler() {
+        return new OAuth2LoginSuccessHandler();
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -75,6 +90,7 @@ public class SpringSecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**").permitAll()
                 // Trang chủ cho phép truy cập không cần đăng nhập
@@ -86,6 +102,13 @@ public class SpringSecurityConfig {
                 .requestMatchers("/forum", "/register", "/pageAdmin").hasAuthority("Admin")
                 // Mọi request khác yêu cầu xác thực
                 .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                    .loginPage("/login")
+                    .successHandler(oAuth2LoginSuccessHandler())
+                    .userInfoEndpoint(userInfo -> userInfo
+                        .userService(oAuth2UserService())
+                    )
                 )
                 .formLogin(form -> form
                 .loginPage("/login")
@@ -144,6 +167,7 @@ public class SpringSecurityConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
+        source.registerCorsConfiguration("/api/oauth2/**", config);
 
         return source;
     }

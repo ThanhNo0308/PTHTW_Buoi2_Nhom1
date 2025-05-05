@@ -10,6 +10,7 @@ import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
 import jakarta.servlet.MultipartConfigElement;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRegistration;
 import jakarta.servlet.ServletRequest;
@@ -17,6 +18,7 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.springframework.web.context.request.RequestContextListener;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherServletInitializer {
@@ -27,16 +29,27 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
             HibernateConfig.class,
             ThymeleafConfig.class,
             SpringSecurityConfig.class,
-            EmailConfig.class
+            EmailConfig.class,
+            OAuth2Config.class,
+            ClientRegistrationConfig.class
         };
 
     }
+    
+    
 
     @Override
     protected Class<?>[] getServletConfigClasses() {
         return new Class[]{
             WebAppContextConfig.class
         };
+    }
+
+    @Override
+    public void onStartup(ServletContext servletContext) throws ServletException {
+        super.onStartup(servletContext);
+
+        servletContext.addListener(new RequestContextListener());
     }
 
     @Override
@@ -49,8 +62,8 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
     @Override
     protected void customizeRegistration(ServletRegistration.Dynamic registration) {
         String location = "/";
-        long maxFileSize = 5242880; 
-        long maxRequestSize = 20971520; 
+        long maxFileSize = 5242880;
+        long maxRequestSize = 20971520;
         int fileSizeThreshold = 0;
 
         registration.setMultipartConfig(new MultipartConfigElement(location, maxFileSize, maxRequestSize, fileSizeThreshold));
@@ -59,7 +72,7 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
     @Override
     protected Filter[] getServletFilters() {
         return new Filter[]{
-            new CorsFilter(), 
+            new CorsFilter(),
             new JwtFilter()
         };
 

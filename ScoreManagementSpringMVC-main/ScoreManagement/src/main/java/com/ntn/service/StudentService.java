@@ -33,4 +33,6 @@ public interface StudentService {
     List<Student> getStudentsByClassIdAndKeyword(Integer classId, String keyword);
 
     List<Student> getStudentbyEmail(String email);
+    
+    Student getStudentByEmail(String email);
 }

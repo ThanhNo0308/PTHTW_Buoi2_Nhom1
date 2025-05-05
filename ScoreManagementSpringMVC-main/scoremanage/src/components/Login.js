@@ -6,6 +6,9 @@ import cookie from "react-cookies";
 import "../assets/css/login.css";
 import logo from '../assets/images/logo.png';
 
+import { FacebookLogin } from '@greatsumini/react-facebook-login';
+import { GoogleLogin } from '@react-oauth/google';
+
 const Login = () => {
   const [user, dispatch] = useContext(MyUserContext);
   const navigate = useNavigate();
@@ -106,6 +109,123 @@ const Login = () => {
     }
   };
 
+  // Xử lý đăng nhập Google thành công
+  const handleGoogleSuccess = async (response) => {
+    try {
+      setOauthLoading(true);
+      setError("");
+      console.log("Google login success", response);
+
+      // Gửi ID token về server để xác thực
+      const res = await userApis.oauth2Login("google", response.credential);
+      handleOAuth2Response(res);
+    } catch (err) {
+      console.error("Google login error:", err);
+      handleOAuth2Error(err);
+    } finally {
+      setOauthLoading(false);
+    }
+  };
+
+  // Xử lý đăng nhập Google thất bại
+  const handleGoogleFailure = (error) => {
+    console.error("Google login failed:", error);
+    setError("Đăng nhập Google thất bại. Vui lòng thử lại.");
+    setOauthLoading(false);
+  };
+
+  // Xử lý đăng nhập Facebook
+  const responseFacebook = async (response) => {
+    try {
+      setOauthLoading(true);
+      setError("");
+      console.log("Facebook login success", response);
+
+      // Nếu hủy đăng nhập
+      if (!response.accessToken) {
+        setError("Đăng nhập Facebook bị hủy.");
+        setOauthLoading(false);
+        return;
+      }
+
+      // Gửi access token về server để xác thực
+      const res = await userApis.oauth2Login("facebook", response.accessToken);
+      handleOAuth2Response(res);
+    } catch (err) {
+      console.error("Facebook login error:", err);
+      handleOAuth2Error(err);
+    } finally {
+      setOauthLoading(false);
+    }
+  };
+
+  // Xử lý phản hồi từ API sau khi đăng nhập OAuth2
+  const handleOAuth2Response = (res) => {
+    if (res.data && res.data.status === "success") {
+      const userData = res.data.user || {};
+
+      // Đảm bảo token được lưu trong userData
+      if (!userData.token && res.data.token) {
+        userData.token = res.data.token;
+      }
+
+      userData.role = res.data.role;
+
+      // Lưu vào context và cookie
+      dispatch({
+        "type": "login",
+        "payload": userData
+      });
+
+      cookie.save("user", userData, { path: "/" });
+
+      // Nếu cần bổ sung thông tin
+      if (res.data.needAdditionalInfo) {
+        navigate("/oauth2/additional-info", {
+          state: {
+            provider: res.data.provider,
+            name: res.data.name,
+            picture: res.data.picture
+          }
+        });
+        return;
+      }
+
+      // Chuyển hướng dựa vào vai trò
+      switch (userData.role) {
+        case "Student":
+          navigate("/student/dashboard?success=true");
+          break;
+        case "Teacher":
+          navigate("/teacher/dashboard?success=true");
+          break;
+        case "Admin":
+          navigate("/admin/dashboard?success=true");
+          break;
+        default:
+          navigate(from);
+      }
+    } else {
+      setError(res.data?.message || "Đăng nhập không thành công");
+    }
+  };
+
+  // Xử lý lỗi OAuth2
+  const handleOAuth2Error = (err) => {
+    if (err.response && err.response.data) {
+      if (err.response.data.needAdditionalInfo) {
+        // Chuyển đến form nhập thông tin bổ sung
+        navigate("/oauth2/additional-info", {
+          state: err.response.data
+        });
+        return;
+      }
+      setError(err.response.data.message || "Đăng nhập không thành công");
+    } else {
+      setError("Không thể kết nối tới máy chủ");
+    }
+  };
+
   const handleCloseAlert = () => {
     setError("");
   };
@@ -192,6 +312,40 @@ const Login = () => {
                         </button>
                       </div>
                     </form>
+
+                    <div className="text-center mb-4">
+                      <p className="divider-text">
+                        <span className="bg-light">Hoặc đăng nhập với</span>
+                      </p>
+                      <div className="social-login-buttons">
+                        {/* Google Login Button */}
+                        <div className="mb-2 d-flex justify-content-center">
+                          <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={handleGoogleFailure}
+                            type="standard"
+                            theme="filled_blue"
+                            text="signin_with"
+                            shape="rectangular"
+                            locale="vi"
+                            disabled={oauthLoading}
+                          />
+                        </div>
+
+                        {/* Facebook Login Button */}
+                        <div className="d-flex justify-content-center">
+                          <FacebookLogin
+                            appId="1229596068700241" // Thay bằng Facebook App ID của bạn
+                            fields="name,email,picture"
+                            callback={responseFacebook}
+                            cssClass="btn btn-facebook btn-block"
+                            icon="fa-facebook-f"
+                            textButton={oauthLoading ? "Đang đăng nhập..." : "Đăng nhập với Facebook"}
+                            disabled={oauthLoading}
+                          />
+                        </div>
+                      </div>
+                    </div>
 
                     <div className="text-center">
                       <p className="mb-0">Chưa có tài khoản?

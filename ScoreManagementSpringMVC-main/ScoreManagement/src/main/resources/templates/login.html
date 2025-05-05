@@ -61,12 +61,27 @@
                                             </button>
                                         </div>
                                     </form>
+                                    <!-- Thêm vào file login.html sau phần form đăng nhập thông thường -->
+                                    <div class="text-center mb-4">
+                                        <p class="divider-text">
+                                            <span class="bg-light">Hoặc đăng nhập với</span>
+                                        </p>
+                                        <div class="social-login-buttons">
+                                            <a th:href="@{/oauth2/authorization/google}" class="btn btn-google btn-block mb-2">
+                                                <i class="fab fa-google me-2"></i>Đăng nhập với Google
+                                            </a>
+                                            <a th:href="@{/oauth2/authorization/facebook}" class="btn btn-facebook btn-block">
+                                                <i class="fab fa-facebook-f me-2"></i>Đăng nhập với Facebook
+                                            </a>
+                                        </div>
+                                    </div>
 
                                     <div class="text-center">
                                         <p class="mb-0">Chưa có tài khoản? 
                                             <a th:href="@{/registerStudent}" class="text-primary fw-bold">Đăng ký</a>
                                         </p>
                                     </div>
+
                                 </div>
                             </div>
 

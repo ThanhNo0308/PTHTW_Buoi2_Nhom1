@@ -131,11 +131,18 @@ public class UserController {
 
     @GetMapping("/registerStudent")
     public String showRegistrationStudentForm(Model model) {
-        return "registerStudent"; 
+        return "registerStudent";
     }
 
     @GetMapping("/login")
-    public String showLoginForm() {
+    public String login(Model model, @RequestParam(required = false) String error) {
+        if (error != null) {
+            if (error.equals("email_not_found")) {
+                model.addAttribute("error", "Email không tồn tại trong hệ thống nhà trường");
+            } else if (error.equals("email_exists")) {
+                model.addAttribute("error", "Email đã được đăng ký trong hệ thống");
+            }
+        }
         return "login";
     }
 

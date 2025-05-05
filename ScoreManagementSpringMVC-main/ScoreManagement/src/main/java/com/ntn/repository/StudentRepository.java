@@ -7,6 +7,8 @@ import java.util.Optional;
 public interface StudentRepository {
 
     List<Student> getStudentByClassId(int classId);
+    
+    Student getStudentByEmail(String email);
 
     boolean addOrUpdateStudent(Student student);
 

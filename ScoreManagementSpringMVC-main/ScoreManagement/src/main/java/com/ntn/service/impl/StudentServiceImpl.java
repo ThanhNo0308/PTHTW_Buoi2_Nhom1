@@ -23,6 +23,7 @@ public class StudentServiceImpl implements StudentService {
     public List<Student> getStudentbyEmail(String email) {
         return this.studRepo.getStudentbyEmail(email);
     }
+    
 
     @Override
     public boolean addOrUpdateStudent(Student student) {
@@ -82,5 +83,10 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public List<Student> getStudentsByClassIdAndKeyword(Integer classId, String keyword) {
         return this.studRepo.getStudentsByClassIdAndKeyword(classId, keyword);
+    }
+
+    @Override
+    public Student getStudentByEmail(String email) {
+        return this.studRepo.getStudentByEmail(email);
     }
 }
