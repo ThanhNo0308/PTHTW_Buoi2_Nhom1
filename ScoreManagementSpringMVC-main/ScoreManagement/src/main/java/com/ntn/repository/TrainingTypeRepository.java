@@ -9,11 +9,13 @@ import java.util.List;
 
 public interface TrainingTypeRepository {
 
-    List<Trainingtype> getTrainingTypes();
-
     Trainingtype getTrainingTypeById(int id);
 
     Trainingtype getTrainingTypeByName(String name);
+
+    List<Trainingtype> getTrainingTypes();
+
+    int countTrainingTypes();
 
     boolean addTrainingType(Trainingtype trainingType);
 
@@ -23,5 +25,4 @@ public interface TrainingTypeRepository {
 
     boolean hasRelatedMajors(int trainingTypeId);
 
-    int countTrainingTypes();
 }

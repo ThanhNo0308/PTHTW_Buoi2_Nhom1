@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface ForumRepository {
 
+    Forum getForumById(int id);
+
     List<Forum> getForums();
 
     List<Forum> getForumBySubjectTeacher(int subjectTeacherId);
@@ -22,6 +24,4 @@ public interface ForumRepository {
     boolean deleteForum(int forumId);
 
     boolean updateForum(Forum forum);
-
-    Forum getForumById(int id);
 }

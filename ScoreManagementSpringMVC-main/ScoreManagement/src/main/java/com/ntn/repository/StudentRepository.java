@@ -6,23 +6,15 @@ import java.util.Optional;
 
 public interface StudentRepository {
 
-    List<Student> getStudentByClassId(int classId);
-    
-    Student getStudentByEmail(String email);
-
-    boolean addOrUpdateStudent(Student student);
-
-    boolean deleteStudent(int studentId);
-
     Student getStudentById(int studentId);
 
-    Optional<Student> findByStudentCode(String studentCode);
+    Student getStudentByEmail(String email);
 
-    int countStudents();
+    Student getStudentByCode(String studentCode);
 
     List<Student> getStudents();
 
-    int countStudentsByClassId(int classId);
+    List<Student> getStudentByClassId(int classId);
 
     List<Student> getStudentsByKeyword(String keyword);
 
@@ -35,4 +27,14 @@ public interface StudentRepository {
     List<Student> findStudentsByName(String name);
 
     List<Student> findStudentsByClass(String className);
+
+    Optional<Student> findByStudentCode(String studentCode);
+
+    int countStudents();
+
+    int countStudentsByClassId(int classId);
+
+    boolean addOrUpdateStudent(Student student);
+
+    boolean deleteStudent(int studentId);
 }

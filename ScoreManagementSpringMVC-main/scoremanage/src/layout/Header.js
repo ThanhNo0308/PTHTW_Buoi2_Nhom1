@@ -144,7 +144,7 @@ const Header = () => {
                   <FontAwesomeIcon icon={faHome} className="me-1" /> Trang chủ
                 </Nav.Link>
                 <Nav.Link as={Link} to="/student/scores">
-                  <FontAwesomeIcon icon={faClipboardList} className="me-1" /> Điểm của tôi
+                  <FontAwesomeIcon icon={faClipboardList} className="me-1" /> Xem điểm
                 </Nav.Link>
                 <Nav.Link as={Link} to="/student/class-info">
                   <FontAwesomeIcon icon={faBuilding} className="me-1" /> Thông tin lớp học

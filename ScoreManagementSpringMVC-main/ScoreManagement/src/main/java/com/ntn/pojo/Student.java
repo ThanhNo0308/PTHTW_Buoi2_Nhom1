@@ -27,10 +27,6 @@ import jakarta.validation.constraints.Size;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 
-/**
- *
- * @author Kiet
- */
 @Entity
 @Table(name = "student")
 @XmlRootElement

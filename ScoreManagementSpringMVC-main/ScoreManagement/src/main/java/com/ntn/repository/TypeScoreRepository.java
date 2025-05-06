@@ -4,10 +4,8 @@
  */
 package com.ntn.repository;
 
-import com.ntn.pojo.Student;
 import com.ntn.pojo.Typescore;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -17,17 +15,10 @@ public interface TypeScoreRepository {
 
     Typescore getScoreTypeByName(String name);
 
-    int countScoreTypesBySubjectTeacher(int subjectTeacherId);
-
-    Student getStudentByCode(String studentCode);
-
-    boolean addScoreTypeToClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType, Float weight);
-
-    boolean removeScoreTypeFromClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType);
-
-    boolean updateScoreTypeWeights(Integer classId, Integer subjectTeacherId, Integer schoolYearId, Map<String, Double> weights);
-
     List<Typescore> getAllScoreTypes();
+    
+    List<String> getScoreTypesByClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId);
 
     boolean addScoreType(Typescore newType);
+    
 }

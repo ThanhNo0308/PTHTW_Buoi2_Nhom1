@@ -24,10 +24,6 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 import java.util.Set;
 
-/**
- *
- * @author Kiet
- */
 @Entity
 @Table(name = "subjectteacher")
 @XmlRootElement

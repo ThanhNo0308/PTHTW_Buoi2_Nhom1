@@ -13,9 +13,9 @@ import java.util.List;
  */
 public interface ForumCommentRepository {
 
-    List<Forumcomment> getCommentsByForumId(Integer forumId);
-
     Forumcomment getCommentById(Integer commentId);
+
+    List<Forumcomment> getCommentsByForumId(Integer forumId);
 
     boolean addComment(Forumcomment comment);
 

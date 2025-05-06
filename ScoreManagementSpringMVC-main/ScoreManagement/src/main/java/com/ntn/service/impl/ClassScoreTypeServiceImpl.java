@@ -13,7 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ClassScoreTypeServiceImpl implements ClassScoreTypeService{
+public class ClassScoreTypeServiceImpl implements ClassScoreTypeService {
+
     @Autowired
     private ClassScoreTypeRepository classScoreTypeRepository;
 
@@ -41,6 +42,15 @@ public class ClassScoreTypeServiceImpl implements ClassScoreTypeService{
     public Float getWeightForScoreType(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType) {
         return this.classScoreTypeRepository.getWeightForScoreType(classId, subjectTeacherId, schoolYearId, scoreType);
     }
-    
-    
+
+    @Override
+    public boolean addScoreTypeToClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType, Float weight) {
+        return this.classScoreTypeRepository.addScoreTypeToClass(classId, subjectTeacherId, schoolYearId, scoreType, weight);
+    }
+
+    @Override
+    public boolean removeScoreTypeFromClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType) {
+        return this.classScoreTypeRepository.removeScoreTypeFromClass(classId, subjectTeacherId, schoolYearId, scoreType);
+    }
+
 }

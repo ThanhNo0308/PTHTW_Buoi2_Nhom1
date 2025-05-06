@@ -8,8 +8,6 @@ import com.ntn.pojo.Department;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
 import com.ntn.repository.TeacherRepository;
-import com.ntn.repository.UserRepository;
-import com.ntn.service.UserService;
 import jakarta.persistence.NoResultException;
 import java.util.List;
 import jakarta.persistence.Query;
@@ -32,12 +30,6 @@ public class TeacherRepositoryImp implements TeacherRepository {
     @Autowired
     private LocalSessionFactoryBean factory;
     
-    @Autowired
-    private TeacherRepository teacherRepo;
-
-    @Autowired
-    private UserService userService;
-
     @Override
     public boolean addOrUpdateTeacher(Teacher teacher) {
         Session s = this.factory.getObject().getCurrentSession();

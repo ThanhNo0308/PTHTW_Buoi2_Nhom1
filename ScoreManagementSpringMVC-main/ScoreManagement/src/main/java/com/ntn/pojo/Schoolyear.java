@@ -20,17 +20,12 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 import java.util.Date;
 import java.util.Set;
 
-/**
- *
- * @author Kiet
- */
 @Entity
 @Table(name = "schoolyear")
 @XmlRootElement

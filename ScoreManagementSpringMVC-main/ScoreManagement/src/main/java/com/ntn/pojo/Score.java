@@ -18,13 +18,8 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-import jakarta.validation.constraints.NotNull;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
-/**
- *
- * @author Kiet
- */
 @Entity
 @Table(name = "score")
 @XmlRootElement

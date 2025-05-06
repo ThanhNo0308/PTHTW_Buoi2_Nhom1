@@ -5,8 +5,6 @@
 package com.ntn.pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.Serializable;
 import java.util.List;
 import jakarta.persistence.Basic;
@@ -22,17 +20,11 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 import java.util.Set;
 
-/**
- *
- * @author Kiet
- */
 @Entity
 @Table(name = "class")
 @XmlRootElement
@@ -133,7 +125,6 @@ public class Class implements Serializable {
     public String toString() {
         return className;
     }
-
 
     @XmlTransient
     @JsonIgnore

@@ -17,6 +17,8 @@ public interface StudentService {
     List<Student> getStudents();
 
     Student getStudentById(int studentId);
+    
+    Student getStudentByCode(String studentCode);
 
     int countStudents();
 

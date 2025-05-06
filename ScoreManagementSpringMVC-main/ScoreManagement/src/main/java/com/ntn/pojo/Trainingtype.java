@@ -17,15 +17,10 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 
-/**
- *
- * @author Kiet
- */
 @Entity
 @Table(name = "trainingtype")
 @XmlRootElement
@@ -63,7 +58,6 @@ public class Trainingtype implements Serializable {
     public void setId(Integer id) {
         this.id = id;
     }
-
 
     @XmlTransient
     @JsonIgnore

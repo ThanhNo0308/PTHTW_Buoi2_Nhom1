@@ -80,7 +80,7 @@ public class StudentRepositoryImpl implements StudentRepository {
             return false;
         }
     }
-    
+
     @Override
     public Student getStudentByEmail(String email) {
         Session session = this.factory.getObject().getCurrentSession();
@@ -98,6 +98,22 @@ public class StudentRepositoryImpl implements StudentRepository {
         } catch (NoResultException ex) {
             System.out.println("Không tìm thấy sinh viên với email: " + email);
             return null;
+        }
+    }
+
+    @Override
+    public Student getStudentByCode(String studentCode) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Student> query = builder.createQuery(Student.class);
+        Root<Student> root = query.from(Student.class);
+
+        query.where(builder.equal(root.get("studentCode"), studentCode));
+
+        try {
+            return session.createQuery(query).getSingleResult();
+        } catch (Exception e) {
+            return null; // Trả về null nếu không tìm thấy sinh viên
         }
     }
 
@@ -171,7 +187,7 @@ public class StudentRepositoryImpl implements StudentRepository {
 
         return session.createQuery(query).getSingleResult().intValue();
     }
-    
+
     @Override
     public List<Student> findStudentsByCode(String code) {
         Session session = this.factory.getObject().getCurrentSession();

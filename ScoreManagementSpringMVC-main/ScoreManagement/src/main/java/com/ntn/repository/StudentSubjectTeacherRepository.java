@@ -5,18 +5,13 @@
 package com.ntn.repository;
 
 import com.ntn.pojo.Studentsubjectteacher;
-import com.ntn.pojo.Subjectteacher;
 import java.util.List;
 
 public interface StudentSubjectTeacherRepository {
 
-    List<Studentsubjectteacher> getAll();
-
     Studentsubjectteacher getById(int id);
 
-    boolean addOrUpdate(Studentsubjectteacher enrollment);
-
-    boolean delete(int id);
+    List<Studentsubjectteacher> getAll();
 
     List<Studentsubjectteacher> getByStudentId(int studentId);
 
@@ -27,8 +22,18 @@ public interface StudentSubjectTeacherRepository {
     List<Studentsubjectteacher> getBySubjectId(int subjectId);
 
     List<Studentsubjectteacher> getByClassId(int classId);
-    
+
     List<Studentsubjectteacher> getBySchoolYearId(int schoolYearId);
+
+    List<Studentsubjectteacher> getEnrollmentsByStudentCode(String studentCode);
+
+    int batchEnrollStudents(int classId, int subjectTeacherId);
+
+    long countEnrollments();
+
+    boolean addOrUpdate(Studentsubjectteacher enrollment);
+
+    boolean delete(int id);
 
     boolean checkDuplicate(Integer studentId, Integer subjectTeacherId);
 
@@ -36,9 +41,4 @@ public interface StudentSubjectTeacherRepository {
 
     boolean hasRelatedScores(int enrollmentId);
 
-    int batchEnrollStudents(int classId, int subjectTeacherId);
-
-    long countEnrollments();
-    
-    List<Studentsubjectteacher> getEnrollmentsByStudentCode(String studentCode);
 }

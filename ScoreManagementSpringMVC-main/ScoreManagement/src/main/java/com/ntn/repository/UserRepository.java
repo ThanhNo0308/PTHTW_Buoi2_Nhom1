@@ -11,21 +11,27 @@ import java.util.Map;
 
 public interface UserRepository {
 
+    User getUserById(int id);
+
     User getUserByUsername(String username);
 
     User getUserByEmail(String email);
 
-    boolean isEmailExistsInUserTable(String email);
-
     User addUser(User user);
-
-    boolean saveUser(User user);
 
     User addTeacherUser(User user);
 
-    boolean findEmail(String email);
+    List<User> getUsers();
+
+    List<Map<String, Object>> getUsersByRole(String role);
 
     List<Teacher> getTeacherByEmail(String email);
+
+    boolean isEmailExistsInUserTable(String email);
+
+    boolean saveUser(User user);
+
+    boolean findEmail(String email);
 
     boolean findTeacherEmail(String email);
 
@@ -35,13 +41,8 @@ public interface UserRepository {
 
     boolean authStudentUser(String username, String password);
 
-    List<User> getUsers();
-
-    User getUserById(int id);
-
     boolean updateUser(User user);
 
     boolean deleteUser(int id);
 
-    List<Map<String, Object>> getUsersByRole(String role);
 }

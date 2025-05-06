@@ -4,19 +4,16 @@
  */
 package com.ntn.repository;
 
-import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subjectteacher;
 import java.util.List;
 
 public interface SubjectTeacherRepository {
 
-    List<Subjectteacher> getAllSubjectTeachers();
-
     Subjectteacher getSubjectTeacherById(int id);
 
-    boolean addOrUpdateSubjectTeacher(Subjectteacher subjectTeacher);
+    Subjectteacher findByIdClassIdAndSchoolYearId(int id, int classId, int schoolYearId);
 
-    boolean deleteSubjectTeacher(int id);
+    List<Subjectteacher> getAllSubjectTeachers();
 
     List<Subjectteacher> getSubjectTeachersByTeacherId(int teacherId);
 
@@ -33,10 +30,12 @@ public interface SubjectTeacherRepository {
     List<Subjectteacher> getSubjectTeachersByTeacherIdAndClassId(int teacherId, int classId);
 
     List<Subjectteacher> getSubjectTeachersByTeacherIdAndClassIdAndSchoolYearId(int teacherId, int classId, int schoolYearId);
-    
+
     List<Subjectteacher> getSubjectTeachersBySubjectIdAndClassId(int subjectId, int classId);
-    
-    Subjectteacher findByIdClassIdAndSchoolYearId(int id, int classId, int schoolYearId);
-    
+
     List<Subjectteacher> getSubjectTeachersByClassAndSchoolYear(int classId, int schoolYearId);
+
+    boolean addOrUpdateSubjectTeacher(Subjectteacher subjectTeacher);
+
+    boolean deleteSubjectTeacher(int id);
 }

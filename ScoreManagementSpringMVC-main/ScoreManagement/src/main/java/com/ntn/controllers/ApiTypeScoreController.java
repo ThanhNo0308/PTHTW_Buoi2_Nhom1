@@ -6,6 +6,7 @@ package com.ntn.controllers;
 
 import com.ntn.pojo.Score;
 import com.ntn.pojo.Typescore;
+import com.ntn.service.ClassScoreTypeService;
 import com.ntn.service.ScoreService;
 import com.ntn.service.TypeScoreService;
 import java.util.ArrayList;
@@ -34,12 +35,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/typescores")
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class ApiTypeScoreController {
+
     @Autowired
     private TypeScoreService typeScoreService;
-    
+
     @Autowired
     private ScoreService scoreService;
-    
+
+    @Autowired
+    private ClassScoreTypeService classScoreTypeService;
+
     // Lấy danh sách loại điểm
     @GetMapping("/score-types/list")
     public ResponseEntity<List<String>> getScoreTypeList() {
@@ -147,7 +152,7 @@ public class ApiTypeScoreController {
             }
 
             // 2. Lưu vào bảng classscoretypes với thông tin lớp học
-            boolean success = typeScoreService.addScoreTypeToClass(classId, subjectTeacherId, schoolYearId,
+            boolean success = classScoreTypeService.addScoreTypeToClass(classId, subjectTeacherId, schoolYearId,
                     scoreType, weight);
 
             response.put("success", success);
@@ -173,7 +178,7 @@ public class ApiTypeScoreController {
             Integer subjectTeacherId = Integer.parseInt(payload.get("subjectTeacherId").toString());
             Integer schoolYearId = Integer.parseInt(payload.get("schoolYearId").toString());
 
-            boolean success = typeScoreService.removeScoreTypeFromClass(classId, subjectTeacherId, schoolYearId, scoreType);
+            boolean success = classScoreTypeService.removeScoreTypeFromClass(classId, subjectTeacherId, schoolYearId, scoreType);
 
             response.put("success", success);
             response.put("message", success ? "Loại điểm và các điểm liên quan đã được xóa thành công" : "Không thể xóa loại điểm");

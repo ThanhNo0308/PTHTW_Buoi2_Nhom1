@@ -29,10 +29,6 @@ public class TypeScoreServiceImpl implements TypeScoreService {
     @Autowired
     private TypeScoreRepository typeScoreRepository;
 
-    @Autowired
-    private ClassScoreTypeRepository classScoreTypeRepository;
-
-
     @Override
     public Typescore getScoreTypeByName(String name) {
         return this.typeScoreRepository.getScoreTypeByName(name);
@@ -50,53 +46,8 @@ public class TypeScoreServiceImpl implements TypeScoreService {
 
     @Override
     public List<String> getScoreTypesByClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId) {
-        Set<String> scoreTypes = new HashSet<>();
-
-        // Luôn đảm bảo có các loại điểm mặc định
-        scoreTypes.add("Giữa kỳ");
-        scoreTypes.add("Cuối kỳ");
-
-        // Thêm các loại điểm tùy chỉnh từ bảng class_score_types
-        try {
-            List<Classscoretypes> classScoreTypes = classScoreTypeRepository.getScoreTypesByClass(
-                    classId, subjectTeacherId, schoolYearId);
-
-            for (Classscoretypes cst : classScoreTypes) {
-                if (cst.getScoreType() != null && cst.getScoreType().getScoreType() != null) {
-                    String scoreTypeName = cst.getScoreType().getScoreType();
-                    scoreTypes.add(scoreTypeName);
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Error getting score types: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return new ArrayList<>(scoreTypes);
+        return this.typeScoreRepository.getScoreTypesByClass(classId, subjectTeacherId, schoolYearId);
     }
 
-    @Override
-    public boolean addScoreTypeToClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType, Float weight) {
-        return this.typeScoreRepository.addScoreTypeToClass(classId, subjectTeacherId, schoolYearId, scoreType, weight);
-    }
-
-    @Override
-    public boolean removeScoreTypeFromClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType) {
-       return this.typeScoreRepository.removeScoreTypeFromClass(classId, subjectTeacherId, schoolYearId, scoreType);
-    }
-
-    @Override
-    public boolean updateScoreTypeWeights(Integer classId, Integer subjectTeacherId, Integer schoolYearId, Map<String, Double> weights) {
-       return this.typeScoreRepository.updateScoreTypeWeights(classId, subjectTeacherId, schoolYearId, weights);
-    }
-
-    @Override
-    public int countScoreTypesBySubjectTeacher(int subjectTeacherId) {
-        return this.typeScoreRepository.countScoreTypesBySubjectTeacher(subjectTeacherId);
-    }
-
-    @Override
-    public Student getStudentByCode(String studentCode) {
-        return this.typeScoreRepository.getStudentByCode(studentCode);
-    }
+    
 }

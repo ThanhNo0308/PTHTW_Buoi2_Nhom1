@@ -22,15 +22,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 
-/**
- *
- * @author Kiet
- */
 @Entity
 @Table(name = "forum")
 @XmlRootElement
@@ -143,7 +138,7 @@ public class Forum implements Serializable {
 
     @Override
     public String toString() {
-        return "com.hcmou.pojo.Forum[ id=" + id + " ]";
+        return "com.ntn.pojo.Forum[ id=" + id + " ]";
     }
 
     public String getTitle() {

@@ -22,6 +22,7 @@ import com.ntn.service.ClassScoreTypeService;
 import com.ntn.service.ClassService;
 import com.ntn.service.SchoolYearService;
 import com.ntn.service.ScoreService;
+import com.ntn.service.StudentService;
 import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TypeScoreService;
 import java.util.List;
@@ -76,6 +77,9 @@ public class ScoreRepositoryImpl implements ScoreRepository {
 
     @Autowired
     private ClassService classService;
+    
+    @Autowired
+    private StudentService studentService;
 
     @Override
     public Float getScoreWeight(Score score) {
@@ -274,7 +278,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
                 }
 
                 // Tìm thông tin sinh viên
-                Student student = typeScoreService.getStudentByCode(studentCode);
+                Student student = studentService.getStudentByCode(studentCode);
                 if (student == null) {
                     System.err.println("Không tìm thấy sinh viên với mã: " + studentCode);
                     continue;

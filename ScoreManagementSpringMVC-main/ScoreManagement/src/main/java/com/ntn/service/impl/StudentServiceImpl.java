@@ -89,4 +89,9 @@ public class StudentServiceImpl implements StudentService {
     public Student getStudentByEmail(String email) {
         return this.studRepo.getStudentByEmail(email);
     }
+
+    @Override
+    public Student getStudentByCode(String studentCode) {
+        return this.studRepo.getStudentByCode(studentCode);
+    }
 }

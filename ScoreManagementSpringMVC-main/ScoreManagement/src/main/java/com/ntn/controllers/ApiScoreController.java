@@ -7,6 +7,7 @@ import com.ntn.pojo.Student;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.Typescore;
+import com.ntn.service.ClassScoreTypeService;
 import com.ntn.service.ClassService;
 import com.ntn.service.EmailService;
 import com.ntn.service.SchoolYearService;
@@ -64,6 +65,9 @@ public class ApiScoreController {
 
     @Autowired
     private TeacherService teacherService;
+    
+    @Autowired
+    private ClassScoreTypeService classScoreTypeService;
 
     // Cấu hình trọng số điểm
     @PostMapping("/classes/{classId}/scores/configure-weights")
@@ -71,7 +75,7 @@ public class ApiScoreController {
             @PathVariable("classId") Integer classId,
             @RequestParam("subjectTeacherId") Integer subjectTeacherId,
             @RequestParam("schoolYearId") Integer schoolYearId,
-            @RequestBody Map<String, Double> weights) {
+            @RequestBody Map<String, Float> weights) {
 
         Map<String, Object> response = new HashMap<>();
 
@@ -85,7 +89,7 @@ public class ApiScoreController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            boolean success = typeScoreService.updateScoreTypeWeights(classId, subjectTeacherId, schoolYearId, weights);
+            boolean success = classScoreTypeService.updateScoreTypeWeights(classId, subjectTeacherId, schoolYearId, weights);
 
             response.put("success", success);
             response.put("message", success ? "Cấu hình trọng số đã được lưu thành công" : "Có lỗi khi lưu cấu hình trọng số");

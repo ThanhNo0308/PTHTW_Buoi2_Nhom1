@@ -9,15 +9,16 @@ import java.util.List;
 
 public interface DepartmentRepository {
 
+    Department getDepartmentById(int departmentId);
+
     List<Department> getDepartments();
+
+    long countDepartments();
 
     boolean addOrUpdateDepartment(Department department);
 
     boolean deleteDepartment(int departmentId);
 
-    Department getDepartmentById(int departmentId);
-
     boolean hasRelatedData(int departmentId);
 
-    long countDepartments();
 }

@@ -16,13 +16,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
-/**
- *
- * @author Kiet
- */
 @Entity
 @Table(name = "studentsubjectteacher")
 @XmlRootElement
@@ -97,7 +92,7 @@ public class Studentsubjectteacher implements Serializable {
 
     @Override
     public String toString() {
-        return "com.hcmou.pojo.Studentsubjectteacher[ id=" + id + " ]";
+        return "com.ntn.pojo.Studentsubjectteacher[ id=" + id + " ]";
     }
     
 }

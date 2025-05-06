@@ -18,9 +18,12 @@ import jakarta.persistence.NoResultException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
@@ -40,17 +43,8 @@ public class TypeScoreRepositoryImpl implements TypeScoreRepository {
     @Autowired
     private LocalSessionFactoryBean factory;
     
-     @Autowired
-    private StudentService studentService;
-
-    @Autowired
-    private ScoreService scoreService;
-
     @Autowired
     private ClassScoreTypeService classScoreTypeService;
-    
-    @Autowired
-    private TypeScoreRepository typeScoreRepository;
 
     @Override
     public Typescore getScoreTypeByName(String name) {
@@ -68,35 +62,6 @@ public class TypeScoreRepositoryImpl implements TypeScoreRepository {
             Typescore newType = new Typescore(name);
             session.save(newType);
             return newType;
-        }
-    }
-
-    @Override
-    public int countScoreTypesBySubjectTeacher(int subjectTeacherId) {
-        Session session = this.factory.getObject().getCurrentSession();
-        String hql = "SELECT COUNT(DISTINCT ts.id) FROM Score s "
-                + "JOIN s.typeScoreID ts "
-                + "WHERE s.subjectTeacherID.id = :subjectTeacherId";
-
-        Query<Long> q = session.createQuery(hql, Long.class);
-        q.setParameter("subjectTeacherId", subjectTeacherId);
-
-        return q.getSingleResult().intValue();
-    }
-
-    @Override
-    public Student getStudentByCode(String studentCode) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Student> query = builder.createQuery(Student.class);
-        Root<Student> root = query.from(Student.class);
-
-        query.where(builder.equal(root.get("studentCode"), studentCode));
-
-        try {
-            return session.createQuery(query).getSingleResult();
-        } catch (Exception e) {
-            return null; // Trả về null nếu không tìm thấy sinh viên
         }
     }
 
@@ -121,159 +86,33 @@ public class TypeScoreRepositoryImpl implements TypeScoreRepository {
             return false;
         }
     }
-    
+
     @Override
-    public boolean addScoreTypeToClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType, Float weight) {
+    public List<String> getScoreTypesByClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId) {
+        Set<String> scoreTypes = new HashSet<>();
+
+        // Luôn đảm bảo có các loại điểm mặc định
+        scoreTypes.add("Giữa kỳ");
+        scoreTypes.add("Cuối kỳ");
+
+        // Thêm các loại điểm tùy chỉnh từ bảng class_score_types
         try {
-            Session session = factory.getObject().getCurrentSession();
-
-            // Truy vấn trực tiếp các entity bằng các ID
-            String hql = "FROM Classscoretypes c WHERE c.classId.id = :classId AND "
-                    + "c.subjectTeacherId.id = :subjectTeacherId AND "
-                    + "c.schoolYearId.id = :schoolYearId AND "
-                    + "c.scoreType.scoreType = :scoreType";
-
-            Query query = session.createQuery(hql);
-            query.setParameter("classId", classId);
-            query.setParameter("subjectTeacherId", subjectTeacherId);
-            query.setParameter("schoolYearId", schoolYearId);
-            query.setParameter("scoreType", scoreType);
-
-            System.out.println("DEBUG: Searching for class score type: " + classId + ", " + subjectTeacherId + ", " + schoolYearId + ", " + scoreType);
-
-            Classscoretypes existingType = null;
-            try {
-                existingType = (Classscoretypes) query.uniqueResult();
-                System.out.println("DEBUG: Found existing type: " + (existingType != null));
-            } catch (Exception ex) {
-                System.err.println("Error finding class score type: " + ex.getMessage());
-                ex.printStackTrace();
-            }
-
-            if (existingType != null) {
-                // Cập nhật nếu đã tồn tại
-                existingType.setWeight(weight);
-                session.update(existingType);
-                System.out.println("DEBUG: Updated existing class score type");
-                return true;
-            } else {
-                // Tạo mới nếu chưa tồn tại
-                Classscoretypes classScoreType = new Classscoretypes();
-
-                // Truy vấn trực tiếp các đối tượng liên quan
-                System.out.println("DEBUG: Creating new class score type");
-                com.ntn.pojo.Class classEntity = (com.ntn.pojo.Class) session.get(com.ntn.pojo.Class.class, classId);
-                Subjectteacher subjectTeacher = (Subjectteacher) session.get(Subjectteacher.class, subjectTeacherId);
-                Schoolyear schoolYear = (Schoolyear) session.get(Schoolyear.class, schoolYearId);
-
-                // Lấy hoặc tạo đối tượng Typescore tương ứng
-                Typescore typeScoreObj = getScoreTypeByName(scoreType);
-                System.out.println("DEBUG: Retrieved typescore: " + (typeScoreObj != null ? typeScoreObj.getScoreType() : "null"));
-
-                if (typeScoreObj == null) {
-                    typeScoreObj = new Typescore(scoreType);
-                    boolean added = addScoreType(typeScoreObj);
-                    System.out.println("DEBUG: Created new typescore, success: " + added);
-
-                    // Refresh để lấy đối tượng đã lưu
-                    typeScoreObj = getScoreTypeByName(scoreType);
-                }
-
-                if (classEntity == null || subjectTeacher == null || schoolYear == null || typeScoreObj == null) {
-                    System.err.println("DEBUG: Missing required entities: "
-                            + "class=" + (classEntity == null) + ", "
-                            + "subject=" + (subjectTeacher == null) + ", "
-                            + "year=" + (schoolYear == null) + ", "
-                            + "type=" + (typeScoreObj == null));
-                    return false;
-                }
-
-                classScoreType.setClassId(classEntity);
-                classScoreType.setSubjectTeacherId(subjectTeacher);
-                classScoreType.setSchoolYearId(schoolYear);
-                classScoreType.setScoreType(typeScoreObj);
-                classScoreType.setWeight(weight);
-
-                try {
-                    session.save(classScoreType);
-                    System.out.println("DEBUG: Saved new class score type successfully");
-                    return true;
-                } catch (Exception ex) {
-                    System.err.println("Error saving class score type: " + ex.getMessage());
-                    ex.printStackTrace();
-                    return false;
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Overall error in addScoreTypeToClass: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-    
-    @Override
-    public boolean removeScoreTypeFromClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType) {
-        try {
-            // Lấy TypeScore object từ tên
-            Typescore typeScoreObj = typeScoreRepository.getScoreTypeByName(scoreType);
-            if (typeScoreObj == null) {
-                return false;
-            }
-
-            // 1. Xóa các điểm liên quan trong bảng Score
-            // Lấy danh sách học sinh trong lớp
-            List<Student> students = studentService.getStudentByClassId(classId);
-            boolean scoreDeleted = true;
-
-            for (Student student : students) {
-                // Xóa điểm của học sinh có loại điểm tương ứng
-                List<Score> scores = scoreService.getListScoreBySubjectTeacherIdAndSchoolYearIdAndStudentId(
-                        subjectTeacherId, schoolYearId, student.getId());
-
-                for (Score score : scores) {
-                    if (score.getScoreType() != null
-                            && score.getScoreType().getScoreType().equals(scoreType)) {
-                        // Xóa điểm này
-                        boolean success = scoreService.deleteScore(score.getId());
-                        if (!success) {
-                            scoreDeleted = false;
-                        }
-                    }
-                }
-            }
-
-            // 2. Xóa loại điểm trong bảng ClassScoreTypes
             List<Classscoretypes> classScoreTypes = classScoreTypeService.getScoreTypesByClass(
                     classId, subjectTeacherId, schoolYearId);
 
             for (Classscoretypes cst : classScoreTypes) {
-                if (cst.getScoreType().getScoreType().equals(scoreType)) {
-                    return classScoreTypeService.deleteScoreType(cst.getId());
+                if (cst.getScoreType() != null && cst.getScoreType().getScoreType() != null) {
+                    String scoreTypeName = cst.getScoreType().getScoreType();
+                    scoreTypes.add(scoreTypeName);
                 }
             }
-
-            return scoreDeleted;
         } catch (Exception e) {
+            System.err.println("Error getting score types: " + e.getMessage());
             e.printStackTrace();
-            return false;
         }
+
+        return new ArrayList<>(scoreTypes);
     }
     
-    @Override
-    public boolean updateScoreTypeWeights(Integer classId, Integer subjectTeacherId, Integer schoolYearId, Map<String, Double> weights) {
-        try {
-            // Chuyển đổi Map<String, Double> thành Map<String, Float>
-            Map<String, Float> floatWeights = new HashMap<>();
-            for (Map.Entry<String, Double> entry : weights.entrySet()) {
-                floatWeights.put(entry.getKey(), entry.getValue().floatValue());
-            }
-
-            return classScoreTypeService.updateScoreTypeWeights(classId, subjectTeacherId, schoolYearId, floatWeights);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
     
 }

@@ -4,11 +4,12 @@
  */
 package com.ntn.repository;
 
-import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subject;
 import java.util.List;
 
 public interface SubjectRepository {
+
+    Subject getSubjectById(int subjectId);
 
     List<Subject> getSubjects();
 
@@ -21,7 +22,5 @@ public interface SubjectRepository {
     boolean addOrUpdateSubject(Subject subject);
 
     boolean deleteSubject(int subjectId);
-
-    Subject getSubjectById(int subjectId);
 
 }

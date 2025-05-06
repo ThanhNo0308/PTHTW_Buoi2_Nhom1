@@ -9,23 +9,24 @@ import java.util.List;
 
 public interface TeacherRepository {
 
-    boolean addOrUpdateTeacher(Teacher teacher);
-
-    boolean deleteTeacher(int teacherId);
-
     Teacher getTeacherByUserId(int userId);
-
-    List<Teacher> getTeachers();
-
-    int countTeachers();
 
     Teacher getTeacherById(int teacherId);
 
     Teacher getTeacherByEmail(String email);
+
+    List<Teacher> getTeachers();
 
     List<Teacher> getTeachersByDepartmentId(Integer departmentId);
 
     List<Teacher> getTeachersByKeyword(String keyword);
 
     List<Teacher> getTeachersByDepartmentIdAndKeyword(Integer departmentId, String keyword);
+
+    int countTeachers();
+
+    boolean addOrUpdateTeacher(Teacher teacher);
+
+    boolean deleteTeacher(int teacherId);
+
 }
