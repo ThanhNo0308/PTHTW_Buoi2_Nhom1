@@ -9,11 +9,13 @@ import java.util.List;
 
 public interface TrainingTypeService {
 
-    List<Trainingtype> getTrainingTypes();
-
     Trainingtype getTrainingTypeById(int id);
 
     Trainingtype getTrainingTypeByName(String name);
+
+    List<Trainingtype> getTrainingTypes();
+
+    int countTrainingTypes();
 
     boolean addTrainingType(Trainingtype trainingType);
 
@@ -22,7 +24,5 @@ public interface TrainingTypeService {
     boolean deleteTrainingType(int id);
 
     boolean hasRelatedMajors(int trainingTypeId);
-
-    int countTrainingTypes();
 
 }

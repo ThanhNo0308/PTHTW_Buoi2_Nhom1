@@ -9,19 +9,20 @@ import java.util.List;
 
 public interface MajorService {
 
+    Major getMajorById(int majorId);
+
+    List<Major> getMajors();
+
     List<Major> getMajorsByDepartmentId(int departmentId);
 
     List<Major> getMajorsByTrainingTypeId(int trainingtypeId);
 
     List<Major> getMajorsByDepartmentAndTrainingType(Integer departmentId, Integer trainingTypeId);
 
+    int countMajors();
+
     boolean addOrUpdateMajor(Major major);
 
     boolean deleteMajor(int majorId);
 
-    int countMajors();
-
-    List<Major> getMajors();
-
-    Major getMajorById(int majorId);
 }

@@ -14,13 +14,11 @@ import java.util.List;
 public interface TypeScoreService {
 
     Typescore getScoreTypeByName(String name);
-    
-
-    boolean addScoreType(Typescore newType);
 
     List<Typescore> getAllScoreTypes();
 
     List<String> getScoreTypesByClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId);
 
-    
+    boolean addScoreType(Typescore newType);
+
 }

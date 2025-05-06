@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface SubjectService {
 
+    Subject getSubjectById(int subjectId);
+
     List<Subject> getSubjects();
 
     List<Subject> getSubjectsByKeyword(String keyword);
@@ -21,5 +23,4 @@ public interface SubjectService {
 
     boolean deleteSubject(int subjectId);
 
-    Subject getSubjectById(int subjectId);
 }

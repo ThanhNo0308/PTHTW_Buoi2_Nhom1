@@ -26,8 +26,6 @@ import java.util.List;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.multipart.support.MultipartFilter;
-import com.ntn.configs.CustomOAuth2UserService;
-import com.ntn.configs.OAuth2LoginSuccessHandler;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -73,12 +71,12 @@ public class SpringSecurityConfig {
     public CustomLoginSuccessHandler loginSuccessHandler() {
         return new CustomLoginSuccessHandler();
     }
-    
+
     @Bean
     public OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService() {
         return new CustomOAuth2UserService();
     }
-    
+
     @Bean
     public AuthenticationSuccessHandler oAuth2LoginSuccessHandler() {
         return new OAuth2LoginSuccessHandler();
@@ -104,11 +102,11 @@ public class SpringSecurityConfig {
                 .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
-                    .loginPage("/login")
-                    .successHandler(oAuth2LoginSuccessHandler())
-                    .userInfoEndpoint(userInfo -> userInfo
-                        .userService(oAuth2UserService())
-                    )
+                .loginPage("/login")
+                .successHandler(oAuth2LoginSuccessHandler())
+                .userInfoEndpoint(userInfo -> userInfo
+                .userService(oAuth2UserService())
+                )
                 )
                 .formLogin(form -> form
                 .loginPage("/login")

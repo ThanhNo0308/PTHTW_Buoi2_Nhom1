@@ -10,6 +10,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
+// Custem Role khi đăng nhập
 public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 
     @Override

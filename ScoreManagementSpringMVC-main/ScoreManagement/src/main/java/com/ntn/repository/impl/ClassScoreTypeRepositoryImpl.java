@@ -7,7 +7,6 @@ import com.ntn.pojo.Student;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Typescore;
 import com.ntn.repository.ClassScoreTypeRepository;
-import com.ntn.repository.TypeScoreRepository;
 import com.ntn.service.ClassScoreTypeService;
 import com.ntn.service.ScoreService;
 import com.ntn.service.StudentService;
@@ -29,8 +28,8 @@ public class ClassScoreTypeRepositoryImpl implements ClassScoreTypeRepository {
 
     @Autowired
     private LocalSessionFactoryBean sessionFactory;
-    
-     @Autowired
+
+    @Autowired
     private StudentService studentService;
 
     @Autowired
@@ -38,7 +37,7 @@ public class ClassScoreTypeRepositoryImpl implements ClassScoreTypeRepository {
 
     @Autowired
     private ClassScoreTypeService classScoreTypeService;
-    
+
     @Autowired
     private TypeScoreService typeScoreService;
 
@@ -192,7 +191,7 @@ public class ClassScoreTypeRepositoryImpl implements ClassScoreTypeRepository {
             }
         }
     }
-    
+
     @Override
     public boolean addScoreTypeToClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType, Float weight) {
         try {
@@ -209,15 +208,10 @@ public class ClassScoreTypeRepositoryImpl implements ClassScoreTypeRepository {
             query.setParameter("subjectTeacherId", subjectTeacherId);
             query.setParameter("schoolYearId", schoolYearId);
             query.setParameter("scoreType", scoreType);
-
-            System.out.println("DEBUG: Searching for class score type: " + classId + ", " + subjectTeacherId + ", " + schoolYearId + ", " + scoreType);
-
             Classscoretypes existingType = null;
             try {
                 existingType = (Classscoretypes) query.uniqueResult();
-                System.out.println("DEBUG: Found existing type: " + (existingType != null));
             } catch (Exception ex) {
-                System.err.println("Error finding class score type: " + ex.getMessage());
                 ex.printStackTrace();
             }
 
@@ -225,37 +219,28 @@ public class ClassScoreTypeRepositoryImpl implements ClassScoreTypeRepository {
                 // Cập nhật nếu đã tồn tại
                 existingType.setWeight(weight);
                 session.update(existingType);
-                System.out.println("DEBUG: Updated existing class score type");
                 return true;
             } else {
                 // Tạo mới nếu chưa tồn tại
                 Classscoretypes classScoreType = new Classscoretypes();
 
                 // Truy vấn trực tiếp các đối tượng liên quan
-                System.out.println("DEBUG: Creating new class score type");
                 com.ntn.pojo.Class classEntity = (com.ntn.pojo.Class) session.get(com.ntn.pojo.Class.class, classId);
                 Subjectteacher subjectTeacher = (Subjectteacher) session.get(Subjectteacher.class, subjectTeacherId);
                 Schoolyear schoolYear = (Schoolyear) session.get(Schoolyear.class, schoolYearId);
 
                 // Lấy hoặc tạo đối tượng Typescore tương ứng
                 Typescore typeScoreObj = typeScoreService.getScoreTypeByName(scoreType);
-                System.out.println("DEBUG: Retrieved typescore: " + (typeScoreObj != null ? typeScoreObj.getScoreType() : "null"));
 
                 if (typeScoreObj == null) {
                     typeScoreObj = new Typescore(scoreType);
                     boolean added = typeScoreService.addScoreType(typeScoreObj);
-                    System.out.println("DEBUG: Created new typescore, success: " + added);
 
                     // Refresh để lấy đối tượng đã lưu
                     typeScoreObj = typeScoreService.getScoreTypeByName(scoreType);
                 }
 
                 if (classEntity == null || subjectTeacher == null || schoolYear == null || typeScoreObj == null) {
-                    System.err.println("DEBUG: Missing required entities: "
-                            + "class=" + (classEntity == null) + ", "
-                            + "subject=" + (subjectTeacher == null) + ", "
-                            + "year=" + (schoolYear == null) + ", "
-                            + "type=" + (typeScoreObj == null));
                     return false;
                 }
 
@@ -267,7 +252,6 @@ public class ClassScoreTypeRepositoryImpl implements ClassScoreTypeRepository {
 
                 try {
                     session.save(classScoreType);
-                    System.out.println("DEBUG: Saved new class score type successfully");
                     return true;
                 } catch (Exception ex) {
                     System.err.println("Error saving class score type: " + ex.getMessage());
@@ -281,7 +265,7 @@ public class ClassScoreTypeRepositoryImpl implements ClassScoreTypeRepository {
             return false;
         }
     }
-    
+
     @Override
     public boolean removeScoreTypeFromClass(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType) {
         try {

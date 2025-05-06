@@ -9,20 +9,19 @@ import java.util.List;
 
 public interface ClassService {
 
+    Class getClassById(int classId);
+
     List<Class> getClasses();
 
     List<Class> getClassesByMajorId(int majorId);
 
+    List<Class> getClassesByTeacher(int teacherId);
+
     List<Class> getClassesByKeyword(String keyword);
+
+    int countClasses();
 
     boolean deleteClass(int classId);
 
     boolean addOrUpdateClass(Class classes);
-
-    Class getClassById(int classId);
-
-    List<Class> getClassesByTeacher(int teacherId);
-
-    int countClasses();
-
 }

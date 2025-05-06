@@ -5,13 +5,10 @@
 package com.ntn.repository.impl;
 
 import com.ntn.pojo.Department;
-import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subject;
 import com.ntn.repository.SubjectRepository;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;

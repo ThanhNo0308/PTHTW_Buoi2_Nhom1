@@ -36,8 +36,6 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
 
     }
     
-    
-
     @Override
     protected Class<?>[] getServletConfigClasses() {
         return new Class[]{
@@ -48,7 +46,6 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
     @Override
     public void onStartup(ServletContext servletContext) throws ServletException {
         super.onStartup(servletContext);
-
         servletContext.addListener(new RequestContextListener());
     }
 

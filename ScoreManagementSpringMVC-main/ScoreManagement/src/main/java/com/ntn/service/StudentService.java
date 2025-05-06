@@ -6,21 +6,15 @@ import java.util.Optional;
 
 public interface StudentService {
 
-    List<Student> getStudentByClassId(int classId);
+    Student getStudentById(int studentId);
 
-    boolean addOrUpdateStudent(Student student);
+    Student getStudentByCode(String studentCode);
 
-    boolean deleteStudent(int studentId);
-
-    Optional<Student> findByStudentCode(String studentId);
+    Student getStudentByEmail(String email);
 
     List<Student> getStudents();
 
-    Student getStudentById(int studentId);
-    
-    Student getStudentByCode(String studentCode);
-
-    int countStudents();
+    List<Student> getStudentByClassId(int classId);
 
     List<Student> findStudentsByCode(String code);
 
@@ -28,13 +22,20 @@ public interface StudentService {
 
     List<Student> findStudentsByClass(String className);
 
-    int countStudentsByClassId(int classId);
+    Optional<Student> findByStudentCode(String studentId);
 
     List<Student> getStudentsByKeyword(String keyword);
 
     List<Student> getStudentsByClassIdAndKeyword(Integer classId, String keyword);
 
     List<Student> getStudentbyEmail(String email);
-    
-    Student getStudentByEmail(String email);
+
+    int countStudents();
+
+    int countStudentsByClassId(int classId);
+
+    boolean addOrUpdateStudent(Student student);
+
+    boolean deleteStudent(int studentId);
+
 }

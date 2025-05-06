@@ -11,15 +11,23 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 
 public interface UserService extends UserDetailsService {
 
+    User getUserById(int id);
+
     User getUserByUn(String username);
 
     User getUserByEmail(String email);
 
+    User saveOAuth2User(User user);
+
     User addUser(Map<String, String> params);
 
-    boolean isEmailExists(String email);
-
     User addTeacherUser(Map<String, String> params);
+
+    List<User> getUsers();
+
+    List<Map<String, Object>> getUsersByRole(String role);
+
+    boolean isEmailExists(String email);
 
     boolean isTeacherEmailExists(String email);
 
@@ -29,17 +37,10 @@ public interface UserService extends UserDetailsService {
 
     boolean authStudentUser(String username, String password);
 
-    List<User> getUsers();
-
-    User getUserById(int id);
-
     boolean updateUser(User user);
 
     boolean deleteUser(int id);
-    
+
     boolean isEmailExistsInUserTable(String email);
-    
-    List<Map<String, Object>> getUsersByRole(String role);
-    
-    User saveOAuth2User(User user);
+
 }

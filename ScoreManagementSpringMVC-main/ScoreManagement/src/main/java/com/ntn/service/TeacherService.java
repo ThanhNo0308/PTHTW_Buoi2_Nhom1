@@ -8,13 +8,6 @@ import com.ntn.pojo.Teacher;
 import java.util.List;
 
 public interface TeacherService {
-    boolean addOrUpdateTeacher(Teacher teacher);
-
-    boolean deleteTeacher(int teacherId);
-
-    List<Teacher> getTeachers();
-
-    int countTeachers();
 
     Teacher getTeacherById(int teacherId);
 
@@ -22,9 +15,18 @@ public interface TeacherService {
 
     Teacher getTeacherByEmail(String email);
 
+    List<Teacher> getTeachers();
+
     List<Teacher> getTeachersByDepartmentId(Integer departmentId);
 
     List<Teacher> getTeachersByKeyword(String keyword);
 
     List<Teacher> getTeachersByDepartmentIdAndKeyword(Integer departmentId, String keyword);
+
+    int countTeachers();
+
+    boolean addOrUpdateTeacher(Teacher teacher);
+
+    boolean deleteTeacher(int teacherId);
+
 }

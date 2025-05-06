@@ -4,11 +4,8 @@
  */
 package com.ntn.repository.impl;
 
-import com.ntn.pojo.Department;
-import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Studentsubjectteacher;
-import com.ntn.pojo.Subject;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.repository.StudentSubjectTeacherRepository;
 import java.util.List;
@@ -19,7 +16,6 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.jpa.QueryHints;

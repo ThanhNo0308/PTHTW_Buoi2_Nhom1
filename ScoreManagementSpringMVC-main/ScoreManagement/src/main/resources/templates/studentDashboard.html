@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
     <head>
         <title>Trang sinh viên</title>
         <th:block th:replace="base :: styles"></th:block>
@@ -8,7 +9,7 @@
         <div th:replace="base :: header"></div>
         <div>
             <div class="container mt-4">
-                <h1>Chào mừng, <span th:text="${#authentication.principal.username}"></span>!</h1>
+                <h1>Chào mừng!</h1>
 
                 <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
 
@@ -56,19 +57,19 @@
                                 <table class="table">
                                     <tr>
                                         <th>Mã sinh viên:</th>
-                                        <td th:text="${student.studentCode}">-</td>
+                                        <td>-</td>
                                     </tr>
                                     <tr>
                                         <th>Họ và tên:</th>
-                                        <td th:text="${student.lastName}">-</td>
+                                        <td>-</td>
                                     </tr>
                                     <tr>
                                         <th>Email:</th>
-                                        <td th:text="${student.email}">-</td>
+                                        <td>-</td>
                                     </tr>
                                     <tr>
                                         <th>Lớp:</th>
-                                        <td th:text="${student.classId.className}">-</td>
+                                        <td>-</td>
                                     </tr>
                                 </table>
                             </div>

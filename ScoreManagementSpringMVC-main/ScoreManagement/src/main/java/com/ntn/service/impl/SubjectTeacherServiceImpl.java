@@ -4,7 +4,6 @@
  */
 package com.ntn.service.impl;
 
-import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.repository.SubjectTeacherRepository;
 import com.ntn.service.SubjectTeacherService;
@@ -12,10 +11,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-/**
- *
- * @author nguye
- */
 @Service
 public class SubjectTeacherServiceImpl implements SubjectTeacherService {
 

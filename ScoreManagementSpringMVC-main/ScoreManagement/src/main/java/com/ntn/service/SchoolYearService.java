@@ -9,21 +9,21 @@ import java.util.List;
 
 public interface SchoolYearService {
 
-    int getCurrentSchoolYearId();
+    Schoolyear getSchoolYearById(int schoolYearId);
 
     List<Schoolyear> getAllSchoolYears();
-
-    boolean addOrUpdateSchoolYear(Schoolyear schoolYear);
-
-    boolean deleteSchoolYear(int schoolYearId);
-
-    Schoolyear getSchoolYearById(int schoolYearId);
 
     List<Schoolyear> getSchoolYearsByNameYear(String nameYear);
 
     List<Schoolyear> getSchoolYearsBySemester(String semesterName);
 
     List<Schoolyear> getSchoolYearsByNameYearAndSemester(String nameYear, String semesterName);
+
+    int getCurrentSchoolYearId();
+
+    boolean addOrUpdateSchoolYear(Schoolyear schoolYear);
+
+    boolean deleteSchoolYear(int schoolYearId);
 
     boolean hasRelatedData(int schoolYearId);
 }

@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,9 +48,6 @@ public class ApiTeacherClassController {
 
     @Autowired
     private StudentService studentService;
-
-    @Autowired
-    private UserService userService;
 
     @Autowired
     private TypeScoreService typeScoreService;

@@ -20,42 +20,42 @@ public class TrainingTypeServiceImpl implements TrainingTypeService {
 
     @Override
     public List<Trainingtype> getTrainingTypes() {
-        return trainingTypeRepository.getTrainingTypes();
+        return this.trainingTypeRepository.getTrainingTypes();
     }
 
     @Override
     public Trainingtype getTrainingTypeById(int id) {
-        return trainingTypeRepository.getTrainingTypeById(id);
+        return this.trainingTypeRepository.getTrainingTypeById(id);
     }
 
     @Override
     public Trainingtype getTrainingTypeByName(String name) {
-        return trainingTypeRepository.getTrainingTypeByName(name);
+        return this.trainingTypeRepository.getTrainingTypeByName(name);
     }
 
     @Override
     public boolean addTrainingType(Trainingtype trainingType) {
-        return trainingTypeRepository.addTrainingType(trainingType);
+        return this.trainingTypeRepository.addTrainingType(trainingType);
     }
 
     @Override
     public boolean updateTrainingType(Trainingtype trainingType) {
-        return trainingTypeRepository.updateTrainingType(trainingType);
+        return this.trainingTypeRepository.updateTrainingType(trainingType);
     }
 
     @Override
     public boolean deleteTrainingType(int id) {
-        return trainingTypeRepository.deleteTrainingType(id);
+        return this.trainingTypeRepository.deleteTrainingType(id);
     }
 
     @Override
     public boolean hasRelatedMajors(int trainingTypeId) {
-        return trainingTypeRepository.hasRelatedMajors(trainingTypeId);
+        return this.trainingTypeRepository.hasRelatedMajors(trainingTypeId);
     }
 
     @Override
     public int countTrainingTypes() {
-        return trainingTypeRepository.countTrainingTypes();
+        return this.trainingTypeRepository.countTrainingTypes();
     }
 
 }

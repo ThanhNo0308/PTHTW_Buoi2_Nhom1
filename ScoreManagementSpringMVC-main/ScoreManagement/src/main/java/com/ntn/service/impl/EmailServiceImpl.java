@@ -5,8 +5,6 @@ import com.ntn.pojo.Teacher;
 import com.ntn.repository.StudentRepository;
 import com.ntn.repository.TeacherRepository;
 import com.ntn.service.EmailService;
-import com.ntn.service.StudentService;
-import com.ntn.service.TeacherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;

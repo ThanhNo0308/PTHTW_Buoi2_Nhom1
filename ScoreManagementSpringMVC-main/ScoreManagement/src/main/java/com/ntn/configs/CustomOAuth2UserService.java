@@ -1,11 +1,9 @@
 package com.ntn.configs;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -14,13 +12,10 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import com.ntn.service.UserService;
 
+// Service của OAuth2
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
-
-    @Autowired
-    private UserService userService;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -44,7 +39,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             // Thêm flag để kiểm tra xem có cần thông tin bổ sung không
             attributes.put("needAdditionalInfo", false);
 
-            System.out.println("Google login: " + email + " | " + name);
         } else if ("facebook".equals(registrationId)) {
             String name = oauth2User.getAttribute("name");
             String id = oauth2User.getAttribute("id");
@@ -56,7 +50,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             // Đối với Facebook, luôn yêu cầu thông tin bổ sung (email)
             attributes.put("needAdditionalInfo", true);
 
-            System.out.println("Facebook login: " + name + " (No email)");
         }
 
         // Tạo một DefaultOAuth2User mới với các attributes đã được cập nhật

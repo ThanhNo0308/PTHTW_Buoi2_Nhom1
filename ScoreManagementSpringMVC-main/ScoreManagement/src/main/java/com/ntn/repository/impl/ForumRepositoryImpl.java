@@ -2,15 +2,11 @@ package com.ntn.repository.impl;
 
 import com.ntn.pojo.Forum;
 import com.ntn.pojo.Forumcomment;
-import com.ntn.pojo.Student;
-import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Teacher;
 import com.ntn.repository.ForumRepository;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;

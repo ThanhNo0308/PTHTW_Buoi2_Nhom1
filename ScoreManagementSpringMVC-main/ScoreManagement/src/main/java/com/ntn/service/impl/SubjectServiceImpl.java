@@ -4,7 +4,6 @@
  */
 package com.ntn.service.impl;
 
-import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subject;
 import com.ntn.repository.SubjectRepository;
 import com.ntn.service.SubjectService;

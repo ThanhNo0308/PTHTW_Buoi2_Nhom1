@@ -6,5 +6,5 @@ import org.springframework.context.annotation.PropertySource;
 @Configuration
 @PropertySource("classpath:oauth2.properties")
 public class OAuth2Config {
-    // Lớp này chỉ để load file cấu hình oauth2.properties
+    // Load file cấu hình oauth2.properties
 }

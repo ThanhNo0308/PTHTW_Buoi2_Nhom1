@@ -9,13 +9,9 @@ import java.util.List;
 
 public interface StudentSubjectTeacherService {
 
-    List<Studentsubjectteacher> getAll();
-
     Studentsubjectteacher getById(int id);
 
-    boolean addOrUpdate(Studentsubjectteacher enrollment);
-
-    boolean delete(int id);
+    List<Studentsubjectteacher> getAll();
 
     List<Studentsubjectteacher> getByStudentId(int studentId);
 
@@ -27,18 +23,22 @@ public interface StudentSubjectTeacherService {
 
     List<Studentsubjectteacher> getByClassId(int classId);
 
+    List<Studentsubjectteacher> getBySchoolYearIdThroughSubjectTeacher(int schoolYearId);
+
+    List<Studentsubjectteacher> getEnrollmentsByStudentCode(String studentCode);
+
+    int batchEnrollStudents(int classId, int subjectTeacherId);
+
+    long countEnrollments();
+
     boolean checkDuplicate(Integer studentId, Integer subjectTeacherId);
 
     boolean checkDuplicateExcept(Integer studentId, Integer subjectTeacherId, Integer exceptId);
 
-    int batchEnrollStudents(int classId, int subjectTeacherId);
+    boolean addOrUpdate(Studentsubjectteacher enrollment);
 
-    List<Studentsubjectteacher> getBySchoolYearIdThroughSubjectTeacher(int schoolYearId);
+    boolean delete(int id);
 
     boolean hasRelatedScores(int enrollmentId);
-
-    long countEnrollments();
-
-    List<Studentsubjectteacher> getEnrollmentsByStudentCode(String studentCode);
 
 }

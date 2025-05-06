@@ -4,20 +4,12 @@
  */
 package com.ntn.service.impl;
 
-import com.ntn.pojo.Classscoretypes;
-import com.ntn.pojo.Student;
 import com.ntn.pojo.Typescore;
-import com.ntn.repository.ClassScoreTypeRepository;
 import com.ntn.repository.TypeScoreRepository;
 import com.ntn.service.TypeScoreService;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  *
