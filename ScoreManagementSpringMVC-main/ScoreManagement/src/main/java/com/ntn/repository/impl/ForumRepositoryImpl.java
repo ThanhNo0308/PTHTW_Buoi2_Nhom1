@@ -2,6 +2,7 @@ package com.ntn.repository.impl;
 
 import com.ntn.pojo.Forum;
 import com.ntn.pojo.Forumcomment;
+import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Teacher;
 import com.ntn.repository.ForumRepository;
@@ -59,7 +60,7 @@ public class ForumRepositoryImpl implements ForumRepository {
     public List<Forum> getForumByTeacher(int teacherId) {
         Session session = this.factory.getObject().getCurrentSession();
 
-        // Sửa truy vấn để lấy forum dựa trên teacherId
+        // Lấy forum dựa trên teacherId
         CriteriaBuilder b = session.getCriteriaBuilder();
         CriteriaQuery<Forum> q = b.createQuery(Forum.class);
         Root<Forum> root = q.from(Forum.class);
@@ -84,10 +85,14 @@ public class ForumRepositoryImpl implements ForumRepository {
         Session s = this.factory.getObject().getCurrentSession();
 
         // Đầu tiên, lấy danh sách các subjectTeacherId mà sinh viên đã đăng ký
-        String hql1 = "SELECT DISTINCT st.subjectTeacherId.id FROM Studentsubjectteacher st WHERE st.studentId.id = :studentId";
-        Query q1 = s.createQuery(hql1);
-        q1.setParameter("studentId", studentId);
-        List<Integer> subjectTeacherIds = q1.getResultList();
+        CriteriaBuilder builder = s.getCriteriaBuilder();
+        CriteriaQuery<Integer> query = builder.createQuery(Integer.class);
+        Root<Studentsubjectteacher> root = query.from(Studentsubjectteacher.class);
+
+        query.select(root.get("subjectTeacherId").get("id")).distinct(true);
+        query.where(builder.equal(root.get("studentId").get("id"), studentId));
+
+        List<Integer> subjectTeacherIds = s.createQuery(query).getResultList();
 
         if (subjectTeacherIds.isEmpty()) {
             return new ArrayList<>();
@@ -96,15 +101,13 @@ public class ForumRepositoryImpl implements ForumRepository {
         // Sau đó, lấy các forum thuộc về các subjectTeacher này
         CriteriaBuilder b = s.getCriteriaBuilder();
         CriteriaQuery<Forum> q = b.createQuery(Forum.class);
-        Root<Forum> root = q.from(Forum.class);
-        q.select(root);
+        Root<Forum> forumRoot = q.from(Forum.class);
+        q.select(forumRoot);
 
-        q.where(root.get("subjectTeacherId").get("id").in(subjectTeacherIds));
-        // Sắp xếp theo thời gian tạo mới nhất
-        q.orderBy(b.desc(root.get("createdAt")));
+        q.where(forumRoot.get("subjectTeacherId").get("id").in(subjectTeacherIds));
+        q.orderBy(b.desc(forumRoot.get("createdAt")));
 
-        Query query = s.createQuery(q);
-        return query.getResultList();
+        return s.createQuery(q).getResultList();
     }
 
     @Override
@@ -126,10 +129,14 @@ public class ForumRepositoryImpl implements ForumRepository {
             Forum forumToDelete = s.get(Forum.class, forumId);
             if (forumToDelete != null) {
                 // Xóa tất cả comment liên quan
-                String hql = "FROM Forumcomment f WHERE f.forumId.id = :forumId";
-                Query query = s.createQuery(hql);
-                query.setParameter("forumId", forumId);
-                List<Forumcomment> comments = query.getResultList();
+                CriteriaBuilder builder = s.getCriteriaBuilder();
+                CriteriaQuery<Forumcomment> query = builder.createQuery(Forumcomment.class);
+                Root<Forumcomment> root = query.from(Forumcomment.class);
+
+                query.select(root);
+                query.where(builder.equal(root.get("forumId").get("id"), forumId));
+
+                List<Forumcomment> comments = s.createQuery(query).getResultList();
 
                 for (Forumcomment comment : comments) {
                     s.delete(comment);

@@ -66,7 +66,6 @@ public class ClassController {
         try {
             // Kiểm tra lỗi validation
             if (bindingResult.hasErrors()) {
-                System.out.println("VALIDATION ERRORS: " + bindingResult.getAllErrors());
                 redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng kiểm tra lại thông tin lớp học");
                 return "redirect:/admin/classes?error=validation";
             }

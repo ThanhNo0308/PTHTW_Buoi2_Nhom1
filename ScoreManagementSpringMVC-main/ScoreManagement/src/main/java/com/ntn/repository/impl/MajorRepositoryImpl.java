@@ -32,9 +32,15 @@ public class MajorRepositoryImpl implements MajorRepository {
     @Override
     public List<Major> getMajorsByDepartmentId(int departmentId) {
         Session session = factory.getObject().getCurrentSession();
-        Query query = session.createQuery("FROM Major WHERE departmentId.id = :departmentId");
-        query.setParameter("departmentId", departmentId);
-        return query.getResultList();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Major> query = builder.createQuery(Major.class);
+        Root<Major> root = query.from(Major.class);
+
+        query.select(root);
+        query.where(builder.equal(root.get("departmentId").get("id"), departmentId));
+        query.orderBy(builder.asc(root.get("majorName")));
+
+        return session.createQuery(query).getResultList();
     }
 
     @Override
@@ -104,8 +110,7 @@ public class MajorRepositoryImpl implements MajorRepository {
                 // Cập nhật - đã có ID
                 session.merge(major);
             }
-            session.flush();  
-            System.out.println("Saved major with ID: " + major.getId());
+            session.flush();
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -132,8 +137,13 @@ public class MajorRepositoryImpl implements MajorRepository {
     @Override
     public int countMajors() {
         Session s = this.factory.getObject().getCurrentSession();
-        Query query = s.createQuery("SELECT COUNT(m) FROM Major m");
-        return ((Long) query.getSingleResult()).intValue();
+        CriteriaBuilder builder = s.getCriteriaBuilder();
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Major> root = query.from(Major.class);
+
+        query.select(builder.count(root));
+
+        return s.createQuery(query).getSingleResult().intValue();
     }
 
     @Override

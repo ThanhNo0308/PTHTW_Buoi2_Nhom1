@@ -97,4 +97,9 @@ public class StudentSubjectTeacherServiceImpl implements StudentSubjectTeacherSe
         return this.studentSubjectTeacherRepository.getEnrollmentsByStudentCode(studentCode);
     }
 
+    @Override
+    public List<Studentsubjectteacher> getByTeachingClassId(int teachingClassId) {
+        return this.studentSubjectTeacherRepository.getByTeachingClassId(teachingClassId);
+    }
+
 }

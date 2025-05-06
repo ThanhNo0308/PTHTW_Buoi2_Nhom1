@@ -16,7 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import jakarta.persistence.Query;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -71,18 +74,19 @@ public class ClassScoreTypeRepositoryImpl implements ClassScoreTypeRepository {
         Session session = this.sessionFactory.getObject().getCurrentSession();
 
         try {
-            String hql = "FROM Classscoretypes c WHERE "
-                    + "c.classId.id = :classId AND "
-                    + "c.subjectTeacherId.id = :subjectTeacherId AND "
-                    + "c.schoolYearId.id = :schoolYearId";
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Classscoretypes> query = builder.createQuery(Classscoretypes.class);
+            Root<Classscoretypes> root = query.from(Classscoretypes.class);
 
-            Query query = session.createQuery(hql);
-            query.setParameter("classId", classId);
-            query.setParameter("subjectTeacherId", subjectTeacherId);
-            query.setParameter("schoolYearId", schoolYearId);
+            // Tạo các điều kiện
+            Predicate classIdPredicate = builder.equal(root.get("classId").get("id"), classId);
+            Predicate subjectTeacherIdPredicate = builder.equal(root.get("subjectTeacherId").get("id"), subjectTeacherId);
+            Predicate schoolYearIdPredicate = builder.equal(root.get("schoolYearId").get("id"), schoolYearId);
 
-            List<Classscoretypes> result = query.getResultList();
-            System.out.println("Found " + result.size() + " score type configurations");
+            // Kết hợp các điều kiện
+            query.where(builder.and(classIdPredicate, subjectTeacherIdPredicate, schoolYearIdPredicate));
+
+            List<Classscoretypes> result = session.createQuery(query).getResultList();
 
             return result;
         } catch (Exception e) {
@@ -166,19 +170,21 @@ public class ClassScoreTypeRepositoryImpl implements ClassScoreTypeRepository {
     public Float getWeightForScoreType(Integer classId, Integer subjectTeacherId, Integer schoolYearId, String scoreType) {
         Session session = this.sessionFactory.getObject().getCurrentSession();
 
-        String hql = "FROM Classscoretypes c WHERE c.classId.id = :classId AND "
-                + "c.subjectTeacherId.id = :subjectTeacherId AND "
-                + "c.schoolYearId.id = :schoolYearId AND "
-                + "c.scoreType.scoreType = :scoreType";
-
-        Query query = session.createQuery(hql);
-        query.setParameter("classId", classId);
-        query.setParameter("subjectTeacherId", subjectTeacherId);
-        query.setParameter("schoolYearId", schoolYearId);
-        query.setParameter("scoreType", scoreType);
-
         try {
-            Classscoretypes classScoreType = (Classscoretypes) query.getSingleResult();
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Classscoretypes> query = builder.createQuery(Classscoretypes.class);
+            Root<Classscoretypes> root = query.from(Classscoretypes.class);
+
+            // Tạo các điều kiện
+            Predicate classIdPredicate = builder.equal(root.get("classId").get("id"), classId);
+            Predicate subjectTeacherIdPredicate = builder.equal(root.get("subjectTeacherId").get("id"), subjectTeacherId);
+            Predicate schoolYearIdPredicate = builder.equal(root.get("schoolYearId").get("id"), schoolYearId);
+            Predicate scoreTypePredicate = builder.equal(root.get("scoreType").get("scoreType"), scoreType);
+
+            // Kết hợp các điều kiện
+            query.where(builder.and(classIdPredicate, subjectTeacherIdPredicate, schoolYearIdPredicate, scoreTypePredicate));
+
+            Classscoretypes classScoreType = session.createQuery(query).getSingleResult();
             return classScoreType.getWeight();
         } catch (jakarta.persistence.NoResultException e) {
             // Trả về giá trị mặc định nếu không có cấu hình
@@ -197,20 +203,23 @@ public class ClassScoreTypeRepositoryImpl implements ClassScoreTypeRepository {
         try {
             Session session = sessionFactory.getObject().getCurrentSession();
 
-            // Truy vấn trực tiếp các entity bằng các ID
-            String hql = "FROM Classscoretypes c WHERE c.classId.id = :classId AND "
-                    + "c.subjectTeacherId.id = :subjectTeacherId AND "
-                    + "c.schoolYearId.id = :schoolYearId AND "
-                    + "c.scoreType.scoreType = :scoreType";
+            // Sử dụng CriteriaBuilder để kiểm tra tồn tại
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Classscoretypes> query = builder.createQuery(Classscoretypes.class);
+            Root<Classscoretypes> root = query.from(Classscoretypes.class);
 
-            org.hibernate.query.Query query = session.createQuery(hql);
-            query.setParameter("classId", classId);
-            query.setParameter("subjectTeacherId", subjectTeacherId);
-            query.setParameter("schoolYearId", schoolYearId);
-            query.setParameter("scoreType", scoreType);
+            // Tạo các điều kiện
+            Predicate classIdPredicate = builder.equal(root.get("classId").get("id"), classId);
+            Predicate subjectTeacherIdPredicate = builder.equal(root.get("subjectTeacherId").get("id"), subjectTeacherId);
+            Predicate schoolYearIdPredicate = builder.equal(root.get("schoolYearId").get("id"), schoolYearId);
+            Predicate scoreTypePredicate = builder.equal(root.get("scoreType").get("scoreType"), scoreType);
+
+            // Kết hợp các điều kiện
+            query.where(builder.and(classIdPredicate, subjectTeacherIdPredicate, schoolYearIdPredicate, scoreTypePredicate));
+
             Classscoretypes existingType = null;
             try {
-                existingType = (Classscoretypes) query.uniqueResult();
+                existingType = session.createQuery(query).uniqueResult();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

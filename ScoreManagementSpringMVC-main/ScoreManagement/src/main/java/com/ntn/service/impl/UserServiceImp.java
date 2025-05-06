@@ -62,6 +62,11 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
+    public boolean isUsernameExists(String username) {
+        return userRepo.isUsernameExists(username);
+    }
+
+    @Override
     public boolean isEmailExistsInUserTable(String email) {
         return this.userRepo.isEmailExistsInUserTable(email);
     }

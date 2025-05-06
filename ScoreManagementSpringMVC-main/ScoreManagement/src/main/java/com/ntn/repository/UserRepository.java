@@ -26,6 +26,8 @@ public interface UserRepository {
     List<Map<String, Object>> getUsersByRole(String role);
 
     List<Teacher> getTeacherByEmail(String email);
+    
+    boolean isUsernameExists(String username);
 
     boolean isEmailExistsInUserTable(String email);
 

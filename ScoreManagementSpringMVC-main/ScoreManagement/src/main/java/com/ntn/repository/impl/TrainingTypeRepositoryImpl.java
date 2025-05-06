@@ -4,10 +4,13 @@
  */
 package com.ntn.repository.impl;
 
+import com.ntn.pojo.Major;
 import com.ntn.pojo.Trainingtype;
 import com.ntn.repository.TrainingTypeRepository;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import java.util.List;
-import org.hibernate.query.Query;
 import java.util.ArrayList;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -15,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
 
 @Repository
 @Transactional
@@ -28,8 +30,14 @@ public class TrainingTypeRepositoryImpl implements TrainingTypeRepository {
     public List<Trainingtype> getTrainingTypes() {
         Session session = this.factory.getObject().getCurrentSession();
         try {
-            Query<Trainingtype> query = session.createQuery("FROM Trainingtype ORDER BY id", Trainingtype.class);
-            return query.getResultList();
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Trainingtype> query = builder.createQuery(Trainingtype.class);
+            Root<Trainingtype> root = query.from(Trainingtype.class);
+
+            query.select(root);
+            query.orderBy(builder.asc(root.get("id")));
+
+            return session.createQuery(query).getResultList();
         } catch (HibernateException ex) {
             ex.printStackTrace();
             return new ArrayList<>();
@@ -51,9 +59,15 @@ public class TrainingTypeRepositoryImpl implements TrainingTypeRepository {
     public Trainingtype getTrainingTypeByName(String name) {
         Session session = this.factory.getObject().getCurrentSession();
         try {
-            Query<Trainingtype> query = session.createQuery("FROM Trainingtype WHERE trainingTypeName = :name", Trainingtype.class);
-            query.setParameter("name", name);
-            List<Trainingtype> result = query.getResultList();
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Trainingtype> query = builder.createQuery(Trainingtype.class);
+            Root<Trainingtype> root = query.from(Trainingtype.class);
+
+            query.select(root);
+            query.where(builder.equal(root.get("trainingTypeName"), name));
+
+            List<Trainingtype> result = session.createQuery(query).getResultList();
+
             if (!result.isEmpty()) {
                 return result.get(0);
             }
@@ -113,10 +127,14 @@ public class TrainingTypeRepositoryImpl implements TrainingTypeRepository {
     public boolean hasRelatedMajors(int trainingTypeId) {
         Session session = this.factory.getObject().getCurrentSession();
         try {
-            Query<Long> query = session.createQuery(
-                    "SELECT COUNT(m) FROM Major m WHERE m.trainingTypeId.id = :trainingTypeId", Long.class);
-            query.setParameter("trainingTypeId", trainingTypeId);
-            return query.getSingleResult() > 0;
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Long> query = builder.createQuery(Long.class);
+            Root<Major> root = query.from(Major.class);
+
+            query.select(builder.count(root));
+            query.where(builder.equal(root.get("trainingTypeId").get("id"), trainingTypeId));
+
+            return session.createQuery(query).getSingleResult() > 0;
         } catch (HibernateException ex) {
             ex.printStackTrace();
             return true; // Mặc định trả về true để đảm bảo an toàn
@@ -127,8 +145,13 @@ public class TrainingTypeRepositoryImpl implements TrainingTypeRepository {
     public int countTrainingTypes() {
         Session session = this.factory.getObject().getCurrentSession();
         try {
-            Query<Long> query = session.createQuery("SELECT COUNT(t) FROM Trainingtype t", Long.class);
-            return query.getSingleResult().intValue();
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Long> query = builder.createQuery(Long.class);
+            Root<Trainingtype> root = query.from(Trainingtype.class);
+
+            query.select(builder.count(root));
+
+            return session.createQuery(query).getSingleResult().intValue();
         } catch (HibernateException ex) {
             ex.printStackTrace();
             return 0;

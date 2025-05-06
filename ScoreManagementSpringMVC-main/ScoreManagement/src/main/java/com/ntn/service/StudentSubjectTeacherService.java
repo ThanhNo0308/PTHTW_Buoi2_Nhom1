@@ -22,6 +22,8 @@ public interface StudentSubjectTeacherService {
     List<Studentsubjectteacher> getBySubjectId(int subjectId);
 
     List<Studentsubjectteacher> getByClassId(int classId);
+    
+    List<Studentsubjectteacher> getByTeachingClassId(int teachingClassId);
 
     List<Studentsubjectteacher> getBySchoolYearIdThroughSubjectTeacher(int schoolYearId);
 

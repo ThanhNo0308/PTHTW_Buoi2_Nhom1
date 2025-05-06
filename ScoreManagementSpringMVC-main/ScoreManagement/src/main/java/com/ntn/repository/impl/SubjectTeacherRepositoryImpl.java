@@ -83,11 +83,12 @@ public class SubjectTeacherRepositoryImpl implements SubjectTeacherRepository {
     public boolean deleteSubjectTeacher(int id) {
         Session session = this.factory.getObject().getCurrentSession();
         try {
-            org.hibernate.query.NativeQuery query = session.createNativeQuery("DELETE FROM subjectteacher WHERE Id = :id");
-            query.setParameter("id", id);
-
-            int result = query.executeUpdate();
-            return result > 0;
+            Subjectteacher subjectTeacher = session.get(Subjectteacher.class, id);
+            if (subjectTeacher != null) {
+                session.remove(subjectTeacher);
+                return true;
+            }
+            return false;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -241,26 +242,21 @@ public class SubjectTeacherRepositoryImpl implements SubjectTeacherRepository {
     public Subjectteacher findByIdClassIdAndSchoolYearId(int id, int classId, int schoolYearId) {
         Session session = this.factory.getObject().getCurrentSession();
         try {
-            String hql = "FROM Subjectteacher s WHERE s.id = :id "
-                    + "AND s.classId.id = :classId "
-                    + "AND s.schoolYearId.id = :schoolYearId";
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Subjectteacher> query = builder.createQuery(Subjectteacher.class);
+            Root<Subjectteacher> root = query.from(Subjectteacher.class);
 
-            // Sửa dòng lỗi - sử dụng TypedQuery thay vì Query thông thường
-            jakarta.persistence.TypedQuery<Subjectteacher> query
-                    = session.createQuery(hql, Subjectteacher.class);
-            query.setParameter("id", id);
-            query.setParameter("classId", classId);
-            query.setParameter("schoolYearId", schoolYearId);
+            // Tạo các điều kiện
+            Predicate idPredicate = builder.equal(root.get("id"), id);
+            Predicate classIdPredicate = builder.equal(root.get("classId").get("id"), classId);
+            Predicate schoolYearIdPredicate = builder.equal(root.get("schoolYearId").get("id"), schoolYearId);
 
-            // Sử dụng getResultList() và kiểm tra kết quả thay vì uniqueResult()
-            List<Subjectteacher> results = query.getResultList();
+            // Kết hợp các điều kiện
+            query.where(builder.and(idPredicate, classIdPredicate, schoolYearIdPredicate));
+
+            // Lấy kết quả
+            List<Subjectteacher> results = session.createQuery(query).getResultList();
             Subjectteacher result = results.isEmpty() ? null : results.get(0);
-
-            if (result != null) {
-                System.out.println("Found SubjectTeacher with ID: " + result.getId());
-            } else {
-                System.out.println("No matching SubjectTeacher found");
-            }
 
             return result;
         } catch (Exception e) {

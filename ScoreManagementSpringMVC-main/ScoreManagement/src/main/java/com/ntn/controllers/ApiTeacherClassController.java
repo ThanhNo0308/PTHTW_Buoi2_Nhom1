@@ -14,7 +14,6 @@ import com.ntn.service.StudentService;
 import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TeacherService;
 import com.ntn.service.TypeScoreService;
-import com.ntn.service.UserService;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;

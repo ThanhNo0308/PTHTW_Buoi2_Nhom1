@@ -106,7 +106,7 @@ public class ClassRepositoryImpl implements ClassRepository {
                 // Cập nhật - đã có ID
                 session.merge(classObj);
             }
-            session.flush();  
+            session.flush();
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -118,7 +118,17 @@ public class ClassRepositoryImpl implements ClassRepository {
     @Override
     public Class getClassById(int classId) {
         Session session = this.factory.getObject().getCurrentSession();
-        return session.get(Class.class, classId);
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Class> query = builder.createQuery(Class.class);
+        Root<Class> root = query.from(Class.class);
+
+        query.where(builder.equal(root.get("id"), classId));
+
+        try {
+            return session.createQuery(query).getSingleResult();
+        } catch (jakarta.persistence.NoResultException e) {
+            return null;
+        }
     }
 
     @Override
@@ -137,10 +147,14 @@ public class ClassRepositoryImpl implements ClassRepository {
 
     @Override
     public int countClasses() {
-        Session s = this.factory.getObject().getCurrentSession();
-        Query query = s.createQuery("SELECT COUNT(c) FROM Class c");
-        return ((Long) query.getSingleResult()).intValue();
-    }
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Class> root = query.from(Class.class);
 
+        query.select(builder.count(root));
+
+        return session.createQuery(query).getSingleResult().intValue();
+    }
 
 }

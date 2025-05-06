@@ -29,7 +29,7 @@ public class TeacherRepositoryImp implements TeacherRepository {
 
     @Autowired
     private LocalSessionFactoryBean factory;
-    
+
     @Override
     public boolean addOrUpdateTeacher(Teacher teacher) {
         Session s = this.factory.getObject().getCurrentSession();
@@ -73,23 +73,22 @@ public class TeacherRepositoryImp implements TeacherRepository {
 
         // Đầu tiên lấy thông tin user
         User user = session.get(User.class, userId);
-        if (user == null) {
+        if (user == null || user.getEmail() == null || user.getEmail().isEmpty()) {
             return null;
         }
 
         // Sau đó tìm teacher dựa trên email
         String email = user.getEmail();
-        if (email == null || email.isEmpty()) {
-            return null;
-        }
 
-        String hql = "FROM Teacher t WHERE t.email = :email";
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Teacher> query = builder.createQuery(Teacher.class);
+        Root<Teacher> root = query.from(Teacher.class);
 
-        Query query = session.createQuery(hql);
-        query.setParameter("email", email);
+        query.select(root);
+        query.where(builder.equal(root.get("email"), email));
 
         try {
-            return (Teacher) query.getSingleResult();
+            return session.createQuery(query).getSingleResult();
         } catch (NoResultException ex) {
             return null;
         }
@@ -108,9 +107,14 @@ public class TeacherRepositoryImp implements TeacherRepository {
 
     @Override
     public int countTeachers() {
-        Session s = this.factory.getObject().getCurrentSession();
-        Query query = s.createQuery("SELECT COUNT(t) FROM Teacher t");
-        return ((Long) query.getSingleResult()).intValue();
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Teacher> root = query.from(Teacher.class);
+
+        query.select(builder.count(root));
+
+        return session.createQuery(query).getSingleResult().intValue();
     }
 
     @Override
@@ -127,14 +131,17 @@ public class TeacherRepositoryImp implements TeacherRepository {
             return null;
         }
 
-        String hql = "FROM Teacher t WHERE t.email = :email";
-        Query query = session.createQuery(hql);
-        query.setParameter("email", email);
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Teacher> query = builder.createQuery(Teacher.class);
+        Root<Teacher> root = query.from(Teacher.class);
+
+        query.select(root);
+        query.where(builder.equal(root.get("email"), email));
 
         try {
-            return (Teacher) query.getSingleResult();
+            return session.createQuery(query).getSingleResult();
         } catch (NoResultException ex) {
-            System.out.println("Không tìm thấy giảng viên với email: " + email);
+            System.err.println("Không tìm thấy giảng viên với email: " + email);
             return null;
         }
     }

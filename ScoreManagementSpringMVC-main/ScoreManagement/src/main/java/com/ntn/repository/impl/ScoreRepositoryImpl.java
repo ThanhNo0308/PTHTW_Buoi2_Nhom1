@@ -77,7 +77,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
 
     @Autowired
     private ClassService classService;
-    
+
     @Autowired
     private StudentService studentService;
 
@@ -169,16 +169,20 @@ public class ScoreRepositoryImpl implements ScoreRepository {
 
             for (Score score : scores) {
                 // Kiểm tra xem điểm đã tồn tại chưa
-                Query query = session.createQuery(
-                        "FROM Score WHERE studentID.id = :studentId AND subjectTeacherID.id = :subjectTeacherId "
-                        + "AND scoreType.scoreType = :scoreType AND schoolYearId.id = :schoolYearId");
+                CriteriaBuilder builder = session.getCriteriaBuilder();
+                CriteriaQuery<Score> query = builder.createQuery(Score.class);
+                Root<Score> root = query.from(Score.class);
 
-                query.setParameter("studentId", score.getStudentID().getId());
-                query.setParameter("subjectTeacherId", score.getSubjectTeacherID().getId());
-                query.setParameter("scoreType", score.getScoreType().getScoreType());
-                query.setParameter("schoolYearId", score.getSchoolYearId().getId());
+                // Tạo các điều kiện
+                Predicate studentIdPredicate = builder.equal(root.get("studentID").get("id"), score.getStudentID().getId());
+                Predicate subjectTeacherIdPredicate = builder.equal(root.get("subjectTeacherID").get("id"), score.getSubjectTeacherID().getId());
+                Predicate scoreTypePredicate = builder.equal(root.get("scoreType").get("scoreType"), score.getScoreType().getScoreType());
+                Predicate schoolYearIdPredicate = builder.equal(root.get("schoolYearId").get("id"), score.getSchoolYearId().getId());
 
-                List<Score> existingScores = query.getResultList();
+                // Kết hợp các điều kiện
+                query.where(builder.and(studentIdPredicate, subjectTeacherIdPredicate, scoreTypePredicate, schoolYearIdPredicate));
+
+                List<Score> existingScores = session.createQuery(query).getResultList();
 
                 if (!existingScores.isEmpty()) {
                     // Cập nhật điểm
@@ -186,7 +190,6 @@ public class ScoreRepositoryImpl implements ScoreRepository {
                     existingScore.setScoreValue(score.getScoreValue());
 
                     // Chỉ cập nhật trạng thái nháp/khóa nếu trạng thái mới không mâu thuẫn với trạng thái hiện tại
-                    // Nguyên tắc: Nếu điểm đã khóa, không được chuyển thành nháp
                     if (existingScore.getIsLocked() && score.getIsLocked() != null && !score.getIsLocked()) {
                         // Giữ nguyên trạng thái đã khóa nếu điểm đang bị khóa và trạng thái mới là mở khóa
                     } else {
@@ -245,13 +248,6 @@ public class ScoreRepositoryImpl implements ScoreRepository {
             if (subjectTeacher == null) {
                 // Nếu không tìm thấy với 3 tiêu chí, thử tìm chỉ với ID
                 subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
-
-                // Log cảnh báo nếu classId không khớp
-                if (subjectTeacher != null && subjectTeacher.getClassId() != null
-                        && subjectTeacher.getClassId().getId() != classId) {
-                    System.out.println("WARNING: ClassId mismatch! Selected classId=" + classId
-                            + ", but subjectTeacher has classId=" + subjectTeacher.getClassId().getId());
-                }
             }
 
             if (subjectTeacher == null) {
@@ -358,32 +354,97 @@ public class ScoreRepositoryImpl implements ScoreRepository {
         }
     }
 
-    // Hàm hỗ trợ tìm loại điểm (không phân biệt hoa thường và khoảng trắng)
-    private Typescore findScoreType(String headerName) {
-        // Tìm chính xác trước
-        Typescore typeScore = typeScoreService.getScoreTypeByName(headerName);
-        if (typeScore != null) {
-            return typeScore;
-        }
+    @Override
+    public boolean saveScoresDraft(List<Score> scores) {
+        try {
+            Session session = this.factory.getObject().getCurrentSession();
 
-        // Nếu không tìm thấy, thử so sánh không phân biệt hoa thường và khoảng trắng
-        List<Typescore> allTypes = typeScoreService.getAllScoreTypes();
-        String normalizedHeader = normalizeString(headerName);
+            for (Score score : scores) {
+                // Kiểm tra xem điểm đã tồn tại chưa
+                CriteriaBuilder builder = session.getCriteriaBuilder();
+                CriteriaQuery<Score> query = builder.createQuery(Score.class);
+                Root<Score> root = query.from(Score.class);
 
-        for (Typescore type : allTypes) {
-            if (normalizeString(type.getScoreType()).equals(normalizedHeader)) {
-                return type;
+                // Tạo các điều kiện
+                Predicate studentIdPredicate = builder.equal(root.get("studentID").get("id"), score.getStudentID().getId());
+                Predicate subjectTeacherIdPredicate = builder.equal(root.get("subjectTeacherID").get("id"), score.getSubjectTeacherID().getId());
+                Predicate scoreTypePredicate = builder.equal(root.get("scoreType").get("scoreType"), score.getScoreType().getScoreType());
+                Predicate schoolYearIdPredicate = builder.equal(root.get("schoolYearId").get("id"), score.getSchoolYearId().getId());
+
+                // Kết hợp các điều kiện
+                query.where(builder.and(studentIdPredicate, subjectTeacherIdPredicate, scoreTypePredicate, schoolYearIdPredicate));
+
+                List<Score> existingScores = session.createQuery(query).getResultList();
+
+                if (!existingScores.isEmpty()) {
+                    // Cập nhật điểm
+                    Score existingScore = existingScores.get(0);
+
+                    // Nếu điểm đã bị khóa, giữ nguyên trạng thái khóa
+                    if (existingScore.getIsLocked() != null && existingScore.getIsLocked()) {
+                        // Chỉ cập nhật giá trị điểm nếu điểm mới khác điểm cũ
+                        if (!existingScore.getScoreValue().equals(score.getScoreValue())) {
+                            existingScore.setScoreValue(score.getScoreValue());
+                            session.update(existingScore);
+                        }
+                    } else {
+                        // Điểm chưa bị khóa, cập nhật bình thường
+                        existingScore.setScoreValue(score.getScoreValue());
+                        existingScore.setIsDraft(true); // Luôn là nháp
+                        existingScore.setIsLocked(false); // Không khóa
+                        session.update(existingScore);
+                    }
+                } else {
+                    // Tạo mới điểm
+                    score.setIsDraft(true); // Luôn là nháp
+                    score.setIsLocked(false); // Không khóa
+                    session.save(score);
+                }
             }
-        }
 
-        return null;
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
-    private String normalizeString(String input) {
-        if (input == null) {
-            return "";
+    @Override
+    public boolean deleteScore(Integer scoreId) {
+        try {
+            Session session = this.factory.getObject().getCurrentSession();
+            Score score = session.get(Score.class, scoreId);
+            if (score != null) {
+                session.delete(score);
+                return true;
+            }
+            return false;
+        } catch (HibernateException e) {
+            e.printStackTrace();
+            return false;
         }
-        return input.trim().toLowerCase();
+    }
+
+    @Override
+    public boolean toggleScoreLock(int scoreId, boolean unlock) {
+        try {
+            Session session = this.factory.getObject().getCurrentSession();
+            Score score = session.get(Score.class, scoreId);
+
+            if (score != null) {
+                // Cập nhật trạng thái khóa
+                score.setIsLocked(!unlock); // true = khóa, false = mở khóa
+
+                score.setIsDraft(unlock);
+
+                session.update(score);
+                return true;
+            }
+            return false;
+        } catch (HibernateException ex) {
+            ex.printStackTrace();
+            return false;
+        }
     }
 
     @Override
@@ -648,6 +709,34 @@ public class ScoreRepositoryImpl implements ScoreRepository {
         return out.toByteArray();
     }
 
+    // Hàm hỗ trợ tìm loại điểm (không phân biệt hoa thường và khoảng trắng)
+    private Typescore findScoreType(String headerName) {
+        // Tìm chính xác trước
+        Typescore typeScore = typeScoreService.getScoreTypeByName(headerName);
+        if (typeScore != null) {
+            return typeScore;
+        }
+
+        // Nếu không tìm thấy, thử so sánh không phân biệt hoa thường và khoảng trắng
+        List<Typescore> allTypes = typeScoreService.getAllScoreTypes();
+        String normalizedHeader = normalizeString(headerName);
+
+        for (Typescore type : allTypes) {
+            if (normalizeString(type.getScoreType()).equals(normalizedHeader)) {
+                return type;
+            }
+        }
+
+        return null;
+    }
+
+    private String normalizeString(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input.trim().toLowerCase();
+    }
+
     private void addInfoRow(PdfPTable table, String label, String value, Font font) {
         PdfPCell labelCell = new PdfPCell(new Phrase(label, font));
         labelCell.setHorizontalAlignment(Element.ALIGN_LEFT);
@@ -810,97 +899,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
                 }
             }
         }
-
         return totalWeight > 0 ? totalWeightedScore / totalWeight : null;
-    }
-
-    @Override
-    public boolean saveScoresDraft(List<Score> scores) {
-        try {
-            Session session = this.factory.getObject().getCurrentSession();
-
-            for (Score score : scores) {
-                // Kiểm tra xem điểm đã tồn tại chưa
-                Query query = session.createQuery(
-                        "FROM Score WHERE studentID.id = :studentId AND subjectTeacherID.id = :subjectTeacherId "
-                        + "AND scoreType.scoreType = :scoreType AND schoolYearId.id = :schoolYearId");
-
-                query.setParameter("studentId", score.getStudentID().getId());
-                query.setParameter("subjectTeacherId", score.getSubjectTeacherID().getId());
-                query.setParameter("scoreType", score.getScoreType().getScoreType());
-                query.setParameter("schoolYearId", score.getSchoolYearId().getId());
-
-                List<Score> existingScores = query.getResultList();
-
-                if (!existingScores.isEmpty()) {
-                    // Cập nhật điểm
-                    Score existingScore = existingScores.get(0);
-
-                    // Nếu điểm đã bị khóa, giữ nguyên trạng thái khóa
-                    if (existingScore.getIsLocked() != null && existingScore.getIsLocked()) {
-                        // Chỉ cập nhật giá trị điểm nếu điểm mới khác điểm cũ
-                        if (!existingScore.getScoreValue().equals(score.getScoreValue())) {
-                            existingScore.setScoreValue(score.getScoreValue());
-                            session.update(existingScore);
-                        }
-                    } else {
-                        // Điểm chưa bị khóa, cập nhật bình thường
-                        existingScore.setScoreValue(score.getScoreValue());
-                        existingScore.setIsDraft(true); // Luôn là nháp
-                        existingScore.setIsLocked(false); // Không khóa
-                        session.update(existingScore);
-                    }
-                } else {
-                    // Tạo mới điểm
-                    score.setIsDraft(true); // Luôn là nháp
-                    score.setIsLocked(false); // Không khóa
-                    session.save(score);
-                }
-            }
-
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
-    public boolean deleteScore(Integer scoreId) {
-        try {
-            Session session = this.factory.getObject().getCurrentSession();
-            Score score = session.get(Score.class, scoreId);
-            if (score != null) {
-                session.delete(score);
-                return true;
-            }
-            return false;
-        } catch (HibernateException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
-    public boolean toggleScoreLock(int scoreId, boolean unlock) {
-        try {
-            Session session = this.factory.getObject().getCurrentSession();
-            Score score = session.get(Score.class, scoreId);
-
-            if (score != null) {
-                // Cập nhật trạng thái khóa
-                score.setIsLocked(!unlock); // true = khóa, false = mở khóa
-
-                score.setIsDraft(unlock);
-
-                session.update(score);
-                return true;
-            }
-            return false;
-        } catch (HibernateException ex) {
-            ex.printStackTrace();
-            return false;
-        }
     }
 
 }

@@ -9,7 +9,6 @@ import com.ntn.pojo.Subject;
 import com.ntn.repository.SubjectRepository;
 import java.util.ArrayList;
 import java.util.List;
-import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -29,13 +28,15 @@ public class SubjectRepositoryImpl implements SubjectRepository {
 
     @Override
     public List<Subject> getSubjects() {
-        Session s = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder b = s.getCriteriaBuilder();
-        CriteriaQuery<Subject> q = b.createQuery(Subject.class);
-        Root root = q.from(Subject.class);
-        q.select(root);
-        Query query = s.createQuery(q);
-        return query.getResultList();
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Subject> query = builder.createQuery(Subject.class);
+        Root<Subject> root = query.from(Subject.class);
+
+        query.select(root);
+        query.orderBy(builder.asc(root.get("subjectName")));
+
+        return session.createQuery(query).getResultList();
     }
 
     @Override
@@ -154,8 +155,6 @@ public class SubjectRepositoryImpl implements SubjectRepository {
             }
 
             session.flush();
-
-            System.out.println("Saved subject with ID: " + subject.getId());
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -169,11 +168,13 @@ public class SubjectRepositoryImpl implements SubjectRepository {
         Session session = this.factory.getObject().getCurrentSession();
 
         try {
-            jakarta.persistence.Query query = session.createNativeQuery("DELETE FROM subject WHERE Id = :id");
-            query.setParameter("id", subjectId);
-
-            int result = query.executeUpdate();
-            return result > 0;
+            Subject subject = session.get(Subject.class, subjectId);
+            if (subject != null) {
+                session.remove(subject);
+                session.flush();
+                return true;
+            }
+            return false;
         } catch (Exception ex) {
             ex.printStackTrace();
             return false;

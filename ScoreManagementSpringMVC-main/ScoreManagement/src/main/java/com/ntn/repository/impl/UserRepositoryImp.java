@@ -10,7 +10,6 @@ import com.ntn.pojo.User;
 import com.ntn.repository.UserRepository;
 import jakarta.persistence.NoResultException;
 import java.util.List;
-import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
@@ -33,18 +32,20 @@ public class UserRepositoryImp implements UserRepository {
     private LocalSessionFactoryBean factory;
     @Autowired
     private BCryptPasswordEncoder passEncoder;
-    @Autowired
-    private UserRepository userRepository;
 
     @Override
     public User getUserByUsername(String username) {
         Session session = this.factory.getObject().getCurrentSession();
-        String hql = "FROM User u WHERE u.username = :username";
-        Query query = session.createQuery(hql);
-        query.setParameter("username", username);
+
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<User> query = builder.createQuery(User.class);
+        Root<User> root = query.from(User.class);
+
+        query.select(root);
+        query.where(builder.equal(root.get("username"), username));
 
         try {
-            return (User) query.getSingleResult();
+            return session.createQuery(query).getSingleResult();
         } catch (NoResultException ex) {
             return null;
         }
@@ -76,45 +77,77 @@ public class UserRepositoryImp implements UserRepository {
     @Override
     public boolean findEmail(String email) {
         Session s = this.factory.getObject().getCurrentSession();
-        Query q = s.createQuery("FROM Student WHERE email=:email");
-        q.setParameter("email", email);
 
-        // Lấy danh sách kết quả
-        List<Student> students = q.getResultList();
+        CriteriaBuilder builder = s.getCriteriaBuilder();
+        CriteriaQuery<Student> query = builder.createQuery(Student.class);
+        Root<Student> root = query.from(Student.class);
 
-        // Kiểm tra xem danh sách có phần tử nào không
+        query.select(root);
+        query.where(builder.equal(root.get("email"), email));
+
+        List<Student> students = s.createQuery(query).getResultList();
+
         return !students.isEmpty();
+    }
+
+    @Override
+    public boolean isUsernameExists(String username) {
+        Session session = this.factory.getObject().getCurrentSession();
+
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<User> root = query.from(User.class);
+
+        query.select(builder.count(root));
+        query.where(builder.equal(root.get("username"), username));
+
+        Long count = session.createQuery(query).getSingleResult();
+        return count > 0;
     }
 
     @Override
     public boolean isEmailExistsInUserTable(String email) {
         Session s = this.factory.getObject().getCurrentSession();
-        Query q = s.createQuery("FROM User WHERE email = :email");
-        q.setParameter("email", email);
-        return !q.getResultList().isEmpty();
+
+        CriteriaBuilder builder = s.getCriteriaBuilder();
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<User> root = query.from(User.class);
+
+        query.select(builder.count(root));
+        query.where(builder.equal(root.get("email"), email));
+
+        Long count = s.createQuery(query).getSingleResult();
+        return count > 0;
     }
 
     @Override
     public boolean findTeacherEmail(String email) {
         Session session = this.factory.getObject().getCurrentSession();
-        Query query = session.createQuery("FROM Teacher WHERE email = :email", Teacher.class);
-        query.setParameter("email", email);
 
-        List<Teacher> teachers = query.getResultList();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Teacher> root = query.from(Teacher.class);
 
-        return !teachers.isEmpty();
+        query.select(builder.count(root));
+        query.where(builder.equal(root.get("email"), email));
 
+        Long count = session.createQuery(query).getSingleResult();
+
+        return count > 0;
     }
 
     @Override
     public List<Teacher> getTeacherByEmail(String email) {
         Session session = this.factory.getObject().getCurrentSession();
-        Query query = session.createQuery("FROM Teacher WHERE email = :email", Teacher.class);
-        query.setParameter("email", email);
 
-        List<Teacher> teachers = query.getResultList();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Teacher> query = builder.createQuery(Teacher.class);
+        Root<Teacher> root = query.from(Teacher.class);
 
-        return teachers;
+        query.select(root);
+        query.where(builder.equal(root.get("email"), email));
+
+        return session.createQuery(query).getResultList();
     }
 
     @Override
@@ -158,8 +191,15 @@ public class UserRepositoryImp implements UserRepository {
     @Override
     public List<User> getUsers() {
         Session s = this.factory.getObject().getCurrentSession();
-        jakarta.persistence.TypedQuery<User> q = s.createQuery("FROM User ORDER BY id", User.class);
-        return q.getResultList();
+
+        CriteriaBuilder builder = s.getCriteriaBuilder();
+        CriteriaQuery<User> query = builder.createQuery(User.class);
+        Root<User> root = query.from(User.class);
+
+        query.select(root);
+        query.orderBy(builder.asc(root.get("id")));
+
+        return s.createQuery(query).getResultList();
     }
 
     @Override
@@ -216,7 +256,7 @@ public class UserRepositoryImp implements UserRepository {
             }
 
             // Lưu đối tượng đã cập nhật vào cơ sở dữ liệu
-            this.userRepository.saveUser(existingUser);
+            s.saveOrUpdate(existingUser);
             return true;
         } catch (HibernateException ex) {
             ex.printStackTrace();
@@ -260,11 +300,18 @@ public class UserRepositoryImp implements UserRepository {
             // Chuyển đổi chuỗi role thành Enum User.Role
             User.Role roleEnum = User.Role.valueOf(role);
 
-            String hql = "SELECT u.id, u.username, u.email FROM User u WHERE u.role = :role";
-            Query query = session.createQuery(hql);
-            query.setParameter("role", roleEnum);
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Object[]> query = builder.createQuery(Object[].class);
+            Root<User> root = query.from(User.class);
 
-            List<Object[]> results = query.getResultList();
+            query.multiselect(
+                    root.get("id"),
+                    root.get("username"),
+                    root.get("email")
+            );
+            query.where(builder.equal(root.get("role"), roleEnum));
+
+            List<Object[]> results = session.createQuery(query).getResultList();
             List<Map<String, Object>> users = new ArrayList<>();
 
             for (Object[] row : results) {

@@ -103,7 +103,7 @@ public class UserController {
         // Thực hiện đăng ký người dùng giáo viên
         User user = userService.addTeacherUser(params);
         if (user != null) {
-            return "redirect:/admin/register?successs";
+            return "redirect:/admin/register?success";
         } else {
             return "redirect:/admin/register?error";
         }
@@ -241,6 +241,10 @@ public class UserController {
             return "redirect:/registerStudent?error=email-exists";
         }
 
+        if (userService.isUsernameExists(username)) {
+            return "redirect:/registerStudent?error=username-exists";
+        }
+
         // Kiểm tra xác nhận mật khẩu
         String password = params.get("password");
         String confirmPassword = params.get("confirmPassword");
@@ -265,7 +269,6 @@ public class UserController {
                 return "redirect:/registerStudent?error=system";
             }
         } catch (Exception e) {
-            System.out.println("Lỗi đăng ký: " + e.getMessage());
             return "redirect:/registerStudent?error=system";
         }
     }

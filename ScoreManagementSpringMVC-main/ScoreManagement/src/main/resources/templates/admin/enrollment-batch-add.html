@@ -57,7 +57,7 @@
                                     <option value="">-- Chọn môn học, giảng viên và học kỳ --</option>
                                     <option th:each="st : ${subjectTeachers}" 
                                             th:value="${st.id}" 
-                                            th:text="${st.subjectId.subjectName + ' - ' + st.teacherId.teacherName + ' (' + st.schoolYearId.nameYear + ' - ' + st.schoolYearId.semesterName + ')'}">
+                                            th:text="${st.subjectId.subjectName + ' - ' + st.teacherId.teacherName + ' - ' + (st.classId != null ? st.classId.className : 'Chưa phân lớp') +  ' (' + st.schoolYearId.nameYear + ' - ' + st.schoolYearId.semesterName + ')'}">
                                     </option>
                                 </select>
                             </div>
@@ -80,12 +80,12 @@
                     </div>
                     <div class="card-body">
                         <ol>
-                            <li class="mb-2">Chọn một lớp từ danh sách lớp.</li>
-                            <li class="mb-2">Chọn một phân công giảng dạy (môn học và giảng viên) từ danh sách.</li>
-                            <li class="mb-2">Chọn học kỳ cho việc đăng ký.</li>
+                            <li class="mb-2">Chọn một lớp sinh viên từ danh sách lớp.</li>
+                            <li class="mb-2">Chọn một phân công giảng dạy (môn học, giảng viên và lớp dạy) từ danh sách.</li>
                             <li class="mb-2">Nhấn nút "Đăng ký học theo lớp" để hoàn tất.</li>
                         </ol>
                         <p class="mb-0 text-danger"><strong>Lưu ý:</strong> Hệ thống sẽ tự động kiểm tra và không đăng ký những sinh viên đã đăng ký môn học này trong học kỳ đã chọn.</p>
+                        <p class="mb-0 text-info"><strong>Ghi chú:</strong> Lớp sinh viên và lớp được dạy có thể khác nhau. Sinh viên sẽ được đăng ký học theo phân công giảng dạy đã chọn.</p>
                     </div>
                 </div>
             </div>

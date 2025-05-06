@@ -50,8 +50,6 @@ public class JwtFilter implements Filter {
         if (uri.contains("/api/")) {
             String header = httpRequest.getHeader("Authorization");
 
-            System.out.println("Auth header for " + uri + ": " + header);
-
             if (header == null || !header.startsWith("Bearer ")) {
                 httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Thiếu token hoặc token không hợp lệ.");
                 return;

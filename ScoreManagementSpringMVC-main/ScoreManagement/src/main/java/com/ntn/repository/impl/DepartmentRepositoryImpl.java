@@ -5,9 +5,11 @@
 package com.ntn.repository.impl;
 
 import com.ntn.pojo.Department;
+import com.ntn.pojo.Major;
+import com.ntn.pojo.Subject;
+import com.ntn.pojo.Teacher;
 import com.ntn.repository.DepartmentRepository;
 import java.util.List;
-import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
@@ -87,41 +89,56 @@ public class DepartmentRepositoryImpl implements DepartmentRepository {
         Session session = this.factory.getObject().getCurrentSession();
 
         try {
-            // Kiểm tra có ngành học nào thuộc khoa không
-            Query checkMajor = session.createQuery("SELECT COUNT(m) FROM Major m WHERE m.departmentId.id = :departmentId");
-            checkMajor.setParameter("departmentId", departmentId);
-            Long majorCount = (Long) checkMajor.getSingleResult();
+            // Kiểm tra ngành học thuộc khoa 
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Long> majorQuery = builder.createQuery(Long.class);
+            Root<Major> majorRoot = majorQuery.from(Major.class);
 
+            majorQuery.select(builder.count(majorRoot));
+            majorQuery.where(builder.equal(majorRoot.get("departmentId").get("id"), departmentId));
+
+            Long majorCount = session.createQuery(majorQuery).getSingleResult();
             if (majorCount > 0) {
                 return true;
             }
 
-            // Kiểm tra có giảng viên nào thuộc khoa không
-            Query checkTeacher = session.createQuery("SELECT COUNT(t) FROM Teacher t WHERE t.departmentId.id = :departmentId");
-            checkTeacher.setParameter("departmentId", departmentId);
-            Long teacherCount = (Long) checkTeacher.getSingleResult();
+            // Kiểm tra giảng viên thuộc khoa 
+            CriteriaQuery<Long> teacherQuery = builder.createQuery(Long.class);
+            Root<Teacher> teacherRoot = teacherQuery.from(Teacher.class);
 
+            teacherQuery.select(builder.count(teacherRoot));
+            teacherQuery.where(builder.equal(teacherRoot.get("departmentId").get("id"), departmentId));
+
+            Long teacherCount = session.createQuery(teacherQuery).getSingleResult();
             if (teacherCount > 0) {
                 return true;
             }
 
-            // Kiểm tra có môn học nào thuộc khoa không
-            Query checkSubject = session.createQuery("SELECT COUNT(s) FROM Subject s WHERE s.departmentID.id = :departmentId");
-            checkSubject.setParameter("departmentId", departmentId);
-            Long subjectCount = (Long) checkSubject.getSingleResult();
+            // Kiểm tra môn học thuộc khoa 
+            CriteriaQuery<Long> subjectQuery = builder.createQuery(Long.class);
+            Root<Subject> subjectRoot = subjectQuery.from(Subject.class);
 
+            subjectQuery.select(builder.count(subjectRoot));
+            subjectQuery.where(builder.equal(subjectRoot.get("departmentID").get("id"), departmentId));
+
+            Long subjectCount = session.createQuery(subjectQuery).getSingleResult();
             return subjectCount > 0;
         } catch (Exception e) {
             e.printStackTrace();
-            return true; // Nếu có lỗi, giả định là có dữ liệu liên quan để tránh xóa không an toàn
+            return true; // Nếu có lỗi, giả định là có dữ liệu liên quan
         }
     }
 
     @Override
     public long countDepartments() {
         Session session = this.factory.getObject().getCurrentSession();
-        Query q = session.createQuery("SELECT COUNT(*) FROM Department");
-        return (long) q.getSingleResult();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Department> root = query.from(Department.class);
+
+        query.select(builder.count(root));
+
+        return session.createQuery(query).getSingleResult();
     }
 
 }

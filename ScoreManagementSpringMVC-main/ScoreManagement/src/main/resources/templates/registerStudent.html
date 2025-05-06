@@ -24,6 +24,7 @@
                     <i class="fas fa-exclamation-circle me-2"></i>
                     <span th:switch="${param.error[0]}">
                         <span th:case="'email-exists'">Email này đã được đăng ký trong hệ thống. Vui lòng sử dụng email khác.</span>
+                        <span th:case="'username-exists'">Tên đăng nhập đã tồn tại. Vui lòng chọn tên đăng nhập khác.</span>
                         <span th:case="'email'">Email không hợp lệ hoặc không tồn tại trong hệ thống.</span>
                         <span th:case="'password'">Mật khẩu không khớp hoặc không đủ độ dài.</span>
                         <span th:case="'avatar'">Vui lòng chọn ảnh đại diện.</span>

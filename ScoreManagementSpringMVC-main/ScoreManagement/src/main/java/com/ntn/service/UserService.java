@@ -26,6 +26,8 @@ public interface UserService extends UserDetailsService {
     List<User> getUsers();
 
     List<Map<String, Object>> getUsersByRole(String role);
+    
+    boolean isUsernameExists(String username);
 
     boolean isEmailExists(String email);
 

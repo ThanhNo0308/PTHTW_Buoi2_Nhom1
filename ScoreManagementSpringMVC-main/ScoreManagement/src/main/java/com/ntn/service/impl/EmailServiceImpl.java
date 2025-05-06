@@ -95,13 +95,9 @@ public class EmailServiceImpl implements EmailService {
                 // Thêm delay nhỏ để tránh gửi quá nhiều email cùng lúc
                 Thread.sleep(100);
             } catch (Exception e) {
-                // Log lỗi nhưng vẫn tiếp tục với sinh viên tiếp theo
-                System.out.println("Lỗi gửi email cho sinh viên ID " + studentId + ": " + e.getMessage());
                 failCount++;
             }
         }
-
-        System.out.println("Tổng kết gửi email: Thành công: " + successCount + ", Thất bại: " + failCount);
     }
 
     // Phương thức sinh viên

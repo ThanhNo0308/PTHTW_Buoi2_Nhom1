@@ -132,7 +132,7 @@
                         <form th:action="@{/admin/enrollment}" method="get">
                             <div class="input-group">
                                 <select name="classId" class="form-select">
-                                    <option value="">-- Chọn lớp --</option>
+                                    <option value="">-- Chọn lớp sinh viên --</option>
                                     <option th:each="class : ${classes}" 
                                             th:value="${class.id}" 
                                             th:text="${class.className}"
@@ -140,6 +140,22 @@
                                     </option>
                                 </select>
                                 <button class="btn btn-outline-secondary" type="submit">Lọc</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="col-md-4">
+                        <form th:action="@{/admin/enrollment}" method="get">
+                            <div class="input-group">
+                                <select name="teachingClassId" class="form-select">
+                                    <option value="">-- Chọn lớp dạy --</option>
+                                    <option th:each="class : ${classes}" 
+                                            th:value="${class.id}" 
+                                            th:text="${class.className}"
+                                            th:selected="${param.teachingClassId != null && param.teachingClassId[0] == class.id.toString()}">
+                                    </option>
+                                </select>
+                                <button class="btn btn-outline-secondary" type="submit">Lọc theo lớp dạy</button>
                             </div>
                         </form>
                     </div>
@@ -174,9 +190,10 @@
                             <tr>
                                 <th scope="col">ID</th>
                                 <th scope="col">Sinh viên</th>
-                                <th scope="col">Lớp</th>
+                                <th scope="col">Lớp sinh viên</th>
                                 <th scope="col">Môn học</th>
                                 <th scope="col">Giảng viên</th>
+                                <th scope="col">Lớp dạy</th>
                                 <th scope="col">Học kỳ</th>
                                 <th scope="col" sec:authorize="hasAuthority('Admin')">Thao tác</th>
                             </tr>
@@ -190,6 +207,7 @@
                                 <td th:text="${enrollment.studentId.classId != null ? enrollment.studentId.classId.className : ''}"></td>
                                 <td th:text="${enrollment.subjectTeacherId.subjectId.subjectName}"></td>
                                 <td th:text="${enrollment.subjectTeacherId.teacherId.teacherName}"></td>
+                                <td th:text="${enrollment.subjectTeacherId.classId != null ? enrollment.subjectTeacherId.classId.className : 'Không phân lớp dạy'}"></td>
                                 <td th:text="${enrollment.subjectTeacherId.schoolYearId.nameYear + ' - ' + enrollment.subjectTeacherId.schoolYearId.semesterName}"></td>
                                 <td sec:authorize="hasAuthority('Admin')">
                                     <button class="btn btn-sm btn-warning me-1" 
@@ -242,7 +260,7 @@
                                 <option value="">-- Chọn môn học, giảng viên và học kỳ --</option>
                                 <option th:each="st : ${subjectTeachers}" 
                                         th:value="${st.id}" 
-                                        th:text="${st.subjectId.subjectName + ' - ' + st.teacherId.teacherName + ' (' + st.schoolYearId.nameYear + ' - ' + st.schoolYearId.semesterName + ')'}">
+                                        th:text="${st.subjectId.subjectName + ' - ' + st.teacherId.teacherName + ' - ' + (st.classId != null ? st.classId.className : 'Chưa phân lớp') + ' (' + st.schoolYearId.nameYear + ' - ' + st.schoolYearId.semesterName + ')'}">
                                 </option>
                             </select>
                         </div>
@@ -287,7 +305,7 @@
                                 <option value="">-- Chọn môn học, giảng viên và học kỳ --</option>
                                 <option th:each="st : ${subjectTeachers}" 
                                         th:value="${st.id}" 
-                                        th:text="${st.subjectId.subjectName + ' - ' + st.teacherId.teacherName + ' (' + st.schoolYearId.nameYear + ' - ' + st.schoolYearId.semesterName + ')'}">
+                                        th:text="${st.subjectId.subjectName + ' - ' + st.teacherId.teacherName + ' - ' + (st.classId != null ? st.classId.className : 'Chưa phân lớp') + ' (' + st.schoolYearId.nameYear + ' - ' + st.schoolYearId.semesterName + ')'}">
                                 </option>
                             </select>
                         </div>

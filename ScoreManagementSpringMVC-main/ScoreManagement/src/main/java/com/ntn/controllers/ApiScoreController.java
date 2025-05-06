@@ -397,13 +397,6 @@ public class ApiScoreController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
-            // Kiểm tra xem subjectTeacher có đúng classId không
-            if (subjectTeacher.getClassId() == null || subjectTeacher.getClassId().getId() != classId) {
-                System.out.println("Warning: ClassId mismatch! SubjectTeacher has classId="
-                        + (subjectTeacher.getClassId() != null ? subjectTeacher.getClassId().getId() : "null")
-                        + " but requested classId=" + classId);
-            }
-
             // Lấy ra schoolYear từ subjectTeacher
             List<Schoolyear> schoolYears = new ArrayList<>();
             if (subjectTeacher.getSchoolYearId() != null) {

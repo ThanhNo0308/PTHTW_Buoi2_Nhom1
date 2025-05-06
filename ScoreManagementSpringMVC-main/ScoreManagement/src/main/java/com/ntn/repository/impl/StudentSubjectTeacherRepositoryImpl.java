@@ -4,12 +4,12 @@
  */
 package com.ntn.repository.impl;
 
+import com.ntn.pojo.Score;
 import com.ntn.pojo.Student;
 import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.repository.StudentSubjectTeacherRepository;
 import java.util.List;
-import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
@@ -233,11 +233,14 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
         Session session = this.factory.getObject().getCurrentSession();
 
         try {
-            Query checkScores = session.createQuery(
-                    "SELECT COUNT(s) FROM Score s WHERE s.subjectTeacherID.id = :enrollmentId");
-            checkScores.setParameter("enrollmentId", enrollmentId);
-            Long scoreCount = (Long) checkScores.getSingleResult();
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Long> query = builder.createQuery(Long.class);
+            Root<Score> root = query.from(Score.class);
 
+            query.select(builder.count(root));
+            query.where(builder.equal(root.get("subjectTeacherID").get("id"), enrollmentId));
+
+            Long scoreCount = session.createQuery(query).getSingleResult();
             return scoreCount > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -252,12 +255,15 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
         int enrolledCount = 0;
 
         try {
-            // Lấy danh sách sinh viên của lớp
-            Query studentQuery = session.createQuery("FROM Student s WHERE s.classId.id = :classId");
-            studentQuery.setParameter("classId", classId);
-            List<Student> students = studentQuery.getResultList();
+            // Lấy danh sách sinh viên của lớp 
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Student> studentQuery = builder.createQuery(Student.class);
+            Root<Student> studentRoot = studentQuery.from(Student.class);
 
-            // Lấy đối tượng SubjectTeacher
+            studentQuery.where(builder.equal(studentRoot.get("classId").get("id"), classId));
+            List<Student> students = session.createQuery(studentQuery).getResultList();
+
+            // Lấy đối tượng SubjectTeacher (đã dùng session.get nên không cần chuyển)
             Subjectteacher subjectTeacher = session.get(Subjectteacher.class, subjectTeacherId);
 
             if (students.isEmpty() || subjectTeacher == null) {
@@ -266,16 +272,19 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
 
             // Đăng ký cho từng sinh viên
             for (Student student : students) {
-                // Kiểm tra trùng lặp
-                Query checkQuery = session.createQuery(
-                        "SELECT COUNT(sst) FROM Studentsubjectteacher sst "
-                        + "WHERE sst.studentId.id = :studentId "
-                        + "AND sst.subjectTeacherId.id = :subjectTeacherId");
+                // Kiểm tra trùng lặp sử dụng CriteriaBuilder
+                CriteriaQuery<Long> checkQuery = builder.createQuery(Long.class);
+                Root<Studentsubjectteacher> checkRoot = checkQuery.from(Studentsubjectteacher.class);
 
-                checkQuery.setParameter("studentId", student.getId());
-                checkQuery.setParameter("subjectTeacherId", subjectTeacherId);
+                // Tạo các điều kiện
+                Predicate studentIdPredicate = builder.equal(checkRoot.get("studentId").get("id"), student.getId());
+                Predicate subjectTeacherIdPredicate = builder.equal(checkRoot.get("subjectTeacherId").get("id"), subjectTeacherId);
 
-                Long count = (Long) checkQuery.getSingleResult();
+                // Kết hợp các điều kiện
+                checkQuery.select(builder.count(checkRoot))
+                        .where(builder.and(studentIdPredicate, subjectTeacherIdPredicate));
+
+                Long count = session.createQuery(checkQuery).getSingleResult();
 
                 // Nếu chưa đăng ký, thêm mới
                 if (count == 0) {
@@ -303,8 +312,13 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
     @Override
     public long countEnrollments() {
         Session session = this.factory.getObject().getCurrentSession();
-        Query query = session.createQuery("SELECT COUNT(*) FROM Studentsubjectteacher");
-        return (long) query.getSingleResult();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Studentsubjectteacher> root = query.from(Studentsubjectteacher.class);
+
+        query.select(builder.count(root));
+
+        return session.createQuery(query).getSingleResult();
     }
 
     @Override
@@ -328,6 +342,22 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
         return session.createQuery(query)
                 .setHint(QueryHints.HINT_FETCH_SIZE, 50)
                 .getResultList();
+    }
+
+    @Override
+    public List<Studentsubjectteacher> getByTeachingClassId(int teachingClassId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Studentsubjectteacher> query = builder.createQuery(Studentsubjectteacher.class);
+        Root<Studentsubjectteacher> root = query.from(Studentsubjectteacher.class);
+
+        // Join từ Studentsubjectteacher -> SubjectTeacher -> Class (lớp dạy)
+        Join<Studentsubjectteacher, Subjectteacher> subjectTeacherJoin = root.join("subjectTeacherId");
+
+        query.where(builder.equal(subjectTeacherJoin.get("classId").get("id"), teachingClassId));
+        query.orderBy(builder.desc(root.get("id")));
+
+        return session.createQuery(query).getResultList();
     }
 
 }

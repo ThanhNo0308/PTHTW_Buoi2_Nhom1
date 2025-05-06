@@ -111,6 +111,7 @@ public class ApiUserController {
     @PostMapping("/register/student")
     public ResponseEntity<?> registerStudent(@RequestBody Map<String, String> params) {
         String email = params.get("email");
+        String username = params.get("username");
         String password = params.get("password");
         String confirmPassword = params.get("confirmPassword");
         Map<String, Object> response = new HashMap<>();
@@ -129,9 +130,17 @@ public class ApiUserController {
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
+        //Kiểm tra email đã được đăng ký chưa
         if (userService.isEmailExistsInUserTable(email)) {
             response.put("status", "error");
             response.put("message", "Email đã tồn tại trong hệ thống. Vui lòng sử dụng email khác.");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        // Kiểm tra username đã tồn tại chưa
+        if (userService.isUsernameExists(username)) {
+            response.put("status", "error");
+            response.put("message", "Tên đăng nhập đã tồn tại trong hệ thống. Vui lòng chọn tên đăng nhập khác.");
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
@@ -158,7 +167,6 @@ public class ApiUserController {
         }
     }
 
-    
     //Lấy thông tin người dùng hiện tại
     @GetMapping("/current-user")
     public ResponseEntity<?> getCurrentUser(Principal principal) {
@@ -185,7 +193,7 @@ public class ApiUserController {
         userMap.put("identifyCard", user.getIdentifyCard());
         userMap.put("birthdate", user.getBirthdate());
         userMap.put("phone", user.getPhone());
-        userMap.put("active", user.getActive());  
+        userMap.put("active", user.getActive());
 
         response.put("user", userMap);
 

@@ -87,14 +87,17 @@ public class StudentRepositoryImpl implements StudentRepository {
             return null;
         }
 
-        String hql = "FROM Student t WHERE t.email = :email";
-        Query query = session.createQuery(hql);
-        query.setParameter("email", email);
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Student> query = builder.createQuery(Student.class);
+        Root<Student> root = query.from(Student.class);
+
+        query.select(root);
+        query.where(builder.equal(root.get("email"), email));
 
         try {
-            return (Student) query.getSingleResult();
+            return session.createQuery(query).getSingleResult();
         } catch (NoResultException ex) {
-            System.out.println("Không tìm thấy sinh viên với email: " + email);
+            System.err.println("Không tìm thấy sinh viên với email: " + email);
             return null;
         }
     }
@@ -155,9 +158,14 @@ public class StudentRepositoryImpl implements StudentRepository {
 
     @Override
     public int countStudents() {
-        Session s = this.factory.getObject().getCurrentSession();
-        Query query = s.createQuery("SELECT COUNT(s) FROM Student s");
-        return ((Long) query.getSingleResult()).intValue();
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Student> root = query.from(Student.class);
+
+        query.select(builder.count(root));
+
+        return session.createQuery(query).getSingleResult().intValue();
     }
 
     @Override
@@ -175,7 +183,7 @@ public class StudentRepositoryImpl implements StudentRepository {
     public int countStudentsByClassId(int classId) {
         Session session = this.factory.getObject().getCurrentSession();
 
-        // Cách 1: Sử dụng CriteriaQuery
+        // Sử dụng CriteriaQuery
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Long> query = builder.createQuery(Long.class);
         Root<Student> root = query.from(Student.class);
@@ -267,15 +275,16 @@ public class StudentRepositoryImpl implements StudentRepository {
 
     @Override
     public List<Student> getStudentbyEmail(String email) {
-        Session s = this.factory.getObject().getCurrentSession();
-        Query q = s.createQuery("FROM Student WHERE email=:email");
-        q.setParameter("email", email);
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Student> query = builder.createQuery(Student.class);
+        Root<Student> root = query.from(Student.class);
+
+        query.select(root);
+        query.where(builder.equal(root.get("email"), email));
 
         // Lấy danh sách kết quả
-        List<Student> students = q.getResultList();
-
-        // Kiểm tra xem danh sách có phần tử nào không
-        return students;
+        return session.createQuery(query).getResultList();
     }
 
     @Override
