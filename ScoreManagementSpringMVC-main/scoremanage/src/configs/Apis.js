@@ -9,8 +9,6 @@ export const endpoints = {
   "registerstudent": `${SERVER_CONTEXT}/api/register/student`,
   "profile": `${SERVER_CONTEXT}/api/profile`,
   "current-user": `${SERVER_CONTEXT}/api/current-user`,
-  "oauth2-login": `${SERVER_CONTEXT}/api/oauth2/login`,
-  "oauth2-additional-info": `${SERVER_CONTEXT}/api/oauth2/additional-info`,
 
   // API TeacherClasses
   "teacher-classes": `${SERVER_CONTEXT}/api/teacherclass/classes`,
@@ -146,30 +144,6 @@ export const userApis = {
       }
     });
   },
-
-  // Đăng nhập bằng OAuth2
-  oauth2Login: (provider, token) => {
-    return axios.post(`${SERVER}${endpoints["oauth2-login"]}`, {
-      provider,
-      token
-    }, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-  },
-
-  // Gửi thông tin bổ sung cho OAuth2
-  submitAdditionalInfo: (provider, email) => {
-    return API.post(`${endpoints["oauth2-additional-info"]}`, {
-      provider,
-      email
-    }, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-  }
 };
 
 export const teacherClassApis = {
