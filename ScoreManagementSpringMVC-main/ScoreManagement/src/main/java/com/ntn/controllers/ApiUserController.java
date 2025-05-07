@@ -54,6 +54,15 @@ public class ApiUserController {
         boolean isAuthenticated = false;
         Map<String, Object> response = new HashMap<>();
 
+        User user = userService.getUserByUn(username);
+
+        // Kiểm tra tài khoản tồn tại và đang active
+        if (user != null && !user.isActive()) {
+            response.put("status", "error");
+            response.put("message", "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.");
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+
         switch (role) {
             case "Admin":
                 isAuthenticated = userService.authAdminUser(username, password);
@@ -71,7 +80,6 @@ public class ApiUserController {
         }
 
         if (isAuthenticated) {
-            User user = userService.getUserByUn(username);
             response.put("status", "success");
             response.put("message", "Đăng nhập thành công");
 
@@ -83,6 +91,7 @@ public class ApiUserController {
             userMap.put("name", user.getName());
             userMap.put("image", user.getImage());
             userMap.put("role", user.getRole());
+            userMap.put("active", user.getActive());
 
             // Tạo JWT token
             String token = null;

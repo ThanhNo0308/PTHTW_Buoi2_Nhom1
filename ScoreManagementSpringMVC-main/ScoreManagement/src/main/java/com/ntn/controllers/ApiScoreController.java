@@ -1,5 +1,6 @@
 package com.ntn.controllers;
 
+import static com.google.protobuf.Any.parser;
 import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Score;
 import com.ntn.pojo.Class;
@@ -13,6 +14,7 @@ import com.ntn.service.EmailService;
 import com.ntn.service.SchoolYearService;
 import com.ntn.service.ScoreService;
 import com.ntn.service.StudentService;
+import com.ntn.service.StudentSubjectTeacherService;
 import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TeacherService;
 import com.ntn.service.TypeScoreService;
@@ -65,9 +67,12 @@ public class ApiScoreController {
 
     @Autowired
     private TeacherService teacherService;
-    
+
     @Autowired
     private ClassScoreTypeService classScoreTypeService;
+    
+    @Autowired
+    private StudentSubjectTeacherService studentSubjectTeacherService;
 
     // Cấu hình trọng số điểm
     @PostMapping("/classes/{classId}/scores/configure-weights")
@@ -642,6 +647,29 @@ public class ApiScoreController {
                     response.put("missingScoreTypes", missingScoreColumns);
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
+                
+                // Sau khi import điểm thành công, thêm dòng này
+                Set<String> processedStudentCodes = new HashSet<>();
+
+                // Trong quá trình đọc file CSV
+                for (CSVRecord record : parser) {
+                    String studentCode = record.get("MSSV");
+                    Student student = studentService.getStudentByCode(studentCode);
+
+                    if (student != null) {
+                        processedStudentCodes.add(studentCode);
+
+                        // Kiểm tra xem sinh viên đã đăng ký học chưa
+                        boolean alreadyEnrolled = studentSubjectTeacherService.checkDuplicate(student.getId(), subjectTeacherId);
+
+                        // Nếu chưa đăng ký, tự động thêm vào bảng Studentsubjectteacher
+                        if (!alreadyEnrolled) {
+                            studentSubjectTeacherService.addStudentToSubjectTeacher(
+                                    student.getId(), subjectTeacherId, schoolYearId);
+                        }
+                    }
+                }
+
             } catch (org.apache.commons.csv.CSVException csvEx) {
                 // Xử lý lỗi định dạng CSV cụ thể
                 String userFriendlyMessage = "File CSV không đúng định dạng. ";
@@ -664,7 +692,6 @@ public class ApiScoreController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
-            // Nếu tất cả các điều kiện đều thoả mãn, tiến hành import điểm
             // Truyền thêm classId vào phương thức importScoresFromCsv
             boolean success = scoreService.importScoresFromCsv(file, subjectTeacherId, classId, schoolYearId);
 

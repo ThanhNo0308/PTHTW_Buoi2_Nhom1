@@ -4,9 +4,15 @@
  */
 package com.ntn.service.impl;
 
+import com.ntn.pojo.Schoolyear;
+import com.ntn.pojo.Student;
 import com.ntn.pojo.Studentsubjectteacher;
+import com.ntn.pojo.Subjectteacher;
 import com.ntn.repository.StudentSubjectTeacherRepository;
+import com.ntn.service.SchoolYearService;
+import com.ntn.service.StudentService;
 import com.ntn.service.StudentSubjectTeacherService;
+import com.ntn.service.SubjectTeacherService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,6 +22,15 @@ public class StudentSubjectTeacherServiceImpl implements StudentSubjectTeacherSe
 
     @Autowired
     private StudentSubjectTeacherRepository studentSubjectTeacherRepository;
+
+    @Autowired
+    private StudentService studentService;
+    
+    @Autowired
+    private SubjectTeacherService subjectTeacherService;
+    
+    @Autowired
+    private SchoolYearService schoolYearService;
 
     @Override
     public List<Studentsubjectteacher> getBySchoolYearIdThroughSubjectTeacher(int schoolYearId) {
@@ -100,6 +115,30 @@ public class StudentSubjectTeacherServiceImpl implements StudentSubjectTeacherSe
     @Override
     public List<Studentsubjectteacher> getByTeachingClassId(int teachingClassId) {
         return this.studentSubjectTeacherRepository.getByTeachingClassId(teachingClassId);
+    }
+
+    @Override
+    public boolean addStudentToSubjectTeacher(int studentId, int subjectTeacherId, int schoolYearId) {
+        try {
+            // Lấy các đối tượng cần thiết
+            Student student = studentService.getStudentById(studentId);
+            Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
+
+            if (student == null || subjectTeacher == null) {
+                return false;
+            }
+
+            // Tạo đối tượng đăng ký học
+            Studentsubjectteacher enrollment = new Studentsubjectteacher();
+            enrollment.setStudentId(student);
+            enrollment.setSubjectTeacherId(subjectTeacher);
+
+            // Lưu vào database
+            return studentSubjectTeacherRepository.addStudentSubjectTeacher(enrollment);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
 }

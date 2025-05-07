@@ -26,7 +26,7 @@ public interface StudentSubjectTeacherRepository {
     List<Studentsubjectteacher> getBySchoolYearId(int schoolYearId);
 
     List<Studentsubjectteacher> getEnrollmentsByStudentCode(String studentCode);
-    
+
     List<Studentsubjectteacher> getByTeachingClassId(int teachingClassId);
 
     int batchEnrollStudents(int classId, int subjectTeacherId);
@@ -42,5 +42,7 @@ public interface StudentSubjectTeacherRepository {
     boolean checkDuplicateExcept(Integer studentId, Integer subjectTeacherId, Integer exceptId);
 
     boolean hasRelatedScores(int enrollmentId);
+
+    boolean addStudentSubjectTeacher(Studentsubjectteacher enrollment);
 
 }

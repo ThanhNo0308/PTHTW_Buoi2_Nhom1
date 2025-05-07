@@ -40,6 +40,11 @@ public class JwtFilter implements Filter {
             return; // Quan trọng: return ngay lập tức không filter tiếp
         }
 
+        if (uri.contains("/oauth2/") || uri.contains("/login/oauth2/")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         // Kiểm tra URI có chứa "/api/" thay vì bắt đầu bằng "/api/"
         if (uri.contains("/api/login") || uri.contains("/api/register")) {
             chain.doFilter(request, response);

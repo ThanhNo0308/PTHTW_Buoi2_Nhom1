@@ -22,7 +22,7 @@ public interface StudentSubjectTeacherService {
     List<Studentsubjectteacher> getBySubjectId(int subjectId);
 
     List<Studentsubjectteacher> getByClassId(int classId);
-    
+
     List<Studentsubjectteacher> getByTeachingClassId(int teachingClassId);
 
     List<Studentsubjectteacher> getBySchoolYearIdThroughSubjectTeacher(int schoolYearId);
@@ -42,5 +42,7 @@ public interface StudentSubjectTeacherService {
     boolean delete(int id);
 
     boolean hasRelatedScores(int enrollmentId);
+
+    boolean addStudentToSubjectTeacher(int studentId, int subjectTeacherId, int schoolYearId);
 
 }

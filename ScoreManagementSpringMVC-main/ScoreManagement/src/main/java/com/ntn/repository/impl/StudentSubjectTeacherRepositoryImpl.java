@@ -360,4 +360,17 @@ public class StudentSubjectTeacherRepositoryImpl implements StudentSubjectTeache
         return session.createQuery(query).getResultList();
     }
 
+    @Override
+    public boolean addStudentSubjectTeacher(Studentsubjectteacher enrollment) {
+        try {
+            Session session = this.factory.getObject().getCurrentSession();
+            session.persist(enrollment);
+            session.flush();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }

@@ -163,6 +163,17 @@ public class UserController {
             Model model, HttpSession session,
             HttpServletRequest request, HttpServletResponse response) {
 
+        // Kiểm tra tài khoản có tồn tại không
+        User user = userService.getUserByUn(username);
+        if (user == null) {
+            return "redirect:/login?error=true";
+        }
+
+        // Kiểm tra trạng thái tài khoản
+        if (!user.isActive()) {
+            return "redirect:/login?error=inactive";
+        }
+
         // Xác thực người dùng dựa trên role
         boolean isAuthenticated = false;
         String redirectUrl = "";
@@ -188,9 +199,6 @@ public class UserController {
         }
 
         if (isAuthenticated) {
-            // Lấy User object cho Spring Security
-            User user = userService.getUserByUn(username);
-
             // Cấu hình Spring Security authentication
             List<GrantedAuthority> authorities = new ArrayList<>();
             authorities.add(new SimpleGrantedAuthority(role));
@@ -288,8 +296,11 @@ public class UserController {
     @PostMapping("/admin/accounts/update")
     public String updateAccount(@ModelAttribute User user,
             @RequestParam(required = false) String password,
+            HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
         try {
+            String activeParam = request.getParameter("active");
+            user.setActive(activeParam != null ? "Active" : "Inactive");
             // Kiểm tra email đã tồn tại với tài khoản khác chưa
             User existingByEmail = userService.getUserByEmail(user.getEmail());
             if (existingByEmail != null && !existingByEmail.getId().equals(user.getId())) {

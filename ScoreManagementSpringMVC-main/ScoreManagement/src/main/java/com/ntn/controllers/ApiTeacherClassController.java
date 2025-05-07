@@ -4,6 +4,7 @@ import com.ntn.pojo.Class;
 import com.ntn.pojo.Score;
 import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Student;
+import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subject;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Teacher;
@@ -11,6 +12,7 @@ import com.ntn.service.ClassService;
 import com.ntn.service.SchoolYearService;
 import com.ntn.service.ScoreService;
 import com.ntn.service.StudentService;
+import com.ntn.service.StudentSubjectTeacherService;
 import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TeacherService;
 import com.ntn.service.TypeScoreService;
@@ -50,6 +52,9 @@ public class ApiTeacherClassController {
 
     @Autowired
     private TypeScoreService typeScoreService;
+
+    @Autowired
+    private StudentSubjectTeacherService studentSubjectTeacherService;
 
     // Lấy danh sách lớp được phân công
     @GetMapping("/classes")
@@ -104,10 +109,27 @@ public class ApiTeacherClassController {
 
             Map<Integer, Integer> studentCounts = new HashMap<>();
 
-            // Tính số sinh viên cho mỗi lớp
+            // Tính số sinh viên cho mỗi lớp (bao gồm cả sinh viên đăng ký học)
             for (Class cls : assignedClasses) {
-                int count = studentService.countStudentsByClassId(cls.getId());
-                studentCounts.put(cls.getId(), count);
+                // Lấy danh sách sinh viên thuộc lớp hành chính
+                List<Student> administrativeStudents = studentService.getStudentByClassId(cls.getId());
+                Set<Student> enrolledStudents = new HashSet<>(administrativeStudents);
+
+                // Lấy các môn học được phân công trong lớp này
+                List<Subjectteacher> classAssignments = teacherAssignments.stream()
+                        .filter(a -> a.getClassId() != null && a.getClassId().getId().equals(cls.getId()))
+                        .collect(java.util.stream.Collectors.toList());
+
+                // Thêm sinh viên đăng ký học các môn này
+                for (Subjectteacher st : classAssignments) {
+                    List<Studentsubjectteacher> enrollments = studentSubjectTeacherService.getBySubjectTeacherId(st.getId());
+                    for (Studentsubjectteacher enrollment : enrollments) {
+                        enrolledStudents.add(enrollment.getStudentId());
+                    }
+                }
+
+                // Lưu số lượng sinh viên thực tế
+                studentCounts.put(cls.getId(), enrolledStudents.size());
             }
 
             Map<String, Object> response = new HashMap<>();
@@ -153,7 +175,9 @@ public class ApiTeacherClassController {
             int studentCount = studentService.countStudentsByClassId(classroom.getId());
 
             // Danh sách sinh viên trong lớp
-            List<Student> students = studentService.getStudentByClassId(classroom.getId());
+            int administrativeStudentCount = studentService.countStudentsByClassId(classroom.getId());
+
+            List<Student> administrativeStudents = studentService.getStudentByClassId(classroom.getId());
 
             // Lấy năm học hiện tại
             int currentSchoolYearId = schoolYearService.getCurrentSchoolYearId();
@@ -167,11 +191,27 @@ public class ApiTeacherClassController {
                 assignedSubjects = subjectTeacherService.getSubjectTeachersByTeacherIdAndClassId(teacher.getId(), classId);
             }
 
+            Set<Student> enrolledStudents = new HashSet<>(administrativeStudents);
+
+            for (Subjectteacher st : assignedSubjects) {
+                // Lấy danh sách sinh viên đăng ký học môn này
+                List<Studentsubjectteacher> enrollments = studentSubjectTeacherService.getBySubjectTeacherId(st.getId());
+
+                // Thêm sinh viên vào tập hợp
+                for (Studentsubjectteacher enrollment : enrollments) {
+                    enrolledStudents.add(enrollment.getStudentId());
+                }
+            }
+
+            // Chuyển Set thành List để trả về
+            List<Student> allStudents = new ArrayList<>(enrolledStudents);
+
             Map<String, Object> response = new HashMap<>();
             response.put("classroom", classroom);
             response.put("teacher", teacher);
-            response.put("studentCount", studentCount);
-            response.put("students", students);
+            response.put("administrativeStudentCount", administrativeStudentCount);
+            response.put("totalStudentCount", enrolledStudents.size());
+            response.put("students", allStudents); // Danh sách sinh viên đã được mở rộng
             response.put("subjects", assignedSubjects);
             response.put("schoolYears", schoolYearService.getAllSchoolYears());
 
@@ -221,7 +261,11 @@ public class ApiTeacherClassController {
             }
 
             // Lấy danh sách sinh viên trong lớp
-            List<Student> students = studentService.getStudentByClassId(classId);
+            List<Studentsubjectteacher> enrollments = studentSubjectTeacherService.getBySubjectTeacherId(subjectTeacherId);
+            List<Student> students = new ArrayList<>();
+            for (Studentsubjectteacher enrollment : enrollments) {
+                students.add(enrollment.getStudentId());
+            }
 
             // Lấy danh sách loại điểm từ bảng classscoretypes
             List<String> scoreTypes = typeScoreService.getScoreTypesByClass(classId, subjectTeacherId, schoolYearId);

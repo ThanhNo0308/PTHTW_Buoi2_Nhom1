@@ -15,6 +15,7 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Score;
 import com.ntn.pojo.Student;
+import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Typescore;
 import com.ntn.repository.ScoreRepository;
@@ -23,6 +24,7 @@ import com.ntn.service.ClassService;
 import com.ntn.service.SchoolYearService;
 import com.ntn.service.ScoreService;
 import com.ntn.service.StudentService;
+import com.ntn.service.StudentSubjectTeacherService;
 import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TypeScoreService;
 import java.util.List;
@@ -38,7 +40,9 @@ import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -80,6 +84,9 @@ public class ScoreRepositoryImpl implements ScoreRepository {
 
     @Autowired
     private StudentService studentService;
+
+    @Autowired
+    private StudentSubjectTeacherService studentSubjectTeacherService;
 
     @Override
     public Float getScoreWeight(Score score) {
@@ -239,14 +246,14 @@ public class ScoreRepositoryImpl implements ScoreRepository {
                 CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
 
             List<Score> scores = new ArrayList<>();
+            Set<Integer> processedStudentIds = new HashSet<>(); // Track processed students for enrollment
             Session session = this.factory.getObject().getCurrentSession();
 
-            // Tìm SubjectTeacher chính xác bằng cả 3 thông số
+            // Tìm SubjectTeacher chính xác
             Subjectteacher subjectTeacher = subjectTeacherService.findByIdClassIdAndSchoolYearId(
                     subjectTeacherId, classId, schoolYearId);
 
             if (subjectTeacher == null) {
-                // Nếu không tìm thấy với 3 tiêu chí, thử tìm chỉ với ID
                 subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
             }
 
@@ -279,6 +286,9 @@ public class ScoreRepositoryImpl implements ScoreRepository {
                     System.err.println("Không tìm thấy sinh viên với mã: " + studentCode);
                     continue;
                 }
+
+                // Đánh dấu sinh viên đã được xử lý (để tự động đăng ký sau)
+                processedStudentIds.add(student.getId());
 
                 // Xử lý từng cột điểm trong file CSV
                 for (String headerName : parser.getHeaderNames()) {
@@ -336,6 +346,11 @@ public class ScoreRepositoryImpl implements ScoreRepository {
                                 newScore.setIsLocked(false);
                                 newScore.setSchoolYearId(schoolYear);
                                 scores.add(newScore);
+
+                                // Tự động đăng ký học cho sinh viên nếu chưa đăng ký
+                                if (!studentSubjectTeacherService.checkDuplicate(student.getId(), subjectTeacherId)) {
+                                    addStudentEnrollment(student, subjectTeacher);
+                                }
                             }
 
                         } catch (NumberFormatException e) {
@@ -346,12 +361,34 @@ public class ScoreRepositoryImpl implements ScoreRepository {
             }
 
             // Lưu tất cả điểm
-            return saveScores(scores);
+            boolean success = saveScores(scores);
+
+            // Thực hiện đăng ký học tập cho tất cả sinh viên đã nhập điểm (nếu chưa đăng ký)
+            for (Integer studentId : processedStudentIds) {
+                if (!studentSubjectTeacherService.checkDuplicate(studentId, subjectTeacherId)) {
+                    Student student = session.get(Student.class, studentId);
+                    if (student != null) {
+                        addStudentEnrollment(student, subjectTeacher);
+                    }
+                }
+            }
+
+            return success;
         } catch (Exception e) {
             System.err.println("Lỗi khi import điểm: " + e.getMessage());
             e.printStackTrace();
             throw new Exception("Không thể import điểm: " + e.getMessage());
         }
+    }
+
+    private void addStudentEnrollment(Student student, Subjectteacher subjectTeacher) {
+        Session session = this.factory.getObject().getCurrentSession();
+
+        Studentsubjectteacher enrollment = new Studentsubjectteacher();
+        enrollment.setStudentId(student);
+        enrollment.setSubjectTeacherId(subjectTeacher);
+
+        session.persist(enrollment);
     }
 
     @Override

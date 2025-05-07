@@ -35,12 +35,18 @@ const Login = () => {
 
       // Kiểm tra dữ liệu trả về có đúng định dạng không
       if (res.data && typeof res.data === 'object') {
-        console.log("Parsed response:", res.data);
 
         if (res.data.status === "success") {
           // Lưu thông tin người dùng vào context
           const userData = res.data.user || {};
           console.log("User data:", userData);
+
+          // Kiểm tra trạng thái active
+          if (userData.active !== "Active") {
+            setError("Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.");
+            setLoading(false);
+            return;
+          }
 
           // Đảm bảo token được lưu trong userData
           if (!userData.token && res.data.token) {

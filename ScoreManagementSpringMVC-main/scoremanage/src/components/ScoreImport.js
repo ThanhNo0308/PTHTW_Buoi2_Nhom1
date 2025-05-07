@@ -278,7 +278,7 @@ const ScoreImport = () => {
             for (let i = 0; i < mssvIndex; i++) {
               if (headers[i].toLowerCase().includes('stt') ||
                 headers[i].toLowerCase() === 'tt' ||
-                headers[i].toLowerCase() === 'id') {
+                headers[i].toLowerCase() === 'STT') {
                 hasSTTColumn = true;
                 break;
               }
@@ -291,7 +291,7 @@ const ScoreImport = () => {
             for (let i = finalExamIndex + 1; i < headers.length; i++) {
               if (headers[i].toLowerCase().includes('tb') ||
                 headers[i].toLowerCase().includes('trung bình') ||
-                headers[i].toLowerCase().includes('average')) {
+                headers[i].toLowerCase().includes('Điểm TB')) {
                 hasAvgColumn = true;
                 break;
               }
@@ -385,10 +385,11 @@ const ScoreImport = () => {
 
       if (response.data && response.data.success) {
         setSuccess(response.data.message || 'Import điểm thành công');
-        // Reset form sau khi import thành công
-        setFile(null);
-        setFileName('');
-        setShowCsvPreview(false);
+
+        // Chuyển hướng đến trang chi tiết lớp sau khi import thành công
+        setTimeout(() => {
+          navigate(`/teacher/classes/${selectedClass}/scores?subjectTeacherId=${selectedSubjectTeacher}&schoolYearId=${selectedSchoolYear}`);
+        }, 2000); // Đợi 2 giây để người dùng có thể thấy thông báo thành công
       } else {
         setError(response.data?.message || 'Có lỗi xảy ra khi import điểm');
 

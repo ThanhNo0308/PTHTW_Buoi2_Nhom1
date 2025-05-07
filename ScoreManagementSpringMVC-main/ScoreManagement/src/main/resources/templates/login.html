@@ -32,6 +32,10 @@
                                         <i class="fas fa-exclamation-circle me-2"></i> Bạn đã chọn sai vai trò. Hãy kiểm tra lại.
                                         <span class="closebtn" style="float:right;cursor:pointer;">&times;</span>
                                     </div>
+                                    <div th:if="${param.error == 'inactive'}" class="box_alert_fail_login alert alert-danger mb-4">
+                                        <i class="fas fa-exclamation-circle me-2"></i> Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.
+                                        <span class="closebtn" style="float:right;cursor:pointer;">&times;</span>
+                                    </div>
 
                                     <form method="post" th:action="@{/login}">
                                         <div class="role-selector">

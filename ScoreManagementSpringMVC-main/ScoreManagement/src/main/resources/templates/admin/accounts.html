@@ -169,7 +169,8 @@
                         </div>
                         <div class="mb-3">
                             <label for="editEmail" class="form-label">Email <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" id="editEmail" name="email" required>
+                            <input type="email" class="form-control" id="editEmail" name="email" required readonly>
+                            <div class="form-text text-muted">Email không thể thay đổi.</div>
                         </div>
                         <div class="mb-3">
                             <label for="editUsername" class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
@@ -191,7 +192,7 @@
                         </div>
                         <div class="mb-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="editActive" name="active">
+                                <input class="form-check-input" type="checkbox" id="editActive" name="active" value="Active">
                                 <label class="form-check-label" for="editActive">
                                     Tài khoản hoạt động
                                 </label>
@@ -218,7 +219,7 @@
             const email = button.getAttribute('data-email');
             const username = button.getAttribute('data-username');
             const role = button.getAttribute('data-role');
-            const active = button.getAttribute('data-active') === 'true';
+            const active = button.getAttribute('data-active');
 
             // Điền dữ liệu vào modal
             document.getElementById('editAccountId').value = id;
@@ -226,7 +227,9 @@
             document.getElementById('editEmail').value = email;
             document.getElementById('editUsername').value = username;
             document.getElementById('editRole').value = role;
-            document.getElementById('editActive').checked = active;
+
+            // Sửa lại cách check checkbox - kiểm tra active là "Active"
+            document.getElementById('editActive').checked = (active === "Active");
 
             // Mở modal
             const editModal = new bootstrap.Modal(document.getElementById('editAccountModal'));
