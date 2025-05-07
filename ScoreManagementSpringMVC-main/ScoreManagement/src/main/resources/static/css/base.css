@@ -229,3 +229,23 @@
         margin-top: 10px;
     }
 }
+
+.flag-icon {
+    margin-right: 5px;
+    font-size: 1.2em;
+}
+
+.language-switcher {
+    display: flex;
+    gap: 5px;
+}
+
+.language-switcher .btn {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+}
+
+.language-active {
+    background-color: rgba(255, 255, 255, 0.2);
+}

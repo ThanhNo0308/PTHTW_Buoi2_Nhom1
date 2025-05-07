@@ -108,7 +108,7 @@ const StudentSearch = () => {
         <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
           <Card.Title className="mb-0">Tìm kiếm sinh viên</Card.Title>
           <Badge bg="light" text="dark">
-            {classCount} lớp | {allStudents.length} sinh viên
+            {classCount} lớp 
           </Badge>
         </Card.Header>
         <Card.Body>

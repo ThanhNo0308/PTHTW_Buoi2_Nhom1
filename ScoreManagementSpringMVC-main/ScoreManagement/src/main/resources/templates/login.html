@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+      th:lang="${#locale.language}" lang="vi">
     <head>
-        <title>Đăng nhập | Hệ thống quản lý điểm số</title>
-    <th:block th:replace="base :: styles"></th:block>
-
-</head>
+        <title th:text="#{login.title}">Đăng nhập | Hệ thống quản lý điểm số</title>
+        <th:block th:replace="base :: styles"></th:block>
+    </head>
 <body>
     <div th:replace="base :: header"></div>
 
@@ -20,20 +20,20 @@
                                 <div class="login-form-area">
                                     <div class="text-center mb-4">
                                         <img th:src="@{/images/logo.png}" alt="School Logo" class="school-logo">
-                                        <h3 class="login-title text-center">Đăng nhập hệ thống</h3>
+                                        <h3 class="login-title text-center" th:text="#{login.heading}">Đăng nhập hệ thống</h3>
                                     </div>
 
                                     <!-- Hiển thị lỗi nếu có -->
                                     <div th:if="${param.error}" class="box_alert_fail_login alert alert-danger mb-4">
-                                        <i class="fas fa-exclamation-circle me-2"></i> Tên đăng nhập hoặc mật khẩu không đúng!
+                                        <i class="fas fa-exclamation-circle me-2"></i> <span th:text="#{login.error}">Tên đăng nhập hoặc mật khẩu không đúng!</span>
                                         <span class="closebtn" style="float:right;cursor:pointer;">&times;</span>
                                     </div>
                                     <div th:if="${param.invalid_session}" class="box_alert_fail_login alert alert-danger mb-4">
-                                        <i class="fas fa-exclamation-circle me-2"></i> Bạn đã chọn sai vai trò. Hãy kiểm tra lại.
+                                        <i class="fas fa-exclamation-circle me-2"></i> <span th:text="#{login.invalid.session}">Bạn đã chọn sai vai trò. Hãy kiểm tra lại.</span>
                                         <span class="closebtn" style="float:right;cursor:pointer;">&times;</span>
                                     </div>
                                     <div th:if="${param.error == 'inactive'}" class="box_alert_fail_login alert alert-danger mb-4">
-                                        <i class="fas fa-exclamation-circle me-2"></i> Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.
+                                        <i class="fas fa-exclamation-circle me-2"></i> <span th:text="#{login.error.inactive}">Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.</span>
                                         <span class="closebtn" style="float:right;cursor:pointer;">&times;</span>
                                     </div>
 
@@ -41,49 +41,50 @@
                                         <div class="role-selector">
                                             <div class="form-floating">
                                                 <select class="form-select" id="role" name="role" required>
-                                                    <option value="">Chọn vai trò của bạn</option>
-                                                    <option value="Admin">Giáo vụ</option>
-                                                    <option value="Teacher">Giảng viên</option>
-                                                    <option value="Student">Sinh viên</option>
+                                                    <option value="" th:text="#{login.role.select}">Chọn vai trò của bạn</option>
+                                                    <option value="Admin" th:text="#{login.role.admin}">Giáo vụ</option>
+                                                    <option value="Teacher" th:text="#{login.role.teacher}">Giảng viên</option>
+                                                    <option value="Student" th:text="#{login.role.student}">Sinh viên</option>
                                                 </select>
-                                                <label for="role"><i class="fas fa-user-tag me-2"></i>Vai trò</label>
+                                                <label for="role"><i class="fas fa-user-tag me-2"></i><span th:text="#{login.role}">Vai trò</span></label>
                                             </div>
                                         </div>
 
                                         <div class="form-floating mb-4">
-                                            <input type="text" class="form-control" id="username" placeholder="Nhập username..." name="username" required>
-                                            <label for="username"><i class="fas fa-user me-2"></i>Tên đăng nhập</label>
+                                            <input type="text" class="form-control" id="username" th:placeholder="#{login.username.placeholder}" placeholder="Nhập username..." name="username" required>
+                                            <label for="username"><i class="fas fa-user me-2"></i><span th:text="#{login.username}">Tên đăng nhập</span></label>
                                         </div>
 
                                         <div class="form-floating mb-4">
-                                            <input type="password" class="form-control" id="pwd" placeholder="Nhập mật khẩu..." name="password" required>
-                                            <label for="pwd"><i class="fas fa-lock me-2"></i>Mật khẩu</label>
+                                            <input type="password" class="form-control" id="pwd" th:placeholder="#{login.password.placeholder}" placeholder="Nhập mật khẩu..." name="password" required>
+                                            <label for="pwd"><i class="fas fa-lock me-2"></i><span th:text="#{login.password}">Mật khẩu</span></label>
                                         </div>
 
                                         <div class="d-grid mb-4">
                                             <button type="submit" class="btn btn-primary btn-login">
-                                                <i class="fas fa-sign-in-alt me-2"></i> Đăng nhập
+                                                <i class="fas fa-sign-in-alt me-2"></i> <span th:text="#{login.button}">Đăng nhập</span>
                                             </button>
                                         </div>
                                     </form>
-                                    <!-- Thêm vào file login.html sau phần form đăng nhập thông thường -->
+                                    
                                     <div class="text-center mb-4">
                                         <p class="divider-text">
-                                            <span class="bg-light">Hoặc đăng nhập với</span>
+                                            <span class="bg-light" th:text="#{login.or}">Hoặc đăng nhập với</span>
                                         </p>
                                         <div class="social-login-buttons">
                                             <a th:href="@{/oauth2/authorization/google}" class="btn btn-google btn-block mb-2">
-                                                <i class="fab fa-google me-2"></i>Đăng nhập với Google
+                                                <i class="fab fa-google me-2"></i><span th:text="#{login.google}">Đăng nhập với Google</span>
                                             </a>
                                             <a th:href="@{/oauth2/authorization/facebook}" class="btn btn-facebook btn-block">
-                                                <i class="fab fa-facebook-f me-2"></i>Đăng nhập với Facebook
+                                                <i class="fab fa-facebook-f me-2"></i><span th:text="#{login.facebook}">Đăng nhập với Facebook</span>
                                             </a>
                                         </div>
                                     </div>
 
                                     <div class="text-center">
-                                        <p class="mb-0">Chưa có tài khoản? 
-                                            <a th:href="@{/registerStudent}" class="text-primary fw-bold">Đăng ký</a>
+                                        <p class="mb-0">
+                                            <span th:text="#{login.no.account}">Chưa có tài khoản?</span> 
+                                            <a th:href="@{/registerStudent}" class="text-primary fw-bold" th:text="#{login.register.link}">Đăng ký</a>
                                         </p>
                                     </div>
 
@@ -95,7 +96,7 @@
                                 <div class="account-block">
                                     <div class="overlay"></div>
                                     <div class="position-absolute bottom-0 start-0 p-4 text-white">
-                                        <h4>Hệ thống Quản lý Điểm số</h4>
+                                        <h4 th:text="#{home.title}">Hệ thống Quản lý Điểm số</h4>
                                         <p class="mb-0">Trường Đại học MilkyWay</p>
                                     </div>
                                 </div>

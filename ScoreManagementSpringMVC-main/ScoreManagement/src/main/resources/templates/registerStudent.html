@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+      th:lang="${#locale.language}" lang="vi">
     <head>
-        <title>Đăng ký tài khoản | Hệ thống quản lý điểm số</title>
-    <th:block th:replace="base :: styles"></th:block>
-
-</head>
+        <title th:text="#{register.title}">Đăng ký tài khoản | Hệ thống quản lý điểm số</title>
+        <th:block th:replace="base :: styles"></th:block>
+    </head>
 <body>
     <div th:replace="base :: header"></div>
 
@@ -13,9 +13,9 @@
         <div class="register-card card">
             <div class="register-header">
                 <h2 class="register-title">
-                    <i class="fas fa-user-plus"></i> Đăng ký tài khoản sinh viên
+                    <i class="fas fa-user-plus"></i> <span th:text="#{register.heading}">Đăng ký tài khoản sinh viên</span>
                 </h2>
-                <p class="text-white-50 mb-0">Nhập thông tin của bạn để tạo tài khoản</p>
+                <p class="text-white-50 mb-0" th:text="#{register.subtitle}">Nhập thông tin của bạn để tạo tài khoản</p>
             </div>
 
             <div class="register-form">
@@ -23,16 +23,16 @@
                 <div class="alert alert-danger mb-4" th:if="${param.error}">
                     <i class="fas fa-exclamation-circle me-2"></i>
                     <span th:switch="${param.error[0]}">
-                        <span th:case="'email-exists'">Email này đã được đăng ký trong hệ thống. Vui lòng sử dụng email khác.</span>
-                        <span th:case="'username-exists'">Tên đăng nhập đã tồn tại. Vui lòng chọn tên đăng nhập khác.</span>
-                        <span th:case="'email'">Email không hợp lệ hoặc không tồn tại trong hệ thống.</span>
-                        <span th:case="'password'">Mật khẩu không khớp hoặc không đủ độ dài.</span>
-                        <span th:case="'avatar'">Vui lòng chọn ảnh đại diện.</span>
-                        <span th:case="'email-format'">Email phải là email do trường cấp (@dh.edu.vn)</span>
-                        <span th:case="'avatar-required'">Vui lòng chọn ảnh đại diện</span>
-                        <span th:case="'invalid-email'">Email không tồn tại trong hệ thống hoặc đã được đăng ký</span>
-                        <span th:case="'system'">Lỗi hệ thống, vui lòng thử lại sau</span>
-                        <span th:case="*">Đã xảy ra lỗi khi đăng ký. Vui lòng kiểm tra thông tin và thử lại.</span>
+                        <span th:case="'email-exists'" th:text="#{register.error.email.exists}">Email này đã được đăng ký trong hệ thống. Vui lòng sử dụng email khác.</span>
+                        <span th:case="'username-exists'" th:text="#{register.error.username.exists}">Tên đăng nhập đã tồn tại. Vui lòng chọn tên đăng nhập khác.</span>
+                        <span th:case="'email'" th:text="#{register.error.email}">Email không hợp lệ hoặc không tồn tại trong hệ thống.</span>
+                        <span th:case="'password'" th:text="#{register.error.password}">Mật khẩu không khớp hoặc không đủ độ dài.</span>
+                        <span th:case="'avatar'" th:text="#{register.error.avatar}">Vui lòng chọn ảnh đại diện.</span>
+                        <span th:case="'email-format'" th:text="#{register.error.email.format}">Email phải là email do trường cấp (@dh.edu.vn)</span>
+                        <span th:case="'avatar-required'" th:text="#{register.error.avatar.required}">Vui lòng chọn ảnh đại diện</span>
+                        <span th:case="'invalid-email'" th:text="#{register.error.invalid.email}">Email không tồn tại trong hệ thống hoặc đã được đăng ký</span>
+                        <span th:case="'system'" th:text="#{register.error.system}">Lỗi hệ thống, vui lòng thử lại sau</span>
+                        <span th:case="*" th:text="#{register.error.system}">Đã xảy ra lỗi khi đăng ký. Vui lòng kiểm tra thông tin và thử lại.</span>
                     </span>
                 </div>
 
@@ -44,37 +44,39 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="avatar" class="form-label">Ảnh đại diện <span class="text-danger">*</span></label>
+                                <label for="avatar" class="form-label" th:text="#{register.avatar}">Ảnh đại diện <span class="text-danger">*</span></label>
                                 <input type="file" class="form-control" id="avatar" name="avatar" 
                                        accept="image/*" onchange="previewImage(event)" required>
                                 <input type="hidden" id="base64Avatar" name="avatar">
-                                <small class="form-text text-muted">Chọn ảnh đại diện (jpg, png, jpeg)</small>
+                                <small class="form-text text-muted" th:text="#{register.avatar.help}">Chọn ảnh đại diện (jpg, png, jpeg)</small>
                             </div>
                         </div>
 
                         <div class="col-md-6">
                             <div class="mb-4">
-                                <label for="email" class="form-label">Email sinh viên <span class="text-danger">*</span></label>
+                                <label for="email" class="form-label" th:text="#{register.email}">Email sinh viên <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                                     <input type="email" class="form-control" id="email" name="email" 
                                            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" 
+                                           th:placeholder="#{register.email.placeholder}" 
                                            placeholder="Nhập email trường cấp (@dh.edu.vn)" required>
                                 </div>
-                                <small class="form-text text-muted">Vui lòng sử dụng email do trường cấp (@dh.edu.vn)</small>
+                                <small class="form-text text-muted" th:text="#{register.email.help}">Vui lòng sử dụng email do trường cấp (@dh.edu.vn)</small>
                             </div>
 
                             <div class="mb-4">
-                                <label for="username" class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
+                                <label for="username" class="form-label" th:text="#{register.username}">Tên đăng nhập <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-user"></i></span>
                                     <input type="text" class="form-control" id="username" name="username" 
+                                           th:placeholder="#{register.username.placeholder}" 
                                            placeholder="Nhập tên đăng nhập" required>
                                 </div>
                             </div>
 
                             <div class="mb-4">
-                                <label for="password" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                                <label for="password" class="form-label" th:text="#{register.password}">Mật khẩu <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                     <input type="password" class="form-control" id="password" name="password" 
@@ -86,7 +88,7 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="confirmPassword" class="form-label">Xác nhận mật khẩu <span class="text-danger">*</span></label>
+                                <label for="confirmPassword" class="form-label" th:text="#{register.confirm.password}">Xác nhận mật khẩu <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                     <input type="password" class="form-control" id="confirmPassword" 
@@ -95,7 +97,7 @@
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
-                                <div id="passwordMismatch" class="invalid-feedback" style="display: none;">
+                                <div id="passwordMismatch" class="invalid-feedback" style="display: none;" th:text="#{register.password.mismatch}">
                                     Mật khẩu xác nhận không khớp!
                                 </div>
                             </div>
@@ -103,27 +105,27 @@
                     </div>
 
                     <div class="password-tips">
-                        <h6><i class="fas fa-shield-alt me-2"></i>Yêu cầu mật khẩu:</h6>
+                        <h6><i class="fas fa-shield-alt me-2"></i><span th:text="#{register.password.requirements}">Yêu cầu mật khẩu:</span></h6>
                         <ul>
-                            <li>Tối thiểu 6 ký tự</li>
-                            <li>Nên kết hợp chữ cái và số</li>
-                            <li>Không nên sử dụng thông tin cá nhân dễ đoán</li>
+                            <li th:text="#{register.password.req1}">Tối thiểu 6 ký tự</li>
+                            <li th:text="#{register.password.req2}">Nên kết hợp chữ cái và số</li>
+                            <li th:text="#{register.password.req3}">Không nên sử dụng thông tin cá nhân dễ đoán</li>
                         </ul>
                     </div>
 
                     <div class="mt-4 d-grid">
                         <button type="submit" class="btn btn-primary btn-register">
-                            <i class="fas fa-user-plus me-2"></i> Đăng ký tài khoản
+                            <i class="fas fa-user-plus me-2"></i> <span th:text="#{register.button}">Đăng ký tài khoản</span>
                         </button>
                     </div>
                 </form>
 
                 <div class="divider">
-                    <span>hoặc</span>
+                    <span th:text="#{register.or}">hoặc</span>
                 </div>
 
                 <div class="text-center">
-                    <p>Đã có tài khoản? <a th:href="@{/login}" class="text-primary fw-bold">Đăng nhập</a></p>
+                    <p><span th:text="#{register.have.account}">Đã có tài khoản?</span> <a th:href="@{/login}" class="text-primary fw-bold" th:text="#{register.login.link}">Đăng nhập</a></p>
                 </div>
             </div>
         </div>
@@ -237,8 +239,6 @@
                 });
             }
         });
-
-
     </script>
 </body>
 </html>

@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" 
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6" 
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      th:lang="${#locale.language}" lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Hệ thống quản lý điểm</title>
+        <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE" th:text="#{app.title}">Hệ thống quản lý điểm</title>
     <th:block th:fragment="styles">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -25,8 +26,8 @@
                         <img th:src="@{/images/logo.png}"
                              alt="Logo" width="70" height="54" class="d-inline-block align-text-top me-2">
                         <div class="brand-text">
-                            <span class="fw-bold">Trường Đại học</span>
-                            <span class="fw-bolder text-warning">MilkyWay</span>
+                            <span class="fw-bold" th:text="#{app.university}">Trường Đại học</span>
+                            <span class="fw-bolder text-warning" th:text="#{app.university.name}">MilkyWay</span>
                         </div>
                     </a>
                 </div>
@@ -38,7 +39,7 @@
                     <ul class="navbar-nav">
                         <li class="nav-item" sec:authorize="!isAuthenticated()">
                             <a class="nav-link" th:href="@{/}">
-                                <i class="fas fa-home me-1"></i> Trang chủ
+                                <i class="fas fa-home me-1"></i> <span th:text="#{nav.home}">Trang chủ</span>
                             </a>
                         </li>
                     </ul>
@@ -46,57 +47,57 @@
                     <ul class="navbar-nav mr-auto" sec:authorize="hasAuthority('Admin')">
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/admin/pageAdmin}">
-                                <i class="fas fa-home me-1"></i> Trang chủ
+                                <i class="fas fa-home me-1"></i> <span th:text="#{nav.home}">Trang chủ</span>
                             </a>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button" 
                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-cogs me-1"></i> Quản lý học tập
+                                <i class="fas fa-cogs me-1"></i> <span th:text="#{nav.admin.academic}">Quản lý học tập</span>
                             </a>
                             <div class="dropdown-menu" aria-labelledby="navbarDropdown1">
                                 <a class="dropdown-item" th:href="@{/admin/teachers}">
-                                    <i class="fas fa-chalkboard-teacher me-1"></i> Giảng viên
+                                    <i class="fas fa-chalkboard-teacher me-1"></i> <span th:text="#{nav.admin.teachers}">Giảng viên</span>
                                 </a>
                                 <a class="dropdown-item" th:href="@{/admin/students}">
-                                    <i class="fas fa-user-graduate me-1"></i> Sinh viên
+                                    <i class="fas fa-user-graduate me-1"></i> <span th:text="#{nav.admin.students}">Sinh viên</span>
                                 </a>
                                 <a class="dropdown-item" th:href="@{/admin/classes}">
-                                    <i class="fas fa-school me-2"></i> Lớp học
+                                    <i class="fas fa-school me-2"></i> <span th:text="#{nav.admin.classes}">Lớp học</span>
                                 </a>
                                 <a class="dropdown-item" th:href="@{/admin/majors}">
-                                    <i class="fas fa-graduation-cap me-2"></i> Ngành học
+                                    <i class="fas fa-graduation-cap me-2"></i> <span th:text="#{nav.admin.majors}">Ngành học</span>
                                 </a>
                                 <a class="dropdown-item" th:href="@{/admin/departments}">
-                                    <i class="fas fa-building me-2"></i> Khoa
+                                    <i class="fas fa-building me-2"></i> <span th:text="#{nav.admin.departments}">Khoa</span>
                                 </a>
                                 <a class="dropdown-item" th:href="@{/admin/subjects}">
-                                    <i class="fas fa-book me-2"></i> Môn học
+                                    <i class="fas fa-book me-2"></i> <span th:text="#{nav.admin.subjects}">Môn học</span>
                                 </a>
                                 <a class="dropdown-item" th:href="@{/admin/school-years}">
-                                    <i class="fas fa-calendar-alt me-2"></i> Năm học
+                                    <i class="fas fa-calendar-alt me-2"></i> <span th:text="#{nav.admin.schoolyears}">Năm học</span>
                                 </a>
                                 <a class="dropdown-item" th:href="@{/admin/subjTeach}">
-                                    <i class="fas fa-tasks me-2"></i> Phân công giảng dạy
+                                    <i class="fas fa-tasks me-2"></i> <span th:text="#{nav.admin.teachingassign}">Phân công giảng dạy</span>
                                 </a>
                             </div>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="statisticsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-chart-bar me-1"></i> Thống kê
+                                <i class="fas fa-chart-bar me-1"></i> <span th:text="#{nav.admin.statistics}">Thống kê</span>
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="statisticsDropdown">
                                 <li><a class="dropdown-item" th:href="@{/admin/statistics/class}">
-                                        <i class="fas fa-chart-line me-2"></i> Thống kê theo lớp</a>
+                                        <i class="fas fa-chart-line me-2"></i> <span th:text="#{nav.admin.stats.class}">Thống kê theo lớp</span></a>
                                 </li>
                                 <li><a class="dropdown-item" th:href="@{/admin/statistics/subject}">
-                                        <i class="fas fa-chart-pie me-2"></i> Thống kê theo môn học</a>
+                                        <i class="fas fa-chart-pie me-2"></i> <span th:text="#{nav.admin.stats.subject}">Thống kê theo môn học</span></a>
                                 </li>
                                 <li><a class="dropdown-item" th:href="@{/admin/statistics/department}">
-                                        <i class="fas fa-chart-bar me-2"></i> Thống kê theo khoa</a>
+                                        <i class="fas fa-chart-bar me-2"></i> <span th:text="#{nav.admin.stats.department}">Thống kê theo khoa</span></a>
                                 </li>
                                 <li><a class="dropdown-item" th:href="@{/admin/statistics/major}">
-                                        <i class="fas fa-chart-area me-2"></i> Thống kê theo ngành</a>
+                                        <i class="fas fa-chart-area me-2"></i> <span th:text="#{nav.admin.stats.major}">Thống kê theo ngành</span></a>
                                 </li>
                             </ul>
                         </li>
@@ -106,22 +107,22 @@
                     <ul class="navbar-nav mr-auto" sec:authorize="hasAuthority('Teacher')">
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/pageTeacher}">
-                                <i class="fas fa-home me-1"></i> Trang chủ
+                                <i class="fas fa-home me-1"></i> <span th:text="#{nav.home}">Trang chủ</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/teacher/classes}">
-                                <i class="fas fa-school me-1"></i> Lớp học
+                                <i class="fas fa-school me-1"></i> <span th:text="#{nav.teacher.classes}">Lớp học</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/teacher/search-students}">
-                                <i class="fas fa-search me-1"></i> Tìm kiếm sinh viên
+                                <i class="fas fa-search me-1"></i> <span th:text="#{nav.teacher.searchstudents}">Tìm kiếm sinh viên</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/teacher/scores/import}">
-                                <i class="fas fa-file-import me-1"></i> Nhập điểm
+                                <i class="fas fa-file-import me-1"></i> <span th:text="#{nav.teacher.importscores}">Nhập điểm</span>
                             </a>
                         </li>
                     </ul>
@@ -130,31 +131,41 @@
                     <ul class="navbar-nav mr-auto" sec:authorize="hasAuthority('Student')">
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/pageStudent}">
-                                <i class="fas fa-home me-1"></i> Trang chủ
+                                <i class="fas fa-home me-1"></i> <span th:text="#{nav.home}">Trang chủ</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/student-scores}">
-                                <i class="fas fa-clipboard-list me-1"></i> Điểm của tôi
+                                <i class="fas fa-clipboard-list me-1"></i> <span th:text="#{nav.student.myscores}">Điểm của tôi</span>
                             </a>
                         </li>
                     </ul>
 
                     <!-- User Info and Logout -->
                     <ul class="navbar-nav ms-auto">
+                        <div class="language-switcher btn-group me-3 mt-1" sec:authorize="!isAuthenticated()">
+                            <a class="btn btn-sm" th:classappend="${#locale.language == 'vi' ? 'btn-light' : 'btn-outline-light'}" 
+                               href="?lang=vi">
+                                <span class="flag-icon">🇻🇳</span> VI
+                            </a>
+                            <a class="btn btn-sm" th:classappend="${#locale.language == 'en' ? 'btn-light' : 'btn-outline-light'}" 
+                               href="?lang=en">
+                                <span class="flag-icon">🇬🇧</span> EN
+                            </a>
+                        </div>
                         <li class="nav-item" sec:authorize="!isAuthenticated()">
                             <a class="btn btn-success me-2" th:href="@{/login}">
-                                <i class="fas fa-sign-in-alt me-1"></i> Đăng nhập
+                                <i class="fas fa-sign-in-alt me-1"></i> <span th:text="#{nav.login}">Đăng nhập</span>
                             </a>
                         </li>
                         <li class="nav-item" sec:authorize="!isAuthenticated()">
                             <a class="btn btn-outline-light" th:href="@{/registerStudent}">
-                                <i class="fas fa-user-plus me-1"></i> Đăng ký
+                                <i class="fas fa-user-plus me-1"></i> <span th:text="#{nav.register}">Đăng ký</span>
                             </a>
                         </li>
                         <li class="nav-item" sec:authorize="hasAuthority('Admin')">
                             <a class="btn btn-outline-warning me-2" th:href="@{/admin/register}">
-                                <i class="fas fa-chalkboard-teacher me-1"></i> Đăng ký giảng viên
+                                <i class="fas fa-chalkboard-teacher me-1"></i> <span th:text="#{nav.admin.registerteacher}">Đăng ký giảng viên</span>
                             </a>
                         </li>
 
@@ -166,11 +177,11 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style="margin-right: 35px;">
                                 <li><a class="dropdown-item" th:href="@{/profile}">
-                                        <i class="fas fa-user fa-sm fa-fw me-2"></i> Thông tin cá nhân</a>
+                                        <i class="fas fa-user fa-sm fa-fw me-2"></i> <span th:text="#{nav.profile}">Thông tin cá nhân</span></a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" th:href="@{/logout}">
-                                        <i class="fas fa-sign-out-alt fa-sm fa-fw me-2"></i> Đăng xuất</a>
+                                        <i class="fas fa-sign-out-alt fa-sm fa-fw me-2"></i> <span th:text="#{nav.logout}">Đăng xuất</span></a>
                                 </li>
                             </ul>
                         </li>
@@ -190,11 +201,11 @@
                             <div class="d-flex align-items-center mb-3">
                                 <img th:src="@{/images/logo.png}" alt="Logo" width="70" height="54" class="me-3">
                                 <div>
-                                    <h5 class="mb-0 text-white">Trường Đại học</h5>
-                                    <h4 class="mb-0 text-warning">MilkyWay</h4>
+                                    <h5 class="mb-0 text-white" th:text="#{app.university}">Trường Đại học</h5>
+                                    <h4 class="mb-0 text-warning" th:text="#{app.university.name}">MilkyWay</h4>
                                 </div>
                             </div>
-                            <p class="mb-3 text-light">Đào tạo nhân tài, phát triển tri thức, nghiên cứu khoa học và chuyển giao công nghệ để phụng sự cộng đồng.</p>
+                            <p class="mb-3 text-light" th:text="#{footer.mission}">Đào tạo nhân tài, phát triển tri thức, nghiên cứu khoa học và chuyển giao công nghệ để phụng sự cộng đồng.</p>
                             <div class="social-links">
                                 <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
                                 <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
@@ -207,38 +218,38 @@
 
                     <!-- Liên kết nhanh -->
                     <div class="col-lg-2 col-md-6 mb-4">
-                        <h5 class="text-uppercase text-white mb-4">Liên kết nhanh</h5>
+                        <h5 class="text-uppercase text-white mb-4" th:text="#{footer.quicklinks}">Liên kết nhanh</h5>
                         <ul class="footer-links">
-                            <li><a href="#"><i class="fas fa-angle-right me-2"></i>Trang chủ</a></li>
-                            <li><a href="#"><i class="fas fa-angle-right me-2"></i>Giới thiệu</a></li>
-                            <li><a href="#"><i class="fas fa-angle-right me-2"></i>Khoa & Ngành</a></li>
-                            <li><a href="#"><i class="fas fa-angle-right me-2"></i>Tuyển sinh</a></li>
-                            <li><a href="#"><i class="fas fa-angle-right me-2"></i>Nghiên cứu</a></li>
-                            <li><a href="#"><i class="fas fa-angle-right me-2"></i>Hợp tác quốc tế</a></li>
+                            <li><a href="#"><i class="fas fa-angle-right me-2"></i><span th:text="#{nav.home}">Trang chủ</span></a></li>
+                            <li><a href="#"><i class="fas fa-angle-right me-2"></i><span th:text="#{footer.about}">Giới thiệu</span></a></li>
+                            <li><a href="#"><i class="fas fa-angle-right me-2"></i><span th:text="#{footer.faculties}">Khoa & Ngành</span></a></li>
+                            <li><a href="#"><i class="fas fa-angle-right me-2"></i><span th:text="#{footer.admission}">Tuyển sinh</span></a></li>
+                            <li><a href="#"><i class="fas fa-angle-right me-2"></i><span th:text="#{footer.research}">Nghiên cứu</span></a></li>
+                            <li><a href="#"><i class="fas fa-angle-right me-2"></i><span th:text="#{footer.international}">Hợp tác quốc tế</span></a></li>
                         </ul>
                     </div>
 
                     <!-- Dịch vụ sinh viên -->
                     <div class="col-lg-3 col-md-6 mb-4">
-                        <h5 class="text-uppercase text-white mb-4">Dịch vụ sinh viên</h5>
+                        <h5 class="text-uppercase text-white mb-4" th:text="#{footer.studentservices}">Dịch vụ sinh viên</h5>
                         <ul class="footer-links">
-                            <li><a href="#"><i class="fas fa-angle-right me-2"></i>Thời khóa biểu</a></li>
-                            <li><a href="#"><i class="fas fa-angle-right me-2"></i>Lịch thi</a></li>
-                            <li><a href="#"><i class="fas fa-angle-right me-2"></i>Học bổng</a></li>
-                            <li><a href="#"><i class="fas fa-angle-right me-2"></i>Hoạt động sinh viên</a></li>
-                            <li><a href="#"><i class="fas fa-angle-right me-2"></i>Cơ hội việc làm</a></li>
-                            <li><a href="#"><i class="fas fa-angle-right me-2"></i>Thư viện số</a></li>
+                            <li><a href="#"><i class="fas fa-angle-right me-2"></i><span th:text="#{footer.schedule}">Thời khóa biểu</span></a></li>
+                            <li><a href="#"><i class="fas fa-angle-right me-2"></i><span th:text="#{footer.examschedule}">Lịch thi</span></a></li>
+                            <li><a href="#"><i class="fas fa-angle-right me-2"></i><span th:text="#{footer.scholarship}">Học bổng</span></a></li>
+                            <li><a href="#"><i class="fas fa-angle-right me-2"></i><span th:text="#{footer.activities}">Hoạt động sinh viên</span></a></li>
+                            <li><a href="#"><i class="fas fa-angle-right me-2"></i><span th:text="#{footer.careers}">Cơ hội việc làm</span></a></li>
+                            <li><a href="#"><i class="fas fa-angle-right me-2"></i><span th:text="#{footer.library}">Thư viện số</span></a></li>
                         </ul>
                     </div>
 
                     <!-- Thông tin liên hệ -->
                     <div class="col-lg-3 mb-4">
-                        <h5 class="text-uppercase text-white mb-4">Liên hệ</h5>
+                        <h5 class="text-uppercase text-white mb-4" th:text="#{footer.contact}">Liên hệ</h5>
                         <div class="contact-info">
-                            <p><i class="fas fa-map-marker-alt me-2"></i>Nhà Bè, TP. Hồ Chí Minh</p>
-                            <p><i class="fas fa-phone-alt me-2"></i>(028) 1234 5678</p>
-                            <p><i class="fas fa-envelope me-2"></i>milkyway@dh.edu.vn</p>
-                            <p><i class="fas fa-clock me-2"></i>Thứ 2 - Thứ 7: 7:30 - 17:15</p>
+                            <p><i class="fas fa-map-marker-alt me-2"></i><span th:text="#{footer.address}">Nhà Bè, TP. Hồ Chí Minh</span></p>
+                            <p><i class="fas fa-phone-alt me-2"></i><span th:text="#{footer.phone}">(028) 1234 5678</span></p>
+                            <p><i class="fas fa-envelope me-2"></i><span th:text="#{footer.email}">milkyway@dh.edu.vn</span></p>
+                            <p><i class="fas fa-clock me-2"></i><span th:text="#{footer.hours}">Thứ 2 - Thứ 7: 7:30 - 17:15</span></p>
                         </div>
                     </div>
                 </div>
@@ -250,15 +261,15 @@
             <div class="container">
                 <div class="row">
                     <div class="col-md-6 text-md-start">
-                        <p class="mb-0 text-light">© 2025 Trường Đại học MilkyWay. Tất cả các quyền được bảo lưu.</p>
+                        <p class="mb-0 text-light" th:text="#{footer.copyright}">© 2025 Trường Đại học MilkyWay. Tất cả các quyền được bảo lưu.</p>
                     </div>
                     <div class="col-md-6 text-md-end">
                         <div class="footer-links-bottom">
-                            <a href="#">Chính sách bảo mật</a>
+                            <a href="#" th:text="#{footer.privacy}">Chính sách bảo mật</a>
                             <span class="mx-2">|</span>
-                            <a href="#">Điều khoản sử dụng</a>
+                            <a href="#" th:text="#{footer.terms}">Điều khoản sử dụng</a>
                             <span class="mx-2">|</span>
-                            <a href="#">Sơ đồ trang</a>
+                            <a href="#" th:text="#{footer.sitemap}">Sơ đồ trang</a>
                         </div>
                     </div>
                 </div>

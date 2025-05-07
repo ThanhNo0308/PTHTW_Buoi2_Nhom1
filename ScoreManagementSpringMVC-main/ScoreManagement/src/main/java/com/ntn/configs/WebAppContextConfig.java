@@ -4,6 +4,7 @@
  */
 package com.ntn.configs;
 
+import com.ntn.filters.AuthenticatedLocaleInterceptor;
 import com.ntn.formatters.ClassFormatter;
 import com.ntn.formatters.DateFormatter;
 import com.ntn.formatters.DepartmentFormatter;
@@ -15,6 +16,7 @@ import com.ntn.formatters.SubjectTeacherFormatter;
 import com.ntn.formatters.TeacherFormatter;
 import com.ntn.formatters.TrainingTypeFormatter;
 import com.ntn.formatters.UserFormatter;
+import java.util.Locale;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
@@ -25,11 +27,15 @@ import org.springframework.format.FormatterRegistry;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.context.request.RequestContextListener;
+import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
+import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
+import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
 @Configuration
 @EnableWebMvc
@@ -42,37 +48,37 @@ import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 })
 
 public class WebAppContextConfig implements WebMvcConfigurer {
-    
+
     @Autowired
     private ClassFormatter classFormatter;
-    
+
     @Autowired
     private DateFormatter dateFormatter;
-    
+
     @Autowired
     private DepartmentFormatter departmentFormatter;
-    
+
     @Autowired
     private MajorFormatter majorFormatter;
-    
+
     @Autowired
     private SchoolYearFormatter schoolYearFormatter;
-    
+
     @Autowired
     private StudentFormatter studentFormatter;
-    
+
     @Autowired
     private SubjectFormatter subjectFormatter;
-    
+
     @Autowired
     private SubjectTeacherFormatter subjectTeacherFormatter;
-    
+
     @Autowired
     private TeacherFormatter teacherFormatter;
-    
+
     @Autowired
     private TrainingTypeFormatter trainingTypeFormatter;
-    
+
     @Autowired
     private UserFormatter userFormatter;
 
@@ -80,7 +86,7 @@ public class WebAppContextConfig implements WebMvcConfigurer {
     public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
         configurer.enable();
     }
-    
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/css/**")
@@ -89,14 +95,6 @@ public class WebAppContextConfig implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/static/js/");
         registry.addResourceHandler("/images/**")
                 .addResourceLocations("classpath:/static/images/");
-    }
-
-    @Bean
-    public MessageSource messageSource() {
-        ResourceBundleMessageSource m = new ResourceBundleMessageSource();
-        m.setBasenames("messages");
-
-        return m;
     }
 
     @Bean(name = "validator")
@@ -111,16 +109,12 @@ public class WebAppContextConfig implements WebMvcConfigurer {
     public HandlerMappingIntrospector mvcHandlerMappingIntrospector() {
         return new HandlerMappingIntrospector();
     }
-    
+
     @Bean
     public RequestContextListener requestContextListener() {
         return new RequestContextListener();
     }
-    
-    
-    
-    
-    
+
     @Override
     public void addFormatters(FormatterRegistry registry) {
         registry.addFormatter(classFormatter);
@@ -134,5 +128,39 @@ public class WebAppContextConfig implements WebMvcConfigurer {
         registry.addFormatter(teacherFormatter);
         registry.addFormatter(trainingTypeFormatter);
         registry.addFormatter(userFormatter);
+    }
+
+    @Bean
+    public MessageSource messageSource() {
+        ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+        messageSource.setBasenames("i18n/messages");
+        messageSource.setDefaultEncoding("UTF-8");
+        messageSource.setUseCodeAsDefaultMessage(false);
+        return messageSource;
+    }
+
+    @Bean
+    public LocaleResolver localeResolver() {
+        SessionLocaleResolver resolver = new SessionLocaleResolver();
+        resolver.setDefaultLocale(new Locale("vi"));
+        return resolver;
+    }
+
+    @Bean
+    public LocaleChangeInterceptor localeChangeInterceptor() {
+        LocaleChangeInterceptor interceptor = new LocaleChangeInterceptor();
+        interceptor.setParamName("lang");
+        return interceptor;
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(localeChangeInterceptor());
+        registry.addInterceptor(authenticatedLocaleInterceptor());
+    }
+
+    @Bean
+    public AuthenticatedLocaleInterceptor authenticatedLocaleInterceptor() {
+        return new AuthenticatedLocaleInterceptor();
     }
 }
