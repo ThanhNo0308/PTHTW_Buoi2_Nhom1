@@ -77,7 +77,7 @@ public class ApiTeacherController {
 
     // Xem chi tiết sinh viên
     @GetMapping("/students/{studentCode}/detail")
-    public ResponseEntity<Map<String, Object>> getStudentDetail(@PathVariable String studentCode) {
+    public ResponseEntity<Map<String, Object>> getStudentDetail(@PathVariable("studentCode") String studentCode) {
         Map<String, Object> response = new HashMap<>();
 
         try {
@@ -222,7 +222,7 @@ public class ApiTeacherController {
     // Xem điểm của sinh viên
     @GetMapping("/students/{studentCode}/scores")
     public ResponseEntity<Map<String, Object>> getStudentScores(
-            @PathVariable String studentCode,
+            @PathVariable("studentCode") String studentCode,
             @RequestParam(value = "schoolYearId", required = false) Integer schoolYearId) {
 
         Map<String, Object> response = new HashMap<>();
@@ -394,6 +394,15 @@ public class ApiTeacherController {
             for (com.ntn.pojo.Class cls : assignedClasses) {
                 List<Student> studentsInClass = studentService.getStudentByClassId(cls.getId());
                 allAssignedStudents.addAll(studentsInClass);
+            }
+
+            for (Subjectteacher assignment : teacherAssignments) {
+                List<Studentsubjectteacher> enrollments = studentSubjectTeacherService.getBySubjectTeacherId(assignment.getId());
+                for (Studentsubjectteacher enrollment : enrollments) {
+                    if (enrollment.getStudentId() != null) {
+                        allAssignedStudents.add(enrollment.getStudentId());
+                    }
+                }
             }
 
             List<Student> assignedStudentsList = new ArrayList<>(allAssignedStudents);

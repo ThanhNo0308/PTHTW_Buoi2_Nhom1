@@ -58,7 +58,7 @@ public class ApiTeacherClassController {
 
     // Lấy danh sách lớp được phân công
     @GetMapping("/classes")
-    public ResponseEntity<?> getTeacherClasses(@RequestParam String username) {
+    public ResponseEntity<?> getTeacherClasses(@RequestParam("username") String username) {
         try {
             Teacher teacher = teacherService.getTeacherByUsername(username);
 
@@ -148,7 +148,7 @@ public class ApiTeacherClassController {
     @GetMapping("/classes/{classId}")
     public ResponseEntity<?> getClassDetail(
             @PathVariable("classId") int classId,
-            @RequestParam String username) {
+            @RequestParam("username") String username) {
         try {
             Teacher teacher = teacherService.getTeacherByUsername(username);
 
@@ -261,11 +261,13 @@ public class ApiTeacherClassController {
             }
 
             // Lấy danh sách sinh viên trong lớp
+            List<Student> allStudentsInClass = studentService.getStudentByClassId(classId);
             List<Studentsubjectteacher> enrollments = studentSubjectTeacherService.getBySubjectTeacherId(subjectTeacherId);
-            List<Student> students = new ArrayList<>();
+            Set<Student> uniqueStudents = new HashSet<>(allStudentsInClass);
             for (Studentsubjectteacher enrollment : enrollments) {
-                students.add(enrollment.getStudentId());
+                uniqueStudents.add(enrollment.getStudentId());
             }
+            List<Student> students = new ArrayList<>(uniqueStudents);
 
             // Lấy danh sách loại điểm từ bảng classscoretypes
             List<String> scoreTypes = typeScoreService.getScoreTypesByClass(classId, subjectTeacherId, schoolYearId);

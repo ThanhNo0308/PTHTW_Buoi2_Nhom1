@@ -528,6 +528,18 @@ public class ScoreRepositoryImpl implements ScoreRepository {
 
         List<Student> allStudentsInClass = studentService.getStudentByClassId(classId);
 
+        // Lấy thêm sinh viên đã đăng ký học từ các lớp khác
+        List<Studentsubjectteacher> enrollments = studentSubjectTeacherService.getBySubjectTeacherId(subjectTeacherId);
+        Set<Student> uniqueStudents = new HashSet<>(allStudentsInClass);
+
+        // Thêm sinh viên từ danh sách đăng ký
+        for (Studentsubjectteacher enrollment : enrollments) {
+            uniqueStudents.add(enrollment.getStudentId());
+        }
+
+        // Chuyển set thành list để xử lý
+        allStudentsInClass = new ArrayList<>(uniqueStudents);
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         try {
@@ -694,6 +706,18 @@ public class ScoreRepositoryImpl implements ScoreRepository {
                 subjectTeacherId, classId, schoolYearId);
 
         List<Student> allStudentsInClass = studentService.getStudentByClassId(classId);
+
+        // Lấy thêm sinh viên đã đăng ký học từ các lớp khác
+        List<Studentsubjectteacher> enrollments = studentSubjectTeacherService.getBySubjectTeacherId(subjectTeacherId);
+        Set<Student> uniqueStudents = new HashSet<>(allStudentsInClass);
+
+        // Thêm sinh viên từ danh sách đăng ký
+        for (Studentsubjectteacher enrollment : enrollments) {
+            uniqueStudents.add(enrollment.getStudentId());
+        }
+
+        // Chuyển set thành list để xử lý
+        allStudentsInClass = new ArrayList<>(uniqueStudents);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
