@@ -343,19 +343,27 @@ public class ApiStudentController {
 
             // Thu thập thông tin môn học của học kỳ đã chọn
             List<Map<String, Object>> subjects = new ArrayList<>();
+            Set<Integer> addedSubjectIds = new HashSet<>();
             for (Studentsubjectteacher enrollment : enrollments) {
                 if (enrollment.getSubjectTeacherId() != null
                         && enrollment.getSubjectTeacherId().getSchoolYearId() != null
                         && enrollment.getSubjectTeacherId().getSchoolYearId().getId() == currentSchoolYearId) {
 
-                    Map<String, Object> subjectInfo = new HashMap<>();
-                    subjectInfo.put("subjectId", enrollment.getSubjectTeacherId().getSubjectId().getId());
-                    subjectInfo.put("subjectName", enrollment.getSubjectTeacherId().getSubjectId().getSubjectName());
-                    subjectInfo.put("credits", enrollment.getSubjectTeacherId().getSubjectId().getCredits());
-                    subjectInfo.put("teacherName", enrollment.getSubjectTeacherId().getTeacherId().getTeacherName());
-                    subjectInfo.put("teacherId", enrollment.getSubjectTeacherId().getTeacherId().getId());
+                    Integer subjectId = enrollment.getSubjectTeacherId().getSubjectId().getId();
 
-                    subjects.add(subjectInfo);
+                    // Kiểm tra xem môn học đã được thêm chưa
+                    if (!addedSubjectIds.contains(subjectId)) {
+                        addedSubjectIds.add(subjectId);
+
+                        Map<String, Object> subjectInfo = new HashMap<>();
+                        subjectInfo.put("subjectId", subjectId);
+                        subjectInfo.put("subjectName", enrollment.getSubjectTeacherId().getSubjectId().getSubjectName());
+                        subjectInfo.put("credits", enrollment.getSubjectTeacherId().getSubjectId().getCredits());
+                        subjectInfo.put("teacherName", enrollment.getSubjectTeacherId().getTeacherId().getTeacherName());
+                        subjectInfo.put("teacherId", enrollment.getSubjectTeacherId().getTeacherId().getId());
+
+                        subjects.add(subjectInfo);
+                    }
                 }
             }
 
