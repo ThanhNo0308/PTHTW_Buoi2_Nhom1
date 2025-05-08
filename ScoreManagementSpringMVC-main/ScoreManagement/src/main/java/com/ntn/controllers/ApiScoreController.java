@@ -1,6 +1,5 @@
 package com.ntn.controllers;
 
-import static com.google.protobuf.Any.parser;
 import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Score;
 import com.ntn.pojo.Class;
