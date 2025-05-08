@@ -3,10 +3,8 @@ import { Container, Card, Form, Button, Alert, Spinner, Table } from 'react-boot
 import { scoreApis } from '../configs/Apis';
 import { MyUserContext } from '../App';
 import { useNavigate } from 'react-router-dom';
-import cookie from 'react-cookies';
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDownload, faUpload, faInfoCircle, faCheck, faExclamationTriangle, faSignInAlt } from '@fortawesome/free-solid-svg-icons';
+import { faDownload, faUpload, faInfoCircle, faCheck, faExclamationTriangle} from '@fortawesome/free-solid-svg-icons';
 
 const ScoreImport = () => {
   const [user] = useContext(MyUserContext);
@@ -14,7 +12,6 @@ const ScoreImport = () => {
   // State cho form và dữ liệu
   const [loading, setLoading] = useState(true);
   const [subjectTeachers, setSubjectTeachers] = useState([]);
-  const [classes, setClasses] = useState([]);
   const [schoolYears, setSchoolYears] = useState([]);
   const [selectedSubjectTeacher, setSelectedSubjectTeacher] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
@@ -454,12 +451,6 @@ const ScoreImport = () => {
 
   // Chuyển về trang cấu hình loại điểm
   const goToScoreTypeConfig = () => {
-    console.log("Navigation params:", {
-      classId: selectedClass,
-      subjectTeacherId: selectedSubjectTeacher,
-      schoolYearId: selectedSchoolYear
-    });
-
     // Kiểm tra dữ liệu trước khi điều hướng
     if (!selectedClass || !selectedSubjectTeacher || !selectedSchoolYear) {
       setError("Thiếu thông tin để cấu hình loại điểm. Vui lòng chọn đầy đủ môn học, lớp và năm học.");

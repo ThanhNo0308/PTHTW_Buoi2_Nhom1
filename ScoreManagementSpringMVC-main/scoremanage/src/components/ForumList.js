@@ -41,15 +41,12 @@ const ForumList = () => {
 
       if (!user) return;
 
-      console.log("Loading forums for user role:", user.role);
-
       let response;
       if (user.role === 'Teacher') {
         response = await forumApis.getTeacherForums();
       } else {
         // Sinh viên xem tất cả diễn đàn
         response = await forumApis.getAllForums();
-        console.log("Forums response for student:", response);
       }
 
       if (response.data && response.data.success) {
@@ -57,8 +54,6 @@ const ForumList = () => {
 
         // Lọc diễn đàn cho sinh viên dựa trên môn học đã đăng ký
         if (user.role === 'Student') {
-          console.log("Filtering forums for student with subjects:", subjectTeachers);
-
           if (subjectTeachers.length === 0) {
             // Nếu chưa có dữ liệu môn học, tải lại
             const subjects = await loadSubjectTeachers();
@@ -78,7 +73,6 @@ const ForumList = () => {
             });
           }
 
-          console.log(`Filtered to ${forumsToShow.length} forums for student`);
         }
 
         setForums(forumsToShow);
@@ -133,7 +127,6 @@ const ForumList = () => {
         };
       });
 
-      console.log("Loaded subject teachers:", formattedSubjects);
       setSubjectTeachers(formattedSubjects);
 
       return formattedSubjects;

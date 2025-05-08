@@ -5,9 +5,8 @@ import { Alert } from 'react-bootstrap';
 import moment from 'moment';
 import "../assets/css/base.css";
 import "../assets/css/styles.css";
-import {
-  faUserCircle, faCheckCircle, faExclamationCircle, faIdCard,
-  faSave, faKey, faInfoCircle, faLock, faLockOpen, faEye, faEyeSlash, faShieldAlt, faUserLock
+import {faUserCircle, faCheckCircle, faExclamationCircle, faIdCard,
+  faSave, faKey, faInfoCircle, faLock, faLockOpen, faEye, faShieldAlt, faUserLock
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -60,7 +59,6 @@ const Profile = () => {
           if (user.role === 'Student') {
             // Dùng API student-current cho sinh viên
             response = await API.get(endpoints["student-current"]);
-            console.log("Student API Response:", response.data);
 
             if (response.data && response.data.student) {
               // Lưu thông tin sinh viên vào roleSpecificInfo
@@ -82,8 +80,6 @@ const Profile = () => {
                 formattedBirthdate = moment(user.birthdate).format("YYYY-MM-DD");
               }
             
-              console.log("Birthdate from API (student):", studentData.birthdate);
-              console.log("Formatted birthdate:", formattedBirthdate);
             
               // Cập nhật thông tin cơ bản
               setProfileData({
@@ -99,7 +95,6 @@ const Profile = () => {
           } else {
             // Các vai trò khác vẫn dùng getCurrentUser
             response = await userApis.getCurrentUser();
-            console.log("API Response:", response.data);
 
             if (response.data && response.data.user) {
               const userData = response.data.user;
@@ -118,7 +113,6 @@ const Profile = () => {
 
               // Thêm logic để cập nhật roleSpecificInfo
               if (response.data.roleSpecificInfo) {
-                console.log("Role specific info:", response.data.roleSpecificInfo);
                 setRoleSpecificInfo(response.data.roleSpecificInfo);
               }
             }
@@ -141,7 +135,6 @@ const Profile = () => {
   };
 
   const isUserActive = (status) => {
-    console.log("Checking status:", status);
 
     // Luôn trả về true nếu trạng thái là "Active"
     if (status === "Active") {
@@ -211,15 +204,12 @@ const Profile = () => {
 
       // 1. Xử lý upload ảnh trước nếu có
       if (fileInputRef.current.files.length > 0) {
-        console.log("File selected:", fileInputRef.current.files[0].name);
 
         try {
           const avatarResponse = await userApis.uploadAvatar(
             profileData.id,
             fileInputRef.current.files[0]
           );
-
-          console.log("Avatar upload response:", avatarResponse.data);
 
           if (avatarResponse.data && avatarResponse.data.imageUrl) {
             // Lưu URL mới để cập nhật một lần duy nhất

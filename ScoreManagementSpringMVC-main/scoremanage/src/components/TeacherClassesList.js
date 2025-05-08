@@ -21,7 +21,6 @@ const TeacherClassesList = () => {
                 const response = await teacherClassApis.getTeacherClasses(user.username);
 
                 if (response.data) {
-                    console.log("API response:", response.data); // For debugging
                     setClasses(response.data.classes || []);
                     setStudentCounts(response.data.studentCounts || {});
                 }

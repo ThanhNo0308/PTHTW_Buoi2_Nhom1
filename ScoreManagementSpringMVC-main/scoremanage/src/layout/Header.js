@@ -4,7 +4,7 @@ import "../assets/css/styles.css";
 import logo from '../assets/images/logo.png';
 import cookie from "react-cookies";
 import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { MyUserContext } from '../App';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -17,12 +17,15 @@ import {
 
 const Header = () => {
   const [user, dispatch] = useContext(MyUserContext);
+  const navigate = useNavigate();
 
   const logout = () => {
     cookie.remove("user", { path: '/' });
     dispatch({
       type: "logout"
     });
+
+    navigate('/login');
   };
 
   return (

@@ -1,17 +1,14 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MyUserContext } from "../App";
-import axios from 'axios';
-import { endpoints, authApi, SERVER, API } from '../configs/Apis';
-import { Alert, Spinner, Col, Card, Button, Modal, Form } from 'react-bootstrap';
+import { endpoints, API } from '../configs/Apis';
+import { Alert, Spinner, Card, Button, Modal, Form } from 'react-bootstrap';
 import "../assets/css/base.css";
 import "../assets/css/dashboard.css";
 import defaultAvatar from '../assets/images/logo.png';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faComments, faChalkboardTeacher, faExclamationCircle, faCheckCircle, faUserEdit, faUsers, faGraduationCap, faFileImport, faSearch, faUser,
-  faChalkboard, faSchool, faPaperPlane, faUnlock, faEnvelope
-} from '@fortawesome/free-solid-svg-icons';
+import {faComments, faExclamationCircle, faCheckCircle, faUserEdit, faUsers, faGraduationCap, faFileImport, faSearch, faUser,
+  faChalkboard, faPaperPlane, faUnlock, faEnvelope} from '@fortawesome/free-solid-svg-icons';
 
 const TeacherDashboard = () => {
   const [user] = useContext(MyUserContext);

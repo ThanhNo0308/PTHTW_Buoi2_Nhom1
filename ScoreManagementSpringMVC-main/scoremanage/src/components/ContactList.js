@@ -2,10 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { ListGroup, Form, InputGroup, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faUserCircle, faCircle } from '@fortawesome/free-solid-svg-icons';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../configs/FirebaseConfig';
 import '../assets/css/FireBase.css';
-import moment from 'moment';
 import 'moment/locale/vi';
 
 const ContactList = ({ contacts, selectedContact, onSelectContact, currentUser, loading }) => {

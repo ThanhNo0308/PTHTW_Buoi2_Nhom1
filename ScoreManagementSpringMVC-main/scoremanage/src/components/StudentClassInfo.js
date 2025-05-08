@@ -4,7 +4,7 @@ import { Card, Table, Alert, Spinner, Row, Col } from 'react-bootstrap';
 import { MyUserContext } from "../App";
 import { studentApis } from '../configs/Apis';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faExclamationTriangle, faUserGraduate, faSchool, faUserTie, faCheckCircle, faBan } from '@fortawesome/free-solid-svg-icons';
+import { faUsers, faExclamationTriangle, faSchool, faCheckCircle, faBan } from '@fortawesome/free-solid-svg-icons';
 
 const StudentClassInfo = () => {
   const [user] = useContext(MyUserContext);
@@ -31,7 +31,6 @@ const StudentClassInfo = () => {
         setError(null);
 
         const response = await studentApis.getClassInfo();
-        console.log("API response:", response.data);
 
         if (response.data) {
           setClassInfo(response.data.class || null);

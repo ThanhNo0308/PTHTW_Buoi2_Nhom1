@@ -2,16 +2,8 @@ import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { userApis } from "../configs/Apis";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faUserPlus,
-  faExclamationCircle,
-  faEnvelope,
-  faUser,
-  faLock,
-  faEye,
-  faEyeSlash,
-  faShieldAlt
-} from '@fortawesome/free-solid-svg-icons';
+import {faUserPlus, faExclamationCircle, faEnvelope, faUser,
+  faLock, faEye, faEyeSlash, faShieldAlt} from '@fortawesome/free-solid-svg-icons';
 import "../assets/css/register.css";
 import "../assets/css/styles.css";
 import "../assets/css/base.css";

@@ -39,7 +39,6 @@ const Login = () => {
         if (res.data.status === "success") {
           // Lưu thông tin người dùng vào context
           const userData = res.data.user || {};
-          console.log("User data:", userData);
 
           // Kiểm tra trạng thái active
           if (userData.active !== "Active") {

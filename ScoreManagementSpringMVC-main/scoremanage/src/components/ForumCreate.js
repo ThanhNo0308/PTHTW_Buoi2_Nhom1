@@ -91,11 +91,8 @@ const ForumCreate = () => {
         content,
         subjectTeacherId: parseInt(subjectTeacherId)
       };
-
-      console.log("Submitting forum data:", forumData);
       
       const response = await forumApis.addForum(forumData);
-      console.log("Add forum response:", response.data);
       if (response.data.success) {
         alert("Tạo diễn đàn thành công!");
         navigate(`/forums/${response.data.forumId}`);

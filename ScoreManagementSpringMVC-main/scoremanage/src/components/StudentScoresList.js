@@ -4,15 +4,8 @@ import { Card, Table, Alert, Spinner, Form, Row, Col, Badge } from 'react-bootst
 import { MyUserContext } from "../App";
 import { studentApis } from '../configs/Apis';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    faGraduationCap,
-    faExclamationTriangle,
-    faCalendarAlt,
-    faSortAmountDown,
-    faCalculator,
-    faFilter,
-    faCheckCircle
-} from '@fortawesome/free-solid-svg-icons';
+import { faGraduationCap, faExclamationTriangle, faCalendarAlt, faSortAmountDown,
+    faCalculator, faFilter} from '@fortawesome/free-solid-svg-icons';
 
 const StudentScoresList = () => {
     const [user] = useContext(MyUserContext);
@@ -57,7 +50,6 @@ const StudentScoresList = () => {
                 setError(null);
     
                 const response = await studentApis.getStudentScores(selectedSchoolYear);
-                console.log("API response:", response.data);
     
                 if (response.data) {
                     // Set scores data

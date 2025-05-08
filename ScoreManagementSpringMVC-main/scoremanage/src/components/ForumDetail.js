@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Container, Card, Button, Form, Alert, Spinner, Badge, Row, Col } from 'react-bootstrap';
+import { Container, Card, Button, Form, Alert, Spinner, Badge} from 'react-bootstrap';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { forumApis } from '../configs/Apis';
 import { MyUserContext } from '../App';

@@ -1,24 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { InputGroup, Form, Button, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faPaperPlane,
-  faUserCircle,
-  faEllipsisV,
-  faFileUpload,
-  faCheck,
-  faCheckDouble,
-  faFile,
-  faTimes,
-  faComments, faTrash, faCircle
-} from '@fortawesome/free-solid-svg-icons';
-import { db, storage } from '../configs/FirebaseConfig';
+import {faPaperPlane, faUserCircle, faEllipsisV, faFileUpload, faCheck, faCheckDouble,
+  faFile, faTimes, faComments, faTrash, faCircle} from '@fortawesome/free-solid-svg-icons';
+import { db} from '../configs/FirebaseConfig';
 import { markMessageAsRead, deleteMessage } from '../configs/FirebaseUtils';
-import {
-  collection, query, where, orderBy, addDoc, serverTimestamp,
-  onSnapshot, doc, updateDoc, setDoc
-} from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, query, orderBy, addDoc, serverTimestamp,
+  onSnapshot, doc, setDoc} from 'firebase/firestore';
 import moment from 'moment';
 import 'moment/locale/vi';
 import '../assets/css/FireBase.css';

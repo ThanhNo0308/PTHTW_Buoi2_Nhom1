@@ -4,11 +4,9 @@ import { MyUserContext } from "../App";
 import "../assets/css/base.css";
 import "../assets/css/styles.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faBolt, faSignInAlt, faUserPlus, faCalculator, faChartPie,
+import {faBolt, faSignInAlt, faUserPlus, faCalculator, faChartPie,
   faUserShield, faBell, faFileExport, faComments, faQuestionCircle,
-  faBook, faEnvelope, faPhone
-} from '@fortawesome/free-solid-svg-icons';
+  faBook, faEnvelope, faPhone} from '@fortawesome/free-solid-svg-icons';
 
 const Home = () => {
   const [user] = useContext(MyUserContext);

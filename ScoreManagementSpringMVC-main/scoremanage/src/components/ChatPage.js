@@ -25,7 +25,7 @@ const ChatPage = () => {
     if (!user) {
       const redirectTimer = setTimeout(() => {
         navigate('/login');
-      }, 500); // Chờ 500ms để hiển thị thông báo trước khi chuyển hướng
+      }, 500); 
 
       return () => clearTimeout(redirectTimer);
     }

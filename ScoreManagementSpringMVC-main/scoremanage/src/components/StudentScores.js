@@ -3,16 +3,8 @@ import { Container, Card, Row, Col, Table, Alert, Spinner, Button, Form } from '
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { scoreApis } from '../configs/Apis';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faUserGraduate,
-  faArrowLeft,
-  faExclamationTriangle,
-  faCheckCircle,
-  faFileDownload,
-  faFilter,
-  faSortAmountDown,
-  faCalculator
-} from '@fortawesome/free-solid-svg-icons';
+import {faUserGraduate, faArrowLeft, faExclamationTriangle, faCheckCircle,
+   faFilter, faSortAmountDown, faCalculator} from '@fortawesome/free-solid-svg-icons';
 
 const StudentScores = () => {
   const { studentCode } = useParams();

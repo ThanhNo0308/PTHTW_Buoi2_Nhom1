@@ -34,7 +34,6 @@ const StudentSubjects = () => {
         setError(null);
 
         const response = await studentApis.getEnrolledSubjects(selectedSchoolYear);
-        console.log("API response:", response.data);
 
         if (response.data) {
           setSubjects(response.data.subjects || []);

@@ -2,10 +2,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Container, Card, Form, Table, Button, Modal, Alert, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faArrowLeft, faPlus, faCog, faSave, faEdit, faLock,
-  faExclamationCircle, faCheckCircle, faTimes, faFilePdf, faFileCsv, faFileExport
-} from '@fortawesome/free-solid-svg-icons';
+import {faArrowLeft, faPlus, faCog, faSave, faEdit, faLock,
+  faExclamationCircle, faCheckCircle, faTimes, faFilePdf, faFileCsv} from '@fortawesome/free-solid-svg-icons';
 import { scoreApis, teacherClassApis } from '../configs/Apis';
 import { MyUserContext } from '../App';
 import "../assets/css/styles.css";
@@ -72,13 +70,6 @@ const ScoreManagement = () => {
       setLoading(true);
       setError("");
 
-      console.log("Loading data with params:", {
-        classId,
-        subjectTeacherId,
-        schoolYearId,
-        username: user.username
-      });
-
       // Load class details
       const classResponse = await teacherClassApis.getClassDetail(classId, user.username);
       if (!classResponse.data) {
@@ -136,7 +127,6 @@ const ScoreManagement = () => {
             });
           });
 
-          console.log("Formatted scores:", formattedScores);
           setStudentScores(formattedScores);
         } else {
           console.warn("No student scores found in API response");
