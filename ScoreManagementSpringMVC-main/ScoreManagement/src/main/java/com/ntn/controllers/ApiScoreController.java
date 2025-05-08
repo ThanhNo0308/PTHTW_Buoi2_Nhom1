@@ -70,7 +70,7 @@ public class ApiScoreController {
 
     @Autowired
     private ClassScoreTypeService classScoreTypeService;
-    
+
     @Autowired
     private StudentSubjectTeacherService studentSubjectTeacherService;
 
@@ -647,7 +647,7 @@ public class ApiScoreController {
                     response.put("missingScoreTypes", missingScoreColumns);
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
-                
+
                 // Sau khi import điểm thành công, thêm dòng này
                 Set<String> processedStudentCodes = new HashSet<>();
 
@@ -693,17 +693,11 @@ public class ApiScoreController {
             }
 
             // Truyền thêm classId vào phương thức importScoresFromCsv
-            boolean success = scoreService.importScoresFromCsv(file, subjectTeacherId, classId, schoolYearId);
+            Map<String, Object> importResult = scoreService.importScoresFromCsv(file, subjectTeacherId, classId, schoolYearId);
 
-            if (success) {
-                response.put("success", true);
-                response.put("message", "Import điểm thành công");
-                return ResponseEntity.ok(response);
-            } else {
-                response.put("success", false);
-                response.put("message", "Không thể import điểm. Vui lòng kiểm tra lại file");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
+            response.putAll(importResult);
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             e.printStackTrace();
 
@@ -723,7 +717,7 @@ public class ApiScoreController {
             }
 
             response.put("success", false);
-            response.put("message", errorMessage);
+            response.put("message", "Lỗi khi import điểm: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

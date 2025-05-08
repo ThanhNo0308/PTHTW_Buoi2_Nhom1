@@ -29,7 +29,7 @@ const ScoreImport = () => {
   const [invalidStudents, setInvalidStudents] = useState([]);
   const [showMissingScoreTypesAlert, setShowMissingScoreTypesAlert] = useState(true);
   const [showInvalidStudentsAlert, setShowInvalidStudentsAlert] = useState(true);
-  // State cho thông báo
+  const [invalidScores, setInvalidScores] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [missingScoreTypes, setMissingScoreTypes] = useState([]);
@@ -369,13 +369,6 @@ const ScoreImport = () => {
         });
       }
 
-      console.log("Sending import request for:", {
-        file: file.name,
-        subjectTeacherId: selectedSubjectTeacher,
-        classId: selectedClass,
-        schoolYearId: selectedSchoolYear
-      });
-
       const response = await scoreApis.importScores(
         file,
         parseInt(selectedSubjectTeacher),
@@ -392,6 +385,11 @@ const ScoreImport = () => {
         }, 2000); // Đợi 2 giây để người dùng có thể thấy thông báo thành công
       } else {
         setError(response.data?.message || 'Có lỗi xảy ra khi import điểm');
+
+        // Hiển thị các điểm không hợp lệ nếu có
+        if (response.data?.invalidScores && response.data.invalidScores.length > 0) {
+          setInvalidScores(response.data.invalidScores);
+        }
 
         // Xử lý trường hợp sinh viên không hợp lệ
         if (response.data?.invalidStudents && response.data.invalidStudents.length > 0) {
@@ -490,6 +488,44 @@ const ScoreImport = () => {
         <Alert variant="success" dismissible onClose={() => setSuccess('')}>
           <FontAwesomeIcon icon={faCheck} className="me-2" />
           {success}
+        </Alert>
+      )}
+
+      {invalidScores.length > 0 && (
+        <Alert
+          variant="danger"
+          dismissible
+          onClose={() => setInvalidScores([])}
+        >
+          <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
+          <p>File CSV chứa điểm không hợp lệ:</p>
+          <div className="table-responsive">
+            <Table striped bordered hover size="sm">
+              <thead>
+                <tr>
+                  <th>Dòng</th>
+                  <th>MSSV</th>
+                  <th>Họ tên</th>
+                  <th>Loại điểm</th>
+                  <th>Giá trị</th>
+                  <th>Lỗi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invalidScores.map((score, index) => (
+                  <tr key={index}>
+                    <td>{score.row}</td>
+                    <td>{score.studentCode}</td>
+                    <td>{score.fullName}</td>
+                    <td>{score.scoreType}</td>
+                    <td className="text-danger fw-bold">{score.value}</td>
+                    <td>{score.error}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+          <p className="mt-2">Vui lòng sửa các giá trị không hợp lệ trong file CSV và thử lại.</p>
         </Alert>
       )}
 

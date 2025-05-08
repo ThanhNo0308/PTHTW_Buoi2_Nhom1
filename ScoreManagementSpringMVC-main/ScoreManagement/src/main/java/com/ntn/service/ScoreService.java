@@ -2,6 +2,7 @@ package com.ntn.service;
 
 import com.ntn.pojo.Score;
 import java.util.List;
+import java.util.Map;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface ScoreService {
@@ -20,7 +21,7 @@ public interface ScoreService {
 
     List<Score> getListScoreBySubjectTeacherIdAndSchoolYearIdAndStudentId(int subjectTeacherID, int schoolYearId, int studentID);
 
-    boolean importScoresFromCsv(MultipartFile file, int subjectTeacherId, int classId, int schoolYearId) throws Exception;
+    Map<String, Object> importScoresFromCsv(MultipartFile file, int subjectTeacherId, int classId, int schoolYearId) throws Exception;
 
     boolean saveScoresDraft(List<Score> scores);
 

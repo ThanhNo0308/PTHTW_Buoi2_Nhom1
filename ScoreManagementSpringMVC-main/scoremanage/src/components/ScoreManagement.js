@@ -196,6 +196,7 @@ const ScoreManagement = () => {
     const studentData = studentScores[studentId] || {};
     let totalWeightedScore = 0;
     let totalWeight = 0;
+    let hasScores = false;
 
     for (const type in studentData) {
       if (studentData[type]?.value && scoreWeights[type]) {
@@ -204,6 +205,7 @@ const ScoreManagement = () => {
         if (!isNaN(scoreValue) && !isNaN(weight)) {
           totalWeightedScore += scoreValue * weight;
           totalWeight += weight;
+          hasScores = true;
         }
       }
     }

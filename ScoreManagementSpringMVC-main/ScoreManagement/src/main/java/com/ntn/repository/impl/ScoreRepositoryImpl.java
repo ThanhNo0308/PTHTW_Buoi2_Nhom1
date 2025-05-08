@@ -240,7 +240,13 @@ public class ScoreRepositoryImpl implements ScoreRepository {
     }
 
     @Override
-    public boolean importScoresFromCsv(MultipartFile file, int subjectTeacherId, int classId, int schoolYearId) throws Exception {
+    public Map<String, Object> importScoresFromCsv(MultipartFile file, int subjectTeacherId, int classId, int schoolYearId) throws Exception {
+        // Tạo map kết quả
+        Map<String, Object> result = new HashMap<>();
+
+        // Tạo danh sách để lưu các lỗi điểm không hợp lệ
+        List<Map<String, String>> invalidScores = new ArrayList<>();
+
         try (CSVParser parser = new CSVParser(
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8),
                 CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
@@ -249,7 +255,7 @@ public class ScoreRepositoryImpl implements ScoreRepository {
             Set<Integer> processedStudentIds = new HashSet<>(); // Track processed students for enrollment
             Session session = this.factory.getObject().getCurrentSession();
 
-            // Tìm SubjectTeacher chính xác
+            // Các đoạn code tìm SubjectTeacher và SchoolYear giữ nguyên
             Subjectteacher subjectTeacher = subjectTeacherService.findByIdClassIdAndSchoolYearId(
                     subjectTeacherId, classId, schoolYearId);
 
@@ -258,16 +264,22 @@ public class ScoreRepositoryImpl implements ScoreRepository {
             }
 
             if (subjectTeacher == null) {
-                throw new Exception("Không tìm thấy thông tin phân công giảng dạy với ID=" + subjectTeacherId);
+                result.put("success", false);
+                result.put("message", "Không tìm thấy thông tin phân công giảng dạy với ID=" + subjectTeacherId);
+                return result;
             }
 
             Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
             if (schoolYear == null) {
-                throw new Exception("Không tìm thấy thông tin học kỳ với ID=" + schoolYearId);
+                result.put("success", false);
+                result.put("message", "Không tìm thấy thông tin học kỳ với ID=" + schoolYearId);
+                return result;
             }
 
             // Xử lý từng record trong CSV
+            int rowNumber = 1; // Đếm số dòng để báo cáo lỗi chính xác
             for (CSVRecord record : parser) {
+                rowNumber++; // Tăng số dòng (dòng đầu tiên là header)
                 String studentCode;
                 try {
                     studentCode = record.get("MSSV");
@@ -305,7 +317,15 @@ public class ScoreRepositoryImpl implements ScoreRepository {
 
                             // Kiểm tra điểm có hợp lệ không (0-10)
                             if (scoreValue < 0 || scoreValue > 10) {
-                                System.err.println("Điểm không hợp lệ (" + scoreValue + ") cho sinh viên " + studentCode);
+                                // Thu thập thông tin lỗi
+                                Map<String, String> error = new HashMap<>();
+                                error.put("row", String.valueOf(rowNumber));
+                                error.put("studentCode", studentCode);
+                                error.put("fullName", student.getLastName() + " " + student.getFirstName());
+                                error.put("scoreType", headerName);
+                                error.put("value", scoreValueStr);
+                                error.put("error", "Điểm phải nằm trong khoảng từ 0 đến 10");
+                                invalidScores.add(error);
                                 continue;
                             }
 
@@ -316,6 +336,8 @@ public class ScoreRepositoryImpl implements ScoreRepository {
                                 continue;
                             }
 
+                            // Phần còn lại xử lý và lưu điểm
+                            // (code cũ, giữ nguyên)
                             String hql = "FROM Score s WHERE s.studentID.id = :studentId AND "
                                     + "s.subjectTeacherID.id = :subjectTeacherId AND "
                                     + "s.schoolYearId.id = :schoolYearId AND "
@@ -346,18 +368,28 @@ public class ScoreRepositoryImpl implements ScoreRepository {
                                 newScore.setIsLocked(false);
                                 newScore.setSchoolYearId(schoolYear);
                                 scores.add(newScore);
-
-                                // Tự động đăng ký học cho sinh viên nếu chưa đăng ký
-                                if (!studentSubjectTeacherService.checkDuplicate(student.getId(), subjectTeacherId)) {
-                                    addStudentEnrollment(student, subjectTeacher);
-                                }
                             }
-
                         } catch (NumberFormatException e) {
-                            System.err.println("Giá trị không phải số (" + scoreValueStr + ") cho sinh viên " + studentCode);
+                            // Thu thập thông tin lỗi với giá trị không phải số
+                            Map<String, String> error = new HashMap<>();
+                            error.put("row", String.valueOf(rowNumber));
+                            error.put("studentCode", studentCode);
+                            error.put("fullName", student.getLastName() + " " + student.getFirstName());
+                            error.put("scoreType", headerName);
+                            error.put("value", scoreValueStr);
+                            error.put("error", "Giá trị điểm không phải là số hợp lệ");
+                            invalidScores.add(error);
                         }
                     }
                 }
+            }
+
+            // Kiểm tra nếu có lỗi điểm không hợp lệ
+            if (!invalidScores.isEmpty()) {
+                result.put("success", false);
+                result.put("message", "Tìm thấy điểm không hợp lệ trong file CSV");
+                result.put("invalidScores", invalidScores);
+                return result;
             }
 
             // Lưu tất cả điểm
@@ -373,11 +405,16 @@ public class ScoreRepositoryImpl implements ScoreRepository {
                 }
             }
 
-            return success;
+            result.put("success", success);
+            result.put("message", success ? "Import điểm thành công" : "Có lỗi khi import điểm");
+            return result;
+
         } catch (Exception e) {
             System.err.println("Lỗi khi import điểm: " + e.getMessage());
             e.printStackTrace();
-            throw new Exception("Không thể import điểm: " + e.getMessage());
+            result.put("success", false);
+            result.put("message", "Không thể import điểm: " + e.getMessage());
+            return result;
         }
     }
 
@@ -489,6 +526,8 @@ public class ScoreRepositoryImpl implements ScoreRepository {
         List<Score> scores = this.scoreService.getScoresBySubjectTeacherIdAndClassIdAndSchoolYearId(
                 subjectTeacherId, classId, schoolYearId);
 
+        List<Student> allStudentsInClass = studentService.getStudentByClassId(classId);
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         try {
@@ -568,14 +607,32 @@ public class ScoreRepositoryImpl implements ScoreRepository {
             }
 
             // Nhóm điểm theo sinh viên
-            Map<Student, List<Score>> scoresByStudent = scores.stream()
-                    .collect(Collectors.groupingBy(Score::getStudentID));
+            Map<Student, List<Score>> scoresByStudent = new HashMap<>();
+
+            // Nhóm điểm theo sinh viên (nếu có)
+            for (Score score : scores) {
+                Student student = score.getStudentID();
+                if (!scoresByStudent.containsKey(student)) {
+                    scoresByStudent.put(student, new ArrayList<>());
+                }
+                scoresByStudent.get(student).add(score);
+            }
+
+            // Đảm bảo tất cả sinh viên đều có trong map, kể cả sinh viên không có điểm nào
+            for (Student student : allStudentsInClass) {
+                if (!scoresByStudent.containsKey(student)) {
+                    scoresByStudent.put(student, new ArrayList<>());
+                }
+            }
+
+            // Sắp xếp sinh viên theo mã sinh viên để có thứ tự nhất quán
+            List<Student> sortedStudents = new ArrayList<>(scoresByStudent.keySet());
+            sortedStudents.sort((s1, s2) -> s1.getStudentCode().compareTo(s2.getStudentCode()));
 
             // In dữ liệu sinh viên
             int index = 1;
-            for (Map.Entry<Student, List<Score>> entry : scoresByStudent.entrySet()) {
-                Student student = entry.getKey();
-                List<Score> studentScores = entry.getValue();
+            for (Student student : sortedStudents) {
+                List<Score> studentScores = scoresByStudent.get(student);
 
                 // Tạo danh sách các giá trị cho hàng này
                 List<String> rowValues = new ArrayList<>();
@@ -635,6 +692,8 @@ public class ScoreRepositoryImpl implements ScoreRepository {
     public byte[] exportScoresToPdf(int subjectTeacherId, int classId, int schoolYearId) throws Exception {
         List<Score> scores = this.scoreService.getScoresBySubjectTeacherIdAndClassIdAndSchoolYearId(
                 subjectTeacherId, classId, schoolYearId);
+
+        List<Student> allStudentsInClass = studentService.getStudentByClassId(classId);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -733,8 +792,26 @@ public class ScoreRepositoryImpl implements ScoreRepository {
             // Thêm header
             addTableHeader(table, scoreTypes, headerFont);
 
+            Map<Student, List<Score>> scoresByStudent = new HashMap<>();
+
+            // Nhóm điểm theo sinh viên (nếu có)
+            for (Score score : scores) {
+                Student student = score.getStudentID();
+                if (!scoresByStudent.containsKey(student)) {
+                    scoresByStudent.put(student, new ArrayList<>());
+                }
+                scoresByStudent.get(student).add(score);
+            }
+
+            // Đảm bảo tất cả sinh viên đều có trong map, kể cả sinh viên không có điểm nào
+            for (Student student : allStudentsInClass) {
+                if (!scoresByStudent.containsKey(student)) {
+                    scoresByStudent.put(student, new ArrayList<>());
+                }
+            }
+
             // Thêm dữ liệu - Pass subjectTeacherId and schoolYearId to the method
-            addTableData(table, scores, scoreTypes, normalFont, subjectTeacherId, schoolYearId);
+            addTableData(table, scores, scoreTypes, normalFont, subjectTeacherId, schoolYearId, scoresByStudent, allStudentsInClass);
 
             document.add(table);
             document.close();
@@ -837,21 +914,21 @@ public class ScoreRepositoryImpl implements ScoreRepository {
     }
 
     private void addTableData(PdfPTable table, List<Score> scores, List<String> scoreTypes, Font font,
-            Integer subjectTeacherId, Integer schoolYearId) {
-        // Nhóm điểm theo sinh viên
-        Map<Student, List<Score>> scoresByStudent = scores.stream()
-                .collect(Collectors.groupingBy(Score::getStudentID));
-
+            Integer subjectTeacherId, Integer schoolYearId, Map<Student, List<Score>> scoresByStudent, List<Student> allStudents) {
         // Format số thập phân
         DecimalFormat df = new DecimalFormat();
-        df.setMaximumFractionDigits(2); // Tối đa 2 chữ số thập phân
-        df.setMinimumFractionDigits(0); // Không cần số 0 thừa
+        df.setMaximumFractionDigits(2);
+        df.setMinimumFractionDigits(0);
         df.setGroupingUsed(false);
 
         int index = 1;
-        for (Map.Entry<Student, List<Score>> entry : scoresByStudent.entrySet()) {
-            Student student = entry.getKey();
-            List<Score> studentScores = entry.getValue();
+
+        // Sắp xếp sinh viên theo mã sinh viên để có thứ tự nhất quán
+        List<Student> sortedStudents = new ArrayList<>(scoresByStudent.keySet());
+        sortedStudents.sort((s1, s2) -> s1.getStudentCode().compareTo(s2.getStudentCode()));
+
+        for (Student student : sortedStudents) {
+            List<Score> studentScores = scoresByStudent.get(student);
 
             // Cell STT - căn giữa
             PdfPCell cell = new PdfPCell(new Phrase(String.valueOf(index++), font));
@@ -885,11 +962,10 @@ public class ScoreRepositoryImpl implements ScoreRepository {
 
             for (String scoreType : scoreTypes) {
                 Float scoreValue = studentScoresByType.get(scoreType);
-                String displayValue = formatScore(scoreValue);
+                String displayValue = formatScore(scoreValue); // Sẽ trả về "-" nếu điểm là null
 
                 // Nếu có điểm và có trọng số, tính vào điểm trung bình
                 if (scoreValue != null) {
-                    // Fix: Use the passed subjectTeacherId and schoolYearId parameters
                     Float weight = getScoreWeight(student.getClassId().getId(),
                             subjectTeacherId, schoolYearId, scoreType);
                     if (weight != null) {

@@ -5,6 +5,7 @@ import com.ntn.repository.ClassScoreTypeRepository;
 import com.ntn.repository.ScoreRepository;
 import com.ntn.service.ScoreService;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,7 +50,7 @@ public class ScoreServiceImpl implements ScoreService {
     }
 
     @Override
-    public boolean importScoresFromCsv(MultipartFile file, int subjectTeacherId, int classId, int schoolYearId) throws Exception {
+    public Map<String, Object> importScoresFromCsv(MultipartFile file, int subjectTeacherId, int classId, int schoolYearId) throws Exception {
         return this.scoreRepo.importScoresFromCsv(file, subjectTeacherId, classId, schoolYearId);
     }
 
