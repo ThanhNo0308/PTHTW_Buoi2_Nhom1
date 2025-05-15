@@ -26,6 +26,7 @@ import ForumEdit from "./components/ForumEdit";
 import StudentScoresList from "./components/StudentScoresList";
 import StudentClassInfo from "./components/StudentClassInfo";
 import StudentSubjects from "./components/StudentSubjects";
+import StudentCourseRegistration from './components/StudentCourseRegistration';
 
 import MyUserReducer from "./reducers/MyUserReducer";
 import { SchoolYearProvider } from "./reducers/SchoolYearContext";
@@ -55,6 +56,7 @@ const App = () => {
               <Route path="/student/scores" element={<div style={{ margin: '50px 150px' }}><StudentScoresList /></div>} />
               <Route path="/student/class-info" element={<div style={{ margin: '50px 150px' }}><StudentClassInfo /></div>} />
               <Route path="/student/subjects" element={<div style={{ margin: '50px 150px' }}><StudentSubjects /></div>} />
+              <Route path="/student/course-registration" element={<StudentCourseRegistration />} />
 
               <Route path="/teacher/dashboard" element={<div style={{ margin: '50px 150px' }}><TeacherDashboard /></div>} />
               <Route path="/teacher/classes" element={<div style={{ margin: '50px 150px' }}><TeacherClassesList /></div>} />

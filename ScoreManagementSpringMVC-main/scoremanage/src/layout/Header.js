@@ -6,10 +6,11 @@ import cookie from "react-cookies";
 import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { MyUserContext } from '../App';
+import { faEdit } from '@fortawesome/free-solid-svg-icons/faEdit';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHome, faChalkboardTeacher, faUserGraduate, faCogs, faChartBar,
-  faSignInAlt, faUserPlus, faUserCircle, faSignOutAlt, faUser,
+  faSignInAlt, faUserPlus, faUserCircle, faSignOutAlt, faUser, faBookOpen,
   faSchool, faGraduationCap, faBuilding, faBook, faCalendarAlt,
   faTasks, faChartLine, faChartPie, faChartArea, faSearch, faFileImport, faClipboardList, faComments, faMessage
 } from '@fortawesome/free-solid-svg-icons';
@@ -146,15 +147,21 @@ const Header = () => {
                 <Nav.Link as={NavLink} to="/student/dashboard">
                   <FontAwesomeIcon icon={faHome} className="me-1" /> Trang chủ
                 </Nav.Link>
-                <Nav.Link as={NavLink} to="/student/scores">
-                  <FontAwesomeIcon icon={faClipboardList} className="me-1" /> Xem điểm
-                </Nav.Link>
+
                 <Nav.Link as={NavLink} to="/student/class-info">
                   <FontAwesomeIcon icon={faBuilding} className="me-1" /> Thông tin lớp học
                 </Nav.Link>
-                <Nav.Link as={NavLink} to="/student/subjects">
-                  <FontAwesomeIcon icon={faBook} className="me-1" /> Môn học đã đăng ký
-                </Nav.Link>
+                <NavDropdown title={<><FontAwesomeIcon icon={faBook} className="me-1" /> Môn học</>} id="course-dropdown">
+                  <NavDropdown.Item as={NavLink} to="/student/course-registration">
+                    <FontAwesomeIcon icon={faEdit} className="me-1" /> Đăng ký môn học
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={NavLink} to="/student/subjects">
+                    <FontAwesomeIcon icon={faBookOpen} className="me-1" /> Môn đã học
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={NavLink} to="/student/scores">
+                    <FontAwesomeIcon icon={faClipboardList} className="me-1" /> Xem điểm
+                  </NavDropdown.Item>
+                </NavDropdown>
                 <Nav.Link as={NavLink} to="/forums">
                   <FontAwesomeIcon icon={faComments} className="me-1" />Diễn đàn
                 </Nav.Link>

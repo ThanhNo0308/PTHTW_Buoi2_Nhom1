@@ -2,14 +2,17 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { MyUserContext } from "../App";
 import { endpoints, API } from '../configs/Apis';
-import { Alert, Spinner, Card} from 'react-bootstrap';
+import { Alert, Spinner, Card } from 'react-bootstrap';
 import "../assets/css/base.css";
 import "../assets/css/styles.css";
 import "../assets/css/dashboard.css";
 import defaultAvatar from '../assets/images/logo.png';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faComments, faCheckCircle, faExclamationCircle,
-  faChartLine, faUsers, faUserEdit, faBook, faGraduationCap, faPaperPlane} from '@fortawesome/free-solid-svg-icons';
+import { faEdit } from '@fortawesome/free-solid-svg-icons/faEdit';
+import {
+  faComments, faCheckCircle, faExclamationCircle,
+  faChartLine, faUsers, faUserEdit, faBook, faGraduationCap, faPaperPlane
+} from '@fortawesome/free-solid-svg-icons';
 
 const StudentDashboard = () => {
   const [user] = useContext(MyUserContext);
@@ -141,6 +144,24 @@ const StudentDashboard = () => {
             <div className="row mb-4">
               <div className="col-md-6 mb-3">
                 <div className="feature-card">
+                  <div className="card-header-custom bg-soft-warning">
+                    <FontAwesomeIcon icon={faEdit} className="card-header-icon" />
+                    Đăng ký môn học
+                  </div>
+                  <Card.Body>
+                    <Card.Text>
+                      Đăng ký các môn học cho học kỳ tiếp theo. Xem danh sách môn học có thể đăng ký.
+                    </Card.Text>
+                    <Link to="/student/course-registration" className="btn btn-warning feature-btn w-100">
+                      <FontAwesomeIcon icon={faEdit} className="me-2" />
+                      Đăng ký môn học
+                    </Link>
+                  </Card.Body>
+                </div>
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <div className="feature-card">
                   <div className="card-header-custom bg-soft-success">
                     <FontAwesomeIcon icon={faBook} className="card-header-icon" />
                     Môn học
@@ -159,24 +180,6 @@ const StudentDashboard = () => {
 
               <div className="col-md-6 mb-3">
                 <div className="feature-card">
-                  <div className="card-header-custom bg-soft-warning">
-                    <FontAwesomeIcon icon={faComments} className="card-header-icon" />
-                    Diễn đàn học tập
-                  </div>
-                  <Card.Body>
-                    <Card.Text>
-                      Tham gia các diễn đàn học tập để xem thảo luận và đặt câu hỏi về các môn học.
-                    </Card.Text>
-                    <Link to="/forums" className="btn btn-warning feature-btn w-100">
-                      <FontAwesomeIcon icon={faComments} className="me-2" />
-                      Truy cập diễn đàn
-                    </Link>
-                  </Card.Body>
-                </div>
-              </div>
-
-              <div className="col-md-12 mb-3">
-                <div className="feature-card mb-4">
                   <div className="card-header-custom bg-soft-danger">
                     <FontAwesomeIcon icon={faPaperPlane} className="card-header-icon" />
                     Tin nhắn
@@ -188,6 +191,25 @@ const StudentDashboard = () => {
                     <Link to="/chat" className="btn btn-outline-danger feature-btn w-100">
                       <FontAwesomeIcon icon={faPaperPlane} className="me-2" />
                       Truy cập tin nhắn
+                    </Link>
+                  </Card.Body>
+                </div>
+
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <div className="feature-card">
+                  <div className="card-header-custom bg-soft-warning">
+                    <FontAwesomeIcon icon={faComments} className="card-header-icon" />
+                    Diễn đàn học tập
+                  </div>
+                  <Card.Body>
+                    <Card.Text>
+                      Tham gia các diễn đàn học tập để xem thảo luận và đặt câu hỏi về các môn học.
+                    </Card.Text>
+                    <Link to="/forums" className="btn btn-warning feature-btn w-100">
+                      <FontAwesomeIcon icon={faComments} className="me-2" />
+                      Truy cập diễn đàn
                     </Link>
                   </Card.Body>
                 </div>

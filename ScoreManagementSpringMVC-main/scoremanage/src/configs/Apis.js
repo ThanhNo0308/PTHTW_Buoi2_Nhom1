@@ -56,6 +56,9 @@ export const endpoints = {
   "student-scores": `${SERVER_CONTEXT}/api/student/scores`,
   "student-class-info": `${SERVER_CONTEXT}/api/student/class-info`,
   "student-subjects": `${SERVER_CONTEXT}/api/student/subjects`,
+  "student-course-registration": `${SERVER_CONTEXT}/api/student/course-registration`,
+  "student-register-course": `${SERVER_CONTEXT}/api/student/course-registration/register`,
+  "student-drop-course": `${SERVER_CONTEXT}/api/student/course-registration/drop`,
 }
 
 // Cấu hình axios với token
@@ -399,6 +402,18 @@ export const studentApis = {
       url += `?schoolYearId=${schoolYearId}`;
     }
     return API.get(url);
+  },
+
+  getAvailableCourses: () => {
+    return API.get(endpoints["student-course-registration"]);
+  },
+
+  registerCourse: (subjectTeacherId) => {
+    return API.post(`${endpoints["student-register-course"]}?subjectTeacherId=${subjectTeacherId}`);
+  },
+
+  dropCourse: (enrollmentId) => {
+    return API.delete(`${endpoints["student-drop-course"]}?enrollmentId=${enrollmentId}`);
   }
 };
 
