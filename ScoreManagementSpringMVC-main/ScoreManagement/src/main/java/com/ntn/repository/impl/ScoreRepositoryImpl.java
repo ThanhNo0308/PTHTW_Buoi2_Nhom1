@@ -123,8 +123,9 @@ public class ScoreRepositoryImpl implements ScoreRepository {
 
         Predicate p1 = builder.equal(root.get("studentID").get("studentCode"), studentCode);
         Predicate p2 = builder.equal(root.get("schoolYearId").get("id"), schoolYearId);
+        Predicate p3 = builder.equal(root.get("isLocked"), true);
 
-        query.where(builder.and(p1, p2));
+        query.where(builder.and(p1, p2, p3));
         query.orderBy(builder.asc(root.get("subjectTeacherID").get("subjectId").get("subjectName")));
 
         Query q = session.createQuery(query);

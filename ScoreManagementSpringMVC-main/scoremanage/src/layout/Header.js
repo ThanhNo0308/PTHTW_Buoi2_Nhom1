@@ -51,7 +51,7 @@ const Header = () => {
           <Navbar.Collapse id="navbarNav" className="justify-content-between">
             <Nav>
               {!user && (
-                <Nav.Link as={Link} to="/">
+                <Nav.Link as={NavLink} to="/">
                   <FontAwesomeIcon icon={faHome} className="me-1" /> Trang chủ
                 </Nav.Link>
               )}
@@ -60,13 +60,13 @@ const Header = () => {
             {/* Admin Navigation */}
             {user && user.role === 'Admin' && (
               <Nav className="mr-auto">
-                <Nav.Link as={Link} to="/admin/pageAdmin">
+                <Nav.Link as={NavLink} to="/admin/pageAdmin">
                   <FontAwesomeIcon icon={faHome} className="me-1" /> Trang chủ
                 </Nav.Link>
-                <Nav.Link as={Link} to="/admin/teachers">
+                <Nav.Link as={NavLink} to="/admin/teachers">
                   <FontAwesomeIcon icon={faChalkboardTeacher} className="me-1" /> Giảng viên
                 </Nav.Link>
-                <Nav.Link as={Link} to="/admin/students">
+                <Nav.Link as={NavLink} to="/admin/students">
                   <FontAwesomeIcon icon={faUserGraduate} className="me-1" /> Sinh viên
                 </Nav.Link>
 
@@ -74,22 +74,22 @@ const Header = () => {
                   title={<><FontAwesomeIcon icon={faCogs} className="me-1" /> Quản lý học tập</>}
                   id="navbarDropdown1"
                 >
-                  <NavDropdown.Item as={Link} to="/admin/classes">
+                  <NavDropdown.Item as={NavLink} to="/admin/classes">
                     <FontAwesomeIcon icon={faSchool} className="me-2" /> Lớp học
                   </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/admin/majors">
+                  <NavDropdown.Item as={NavLink} to="/admin/majors">
                     <FontAwesomeIcon icon={faGraduationCap} className="me-2" /> Ngành học
                   </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/admin/departments">
+                  <NavDropdown.Item as={NavLink} to="/admin/departments">
                     <FontAwesomeIcon icon={faBuilding} className="me-2" /> Khoa
                   </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/admin/subjects">
+                  <NavDropdown.Item as={NavLink} to="/admin/subjects">
                     <FontAwesomeIcon icon={faBook} className="me-2" /> Môn học
                   </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/admin/school-years">
+                  <NavDropdown.Item as={NavLink} to="/admin/school-years">
                     <FontAwesomeIcon icon={faCalendarAlt} className="me-2" /> Năm học
                   </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/admin/subjTeach">
+                  <NavDropdown.Item as={NavLink} to="/admin/subjTeach">
                     <FontAwesomeIcon icon={faTasks} className="me-2" /> Phân công giảng dạy
                   </NavDropdown.Item>
                 </NavDropdown>
@@ -98,16 +98,16 @@ const Header = () => {
                   title={<><FontAwesomeIcon icon={faChartBar} className="me-1" /> Thống kê</>}
                   id="statisticsDropdown"
                 >
-                  <NavDropdown.Item as={Link} to="/admin/statistics/class">
+                  <NavDropdown.Item as={NavLink} to="/admin/statistics/class">
                     <FontAwesomeIcon icon={faChartLine} className="me-2" /> Thống kê theo lớp
                   </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/admin/statistics/subject">
+                  <NavDropdown.Item as={NavLink} to="/admin/statistics/subject">
                     <FontAwesomeIcon icon={faChartPie} className="me-2" /> Thống kê theo môn học
                   </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/admin/statistics/department">
+                  <NavDropdown.Item as={NavLink} to="/admin/statistics/department">
                     <FontAwesomeIcon icon={faChartBar} className="me-2" /> Thống kê theo khoa
                   </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/admin/statistics/major">
+                  <NavDropdown.Item as={NavLink} to="/admin/statistics/major">
                     <FontAwesomeIcon icon={faChartArea} className="me-2" /> Thống kê theo ngành
                   </NavDropdown.Item>
                 </NavDropdown>
@@ -117,16 +117,16 @@ const Header = () => {
             {/* Teacher Navigation */}
             {user && user.role === 'Teacher' && (
               <Nav className="mr-auto">
-                <Nav.Link as={Link} to="/teacher/dashboard">
+                <Nav.Link as={NavLink} to="/teacher/dashboard">
                   <FontAwesomeIcon icon={faHome} className="me-1" /> Trang chủ
                 </Nav.Link>
-                <Nav.Link as={Link} to="/teacher/classes">
+                <Nav.Link as={NavLink} to="/teacher/classes">
                   <FontAwesomeIcon icon={faSchool} className="me-1" /> Lớp học
                 </Nav.Link>
-                <Nav.Link as={Link} to="/teacher/students/search">
+                <Nav.Link as={NavLink} to="/teacher/students/search">
                   <FontAwesomeIcon icon={faSearch} className="me-1" /> Tìm kiếm sinh viên
                 </Nav.Link>
-                <Nav.Link as={Link} to="/teacher/scores/import">
+                <Nav.Link as={NavLink} to="/teacher/scores/import">
                   <FontAwesomeIcon icon={faFileImport} className="me-1" /> Nhập điểm
                 </Nav.Link>
                 <Nav.Link as={NavLink} to="/forums">
@@ -143,16 +143,16 @@ const Header = () => {
             {/* Student Navigation */}
             {user && user.role === 'Student' && (
               <Nav className="mr-auto">
-                <Nav.Link as={Link} to="/student/dashboard">
+                <Nav.Link as={NavLink} to="/student/dashboard">
                   <FontAwesomeIcon icon={faHome} className="me-1" /> Trang chủ
                 </Nav.Link>
-                <Nav.Link as={Link} to="/student/scores">
+                <Nav.Link as={NavLink} to="/student/scores">
                   <FontAwesomeIcon icon={faClipboardList} className="me-1" /> Xem điểm
                 </Nav.Link>
-                <Nav.Link as={Link} to="/student/class-info">
+                <Nav.Link as={NavLink} to="/student/class-info">
                   <FontAwesomeIcon icon={faBuilding} className="me-1" /> Thông tin lớp học
                 </Nav.Link>
-                <Nav.Link as={Link} to="/student/subjects">
+                <Nav.Link as={NavLink} to="/student/subjects">
                   <FontAwesomeIcon icon={faBook} className="me-1" /> Môn học đã đăng ký
                 </Nav.Link>
                 <Nav.Link as={NavLink} to="/forums">

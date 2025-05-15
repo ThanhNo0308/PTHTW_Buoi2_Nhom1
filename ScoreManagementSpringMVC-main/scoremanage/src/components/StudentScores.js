@@ -3,8 +3,10 @@ import { Container, Card, Row, Col, Table, Alert, Spinner, Button, Form } from '
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { scoreApis } from '../configs/Apis';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faUserGraduate, faArrowLeft, faExclamationTriangle, faCheckCircle,
-   faFilter, faSortAmountDown, faCalculator} from '@fortawesome/free-solid-svg-icons';
+import {
+  faUserGraduate, faArrowLeft, faExclamationTriangle, faCheckCircle,
+  faFilter, faSortAmountDown, faCalculator, faInfoCircle
+} from '@fortawesome/free-solid-svg-icons';
 
 const StudentScores = () => {
   const { studentCode } = useParams();
@@ -395,6 +397,10 @@ const StudentScores = () => {
               <span>Chưa có điểm hoặc Loại điểm không được cấu hình cho môn học này</span>
             </div>
           )}
+          <Alert variant="info" className="mt-3">
+            <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+            Chỉ hiển thị điểm đã được giảng viên chính thức khóa điểm. Một số điểm có thể chưa hiển thị nếu giảng viên chưa khóa điểm.
+          </Alert>
         </Card.Body>
       </Card>
     </Container>
