@@ -17,6 +17,7 @@ import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TeacherService;
 import com.ntn.service.TypeScoreService;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -132,6 +133,26 @@ public class ApiTeacherClassController {
                 studentCounts.put(cls.getId(), enrolledStudents.size());
             }
 
+            int currentSchoolYearId = schoolYearService.getCurrentSchoolYearId();
+
+            for (Map<String, Object> classDetails : classesWithDetails) {
+                List<Schoolyear> schoolYears = (List<Schoolyear>) classDetails.get("assignedSchoolYears");
+                List<Map<String, Object>> enhancedSchoolYears = new ArrayList<>();
+
+                for (Schoolyear sy : schoolYears) {
+                    Map<String, Object> syInfo = new HashMap<>();
+                    syInfo.put("id", sy.getId());
+                    syInfo.put("nameYear", sy.getNameYear());
+                    syInfo.put("semesterName", sy.getSemesterName());
+                    syInfo.put("yearStart", sy.getYearStart());
+                    syInfo.put("yearEnd", sy.getYearEnd());
+                    syInfo.put("isCurrentSemester", sy.getId() == currentSchoolYearId);
+                    enhancedSchoolYears.add(syInfo);
+                }
+
+                classDetails.put("assignedSchoolYears", enhancedSchoolYears);
+            }
+
             Map<String, Object> response = new HashMap<>();
             response.put("classes", classesWithDetails);
             response.put("studentCounts", studentCounts);
@@ -148,7 +169,8 @@ public class ApiTeacherClassController {
     @GetMapping("/classes/{classId}")
     public ResponseEntity<?> getClassDetail(
             @PathVariable("classId") int classId,
-            @RequestParam("username") String username) {
+            @RequestParam("username") String username,
+            @RequestParam(value = "schoolYearId", required = false) Integer selectedSchoolYearId) {
         try {
             Teacher teacher = teacherService.getTeacherByUsername(username);
 
@@ -171,49 +193,83 @@ public class ApiTeacherClassController {
                         .body(Map.of("error", "Không có quyền truy cập lớp này"));
             }
 
-            // Tính số lượng sinh viên trong lớp
-            int studentCount = studentService.countStudentsByClassId(classroom.getId());
+            // Tạo danh sách các học kỳ mà giáo viên được phân công dạy trong lớp này
+            Set<Schoolyear> assignedSchoolYearsSet = new HashSet<>();
+            for (Subjectteacher st : teacherClassAssignments) {
+                if (st.getSchoolYearId() != null) {
+                    assignedSchoolYearsSet.add(st.getSchoolYearId());
+                }
+            }
+            List<Schoolyear> schoolYears = new ArrayList<>(assignedSchoolYearsSet);
 
-            // Danh sách sinh viên trong lớp
-            int administrativeStudentCount = studentService.countStudentsByClassId(classroom.getId());
+            // Sắp xếp học kỳ theo thứ tự mới nhất trước
+            Collections.sort(schoolYears, (sy1, sy2) -> Integer.compare(sy2.getId(), sy1.getId()));
 
-            List<Student> administrativeStudents = studentService.getStudentByClassId(classroom.getId());
+            // Nếu không có schoolYearId được chọn, sử dụng học kỳ hiện tại hoặc học kỳ đầu tiên trong danh sách
+            int targetSchoolYearId;
+            if (selectedSchoolYearId != null) {
+                targetSchoolYearId = selectedSchoolYearId;
+            } else {
+                int currentSchoolYearId = schoolYearService.getCurrentSchoolYearId();
 
-            // Lấy năm học hiện tại
-            int currentSchoolYearId = schoolYearService.getCurrentSchoolYearId();
+                // Kiểm tra xem học kỳ hiện tại có trong danh sách được phân công không
+                boolean hasCurrentSchoolYear = schoolYears.stream()
+                        .anyMatch(sy -> sy.getId() == currentSchoolYearId);
 
-            // Lấy các môn học mà giảng viên dạy trong lớp này
-            List<Subjectteacher> assignedSubjects = subjectTeacherService.getSubjectTeachersByTeacherIdAndClassIdAndSchoolYearId(
-                    teacher.getId(), classId, currentSchoolYearId);
-
-            // Nếu không có môn học trong học kỳ hiện tại, lấy tất cả phân công
-            if (assignedSubjects.isEmpty()) {
-                assignedSubjects = subjectTeacherService.getSubjectTeachersByTeacherIdAndClassId(teacher.getId(), classId);
+                if (hasCurrentSchoolYear) {
+                    targetSchoolYearId = currentSchoolYearId;
+                } else if (!schoolYears.isEmpty()) {
+                    // Nếu không có học kỳ hiện tại, lấy học kỳ đầu tiên trong danh sách (mới nhất)
+                    targetSchoolYearId = schoolYears.get(0).getId();
+                } else {
+                    // Nếu không có học kỳ nào, sử dụng học kỳ hiện tại mặc định
+                    targetSchoolYearId = currentSchoolYearId;
+                }
             }
 
+            // Lấy các môn học mà giảng viên dạy trong lớp này và trong học kỳ được chọn
+            List<Subjectteacher> assignedSubjects = subjectTeacherService.getSubjectTeachersByTeacherIdAndClassIdAndSchoolYearId(
+                    teacher.getId(), classId, targetSchoolYearId);
+
+            // Danh sách sinh viên trong lớp
+            List<Student> administrativeStudents = studentService.getStudentByClassId(classroom.getId());
+
             Set<Student> enrolledStudents = new HashSet<>(administrativeStudents);
-
             for (Subjectteacher st : assignedSubjects) {
-                // Lấy danh sách sinh viên đăng ký học môn này
                 List<Studentsubjectteacher> enrollments = studentSubjectTeacherService.getBySubjectTeacherId(st.getId());
-
-                // Thêm sinh viên vào tập hợp
                 for (Studentsubjectteacher enrollment : enrollments) {
                     enrolledStudents.add(enrollment.getStudentId());
                 }
             }
 
-            // Chuyển Set thành List để trả về
             List<Student> allStudents = new ArrayList<>(enrolledStudents);
+
+            // Thay đổi: Thêm thông tin học kỳ hiện tại vào cấu trúc dữ liệu riêng thay vì sử dụng isCurrent
+            int currentSchoolYearId = schoolYearService.getCurrentSchoolYearId();
+
+            // Tạo danh sách học kỳ với thông tin bổ sung
+            List<Map<String, Object>> enhancedSchoolYears = new ArrayList<>();
+            for (Schoolyear sy : schoolYears) {
+                Map<String, Object> syInfo = new HashMap<>();
+                syInfo.put("id", sy.getId());
+                syInfo.put("nameYear", sy.getNameYear());
+                syInfo.put("semesterName", sy.getSemesterName());
+                syInfo.put("yearStart", sy.getYearStart());
+                syInfo.put("yearEnd", sy.getYearEnd());
+                syInfo.put("isCurrentSemester", sy.getId() == currentSchoolYearId);
+                enhancedSchoolYears.add(syInfo);
+            }
 
             Map<String, Object> response = new HashMap<>();
             response.put("classroom", classroom);
             response.put("teacher", teacher);
-            response.put("administrativeStudentCount", administrativeStudentCount);
+            response.put("administrativeStudentCount", administrativeStudents.size());
             response.put("totalStudentCount", enrolledStudents.size());
-            response.put("students", allStudents); // Danh sách sinh viên đã được mở rộng
+            response.put("students", allStudents);
             response.put("subjects", assignedSubjects);
-            response.put("schoolYears", schoolYearService.getAllSchoolYears());
+            response.put("assignedSchoolYears", enhancedSchoolYears); // Sử dụng danh sách có thông tin bổ sung
+            response.put("selectedSchoolYearId", targetSchoolYearId); // Học kỳ được chọn
+            response.put("currentSchoolYearId", currentSchoolYearId); // Thêm thông tin học kỳ hiện tại
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {

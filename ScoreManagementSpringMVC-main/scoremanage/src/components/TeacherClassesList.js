@@ -88,13 +88,13 @@ const TeacherClassesList = () => {
                                         <strong>Ngành:</strong> {classroom.majorId ? classroom.majorId.majorName : 'Chưa có thông tin'}
                                     </Card.Text>
                                     <Card.Text className="d-flex align-items-center">
-                                        <strong>Năm học - Học kỳ:</strong>
+                                        <strong>Thời gian:</strong>
                                         {classroom.assignedSchoolYears && classroom.assignedSchoolYears.length > 0
                                             ? (
                                                 <span className="ms-2 d-inline-flex flex-nowrap overflow-auto" style={{ maxWidth: '75%' }}>
                                                     {classroom.assignedSchoolYears.map(year => (
                                                         <Badge
-                                                            bg="secondary"
+                                                            bg={year.isCurrentSemester ? "primary" : "secondary"}
                                                             className="me-1"
                                                             key={year.id}
                                                         >
@@ -113,7 +113,8 @@ const TeacherClassesList = () => {
                                         <Button
                                             variant="primary"
                                             as={Link}
-                                            to={`/teacher/classes/${classroom.id}`}
+                                            to={`/teacher/classes/${classroom.id}${classroom.assignedSchoolYears && classroom.assignedSchoolYears.length > 0 ?
+                                                `?schoolYearId=${classroom.assignedSchoolYears[0].id}` : ''}`}
                                         >
                                             <i className="fas fa-info-circle me-2"></i> Chi tiết
                                         </Button>

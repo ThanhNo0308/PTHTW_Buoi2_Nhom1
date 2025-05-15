@@ -4,7 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { forumApis, teacherClassApis, studentApis } from '../configs/Apis';
 import { MyUserContext } from '../App';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faComments, faPlus, faSearch, faExclamationTriangle, faCommentDots, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faComments, faPlus, faSearch, faExclamationTriangle, faCommentDots, faEdit, faTrash, faBuilding, faGraduationCap, faSchool, faUser } from '@fortawesome/free-solid-svg-icons';
+import "../assets/css/forum.css";
 
 const ForumList = () => {
   const [user] = useContext(MyUserContext);
@@ -14,7 +15,7 @@ const ForumList = () => {
   const [error, setError] = useState("");
   const [subjectTeachers, setSubjectTeachers] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState("");
-  
+
   useEffect(() => {
     if (!user) {
       navigate("/login");
@@ -292,35 +293,40 @@ const ForumList = () => {
         <Row xs={1} md={2} className="g-4">
           {forums.map((forum) => (
             <Col key={forum.id}>
-              <Card className="h-100 shadow-sm">
+              <Card className="h-100 shadow-sm forum-card">
                 <Card.Header className="bg-light">
                   <div className="d-flex justify-content-between align-items-center">
                     <span className="text-muted">
                       {forum.subjectTeacherId?.subjectId?.subjectName || "Chưa có môn học"} -
                       {forum.subjectTeacherId?.teacherId?.teacherName || "Chưa có giảng viên"}
                     </span>
-                    <Badge bg="secondary">
+                    <Badge bg="secondary" className="forum-badge">
                       {formatDate(forum.createdAt)}
                     </Badge>
                   </div>
                 </Card.Header>
                 <Card.Body>
-                  <div className="mb-3">
-                    {/* Tiêu đề diễn đàn */}
-                    <h5>{forum.title}</h5>
-                    <div className="text-muted small">
-                      <div className="row">
-                        <div className="col-md-6">
-                          <p className="mb-1"><strong>Khoa:</strong> {forum.subjectTeacherId?.classId?.majorId?.departmentId?.departmentName || "Không có thông tin"}</p>
-                          <p className="mb-1"><strong>Hệ đào tạo:</strong> {forum.subjectTeacherId?.classId?.majorId?.trainingTypeId?.trainingTypeName || "Không có thông tin"}</p>
-                          <p className="mb-1"><strong>Lớp:</strong> {forum.subjectTeacherId?.classId?.className || "Không có thông tin"}</p>
-                          <p className="mb-1"><strong>Người tạo:</strong> {forum.userId?.name || forum.userId?.username || "Không xác định"}</p>
-                        </div>
-                      </div>
+                  <h5 className="forum-title">{forum.title}</h5>
+                  <div className="forum-info">
+                    <div className="forum-info-item">
+                      <FontAwesomeIcon icon={faBuilding} />
+                      {forum.subjectTeacherId?.classId?.majorId?.departmentId?.departmentName || "Không có thông tin"}
+                    </div>
+                    <div className="forum-info-item">
+                      <FontAwesomeIcon icon={faGraduationCap} />
+                      {forum.subjectTeacherId?.classId?.majorId?.trainingTypeId?.trainingTypeName || "Không có thông tin"}
+                    </div>
+                    <div className="forum-info-item">
+                      <FontAwesomeIcon icon={faSchool} />
+                      {forum.subjectTeacherId?.classId?.className || "Không có thông tin"}
+                    </div>
+                    <div className="forum-info-item">
+                      <FontAwesomeIcon icon={faUser} />
+                      {forum.userId?.name || forum.userId?.username || "Không xác định"}
                     </div>
                   </div>
-                  <Card.Subtitle className="mb-3 text-muted">{forum.description}</Card.Subtitle>
-                  <Card.Text>{forum.content}</Card.Text>
+                  <div className="forum-description">{forum.description}</div>
+                  <div className="forum-content">{forum.content}</div>
                 </Card.Body>
                 <Card.Footer>
                   <div className="d-flex justify-content-between align-items-center">

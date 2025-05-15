@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, Button, Container, Row, Col, Alert, Spinner, Table, Badge, Form } from 'react-bootstrap';
 import { MyUserContext } from '../App';
 import { teacherClassApis } from '../configs/Apis';
@@ -8,13 +8,19 @@ import { UniqueSubjectTeacherIdContext } from '../reducers/UniqueSubjectTeacherI
 
 const TeacherClassDetail = () => {
     const { classId } = useParams();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const schoolYearIdParam = searchParams.get('schoolYearId');
+    const navigate = useNavigate();
+
     const [user] = useContext(MyUserContext);
-    const { selectedSchoolYearId } = useSchoolYear();
+    const { selectedSchoolYearId, setSelectedSchoolYearId } = useSchoolYear();
     const { setSelectedSubjectTeacherId } = useContext(UniqueSubjectTeacherIdContext);
 
     const [classData, setClassData] = useState(null);
     const [students, setStudents] = useState([]);
     const [subjects, setSubjects] = useState([]);
+    const [assignedSchoolYears, setAssignedSchoolYears] = useState([]);
+    const [currentSchoolYearId, setCurrentSchoolYearId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -22,12 +28,23 @@ const TeacherClassDetail = () => {
         const loadClassDetail = async () => {
             try {
                 setLoading(true);
-                const response = await teacherClassApis.getClassDetail(classId, user.username);
+                // Sử dụng schoolYearIdParam nếu được cung cấp trong URL
+                const apiUrl = schoolYearIdParam ?
+                    `${classId}?username=${user.username}&schoolYearId=${schoolYearIdParam}` :
+                    `${classId}?username=${user.username}`;
+
+                const response = await teacherClassApis.getClassDetail(apiUrl);
 
                 if (response.data) {
                     setClassData(response.data.classroom || null);
                     setStudents(response.data.students || []);
                     setSubjects(response.data.subjects || []);
+                    setAssignedSchoolYears(response.data.assignedSchoolYears || []);
+
+                    // Lưu học kỳ đang được chọn
+                    if (response.data.selectedSchoolYearId) {
+                        setCurrentSchoolYearId(response.data.selectedSchoolYearId);
+                    }
                 }
             } catch (err) {
                 console.error("Error loading class detail:", err);
@@ -40,10 +57,16 @@ const TeacherClassDetail = () => {
         if (user && user.username && classId) {
             loadClassDetail();
         }
-    }, [user, classId]);
+    }, [user, classId, schoolYearIdParam]);
 
     const handleSelectSubject = (subjectTeacherId) => {
         setSelectedSubjectTeacherId(subjectTeacherId);
+    };
+
+    const handleSchoolYearChange = (e) => {
+        const newSchoolYearId = e.target.value;
+        // Cập nhật URL với học kỳ mới
+        navigate(`/teacher/classes/${classId}?schoolYearId=${newSchoolYearId}`);
     };
 
     if (loading) {
@@ -97,10 +120,27 @@ const TeacherClassDetail = () => {
 
                         <Col md={6}>
                             <Card className="shadow-sm h-100">
-                                <Card.Header className="bg-success text-white">
+                                <Card.Header className="bg-success text-white d-flex justify-content-between align-items-center">
                                     <h5 className="mb-0">
                                         <i className="fas fa-book me-2"></i> Môn học phụ trách
                                     </h5>
+
+                                    {/* Dropdown chọn học kỳ */}
+                                    {assignedSchoolYears && assignedSchoolYears.length > 0 && (
+                                        <Form.Select
+                                            value={schoolYearIdParam || currentSchoolYearId || ''}
+                                            onChange={handleSchoolYearChange}
+                                            style={{ maxWidth: '250px' }}
+                                            size="sm"
+                                            className="text-dark"
+                                        >
+                                            {assignedSchoolYears.map(year => (
+                                                <option key={year.id} value={year.id}>
+                                                    {year.nameYear} {year.semesterName} {year.isCurrentSemester ? "(Hiện tại)" : ""}
+                                                </option>
+                                            ))}
+                                        </Form.Select>
+                                    )}
                                 </Card.Header>
                                 <Card.Body style={{ overflowY: 'auto', maxHeight: '250px' }}>
                                     {subjects.length > 0 ? (
@@ -116,7 +156,7 @@ const TeacherClassDetail = () => {
                                                 {subjects.map(subject => (
                                                     <tr key={subject.id}>
                                                         <td>{subject.subjectId.subjectName}</td>
-                                                        <td>{subject.schoolYearId.semesterName} {subject.schoolYearId.year}</td>
+                                                        <td>{subject.schoolYearId.nameYear} {subject.schoolYearId.semesterName}</td>
                                                         <td>
                                                             <Button
                                                                 variant="primary"
@@ -135,7 +175,7 @@ const TeacherClassDetail = () => {
                                     ) : (
                                         <Alert variant="warning">
                                             <i className="fas fa-exclamation-triangle me-2"></i>
-                                            Chưa có môn học nào được phân công cho lớp này.
+                                            Không có môn học nào được phân công cho lớp này trong học kỳ đã chọn.
                                         </Alert>
                                     )}
                                 </Card.Body>
@@ -143,6 +183,7 @@ const TeacherClassDetail = () => {
                         </Col>
                     </Row>
 
+                    {/* Phần danh sách sinh viên giữ nguyên */}
                     <Card className="shadow-sm mb-4">
                         <Card.Header className="bg-primary text-white">
                             <h5 className="mb-0">
@@ -184,7 +225,7 @@ const TeacherClassDetail = () => {
                                                             variant="primary"
                                                             size="sm"
                                                             as={Link}
-                                                            to={`/teacher/student/${student.studentCode}/scores${selectedSchoolYearId ? `?schoolYearId=${selectedSchoolYearId}` : ''}`}
+                                                            to={`/teacher/student/${student.studentCode}/scores${schoolYearIdParam || currentSchoolYearId ? `?schoolYearId=${schoolYearIdParam || currentSchoolYearId}` : ''}`}
                                                         >
                                                             <i className="fas fa-chart-bar me-1"></i> Xem điểm
                                                         </Button>

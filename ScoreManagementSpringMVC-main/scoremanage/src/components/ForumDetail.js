@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Container, Card, Button, Form, Alert, Spinner, Badge} from 'react-bootstrap';
+import { Container, Card, Button, Form, Alert, Spinner, Badge } from 'react-bootstrap';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { forumApis } from '../configs/Apis';
 import { MyUserContext } from '../App';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faComments, faArrowLeft, faPaperPlane, faReply, faTrash, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import "../assets/css/forum.css";
 
 const ForumDetail = () => {
   const { forumId } = useParams();
@@ -18,18 +19,18 @@ const ForumDetail = () => {
   const [commentContent, setCommentContent] = useState("");
   const [replying, setReplying] = useState(null); // ID of comment being replied to
   const [submitting, setSubmitting] = useState(false);
-  
+
   useEffect(() => {
     loadForumDetail();
   }, [forumId]);
-  
+
   const loadForumDetail = async () => {
     try {
       setLoading(true);
       setError("");
-      
+
       const response = await forumApis.getForumDetail(forumId);
-      
+
       if (response.data.success) {
         setForum(response.data.forum);
         setComments(response.data.comments);
@@ -43,33 +44,33 @@ const ForumDetail = () => {
       setLoading(false);
     }
   };
-  
+
   const handleSubmitComment = async (e) => {
     e.preventDefault();
-    
+
     if (!commentTitle.trim() || !commentContent.trim()) {
       setError("Vui lòng nhập đầy đủ tiêu đề và nội dung bình luận");
       return;
     }
-    
+
     try {
       setSubmitting(true);
       setError("");
-      
+
       const commentData = {
         title: commentTitle,
         content: commentContent,
         parentCommentId: replying // null if it's a top-level comment
       };
-      
+
       const response = await forumApis.addComment(forumId, commentData);
-      
+
       if (response.data.success) {
         // Reset form
         setCommentTitle("");
         setCommentContent("");
         setReplying(null);
-        
+
         // Reload comments
         loadForumDetail();
       } else {
@@ -82,17 +83,17 @@ const ForumDetail = () => {
       setSubmitting(false);
     }
   };
-  
+
   const handleDeleteComment = async (commentId) => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa bình luận này không?")) {
       return;
     }
-    
+
     try {
       setError("");
-      
+
       const response = await forumApis.deleteComment(commentId);
-      
+
       if (response.data.success) {
         // Reload comments
         loadForumDetail();
@@ -104,29 +105,29 @@ const ForumDetail = () => {
       setError("Lỗi khi xóa bình luận: " + (err.response?.data?.error || err.message));
     }
   };
-  
+
   const formatDate = (dateString) => {
-    const options = { 
-      year: 'numeric', 
-      month: 'numeric', 
-      day: 'numeric', 
-      hour: '2-digit', 
+    const options = {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
       minute: '2-digit'
     };
     return new Date(dateString).toLocaleDateString('vi-VN', options);
   };
-  
+
   // Organize comments into a tree structure
   const buildCommentTree = () => {
     const commentMap = {};
     const rootComments = [];
-    
+
     // First pass: create a map of comments by ID
     comments.forEach(comment => {
       comment.children = [];
       commentMap[comment.id] = comment;
     });
-    
+
     // Second pass: link comments to their parents
     comments.forEach(comment => {
       if (comment.parentCommentId) {
@@ -138,40 +139,40 @@ const ForumDetail = () => {
         rootComments.push(comment);
       }
     });
-    
+
     return rootComments;
   };
-  
+
   // Render a single comment and its replies
   const renderComment = (comment, depth = 0) => {
     return (
-      <div className={`mb-3 ${depth > 0 ? 'ms-4 border-start border-2 ps-3' : ''}`} key={comment.id}>
-        <Card>
-          <Card.Header className="d-flex justify-content-between align-items-center">
+      <div className={`mb-3 ${depth > 0 ? 'nested-comment' : ''} fade-in`} key={comment.id}>
+        <Card className="comment-card">
+          <Card.Header className="comment-header">
             <div>
-              <strong>{comment.title}</strong>
+              <strong className="comment-author">{comment.title}</strong>
               <span className="ms-2 text-muted">
                 bởi {comment.userId?.name || comment.userId?.username || "Không xác định"}
               </span>
             </div>
-            <Badge bg="secondary">{formatDate(comment.createdAt)}</Badge>
+            <Badge bg="secondary" className="forum-badge">{formatDate(comment.createdAt)}</Badge>
           </Card.Header>
           <Card.Body>
             <Card.Text>{comment.content}</Card.Text>
-            <div className="d-flex">
-              <Button 
-                variant="outline-primary" 
+            <div className="comment-actions">
+              <Button
+                variant="outline-primary"
                 size="sm"
                 className="me-2"
                 onClick={() => setReplying(comment.id)}
               >
                 <FontAwesomeIcon icon={faReply} className="me-1" /> Trả lời
               </Button>
-              
+
               {/* Only show delete button if user is the owner of the comment or admin */}
               {(user?.id === comment.userId?.id || user?.role === "Admin") && (
-                <Button 
-                  variant="outline-danger" 
+                <Button
+                  variant="outline-danger"
                   size="sm"
                   onClick={() => handleDeleteComment(comment.id)}
                 >
@@ -181,13 +182,13 @@ const ForumDetail = () => {
             </div>
           </Card.Body>
         </Card>
-        
+
         {/* Render replies */}
         {comment.children && comment.children.map(child => renderComment(child, depth + 1))}
       </div>
     );
   };
-  
+
   if (loading) {
     return (
       <Container className="text-center my-5">
@@ -196,7 +197,7 @@ const ForumDetail = () => {
       </Container>
     );
   }
-  
+
   if (!forum) {
     return (
       <Container className="my-5">
@@ -217,48 +218,48 @@ const ForumDetail = () => {
         <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
         Quay lại danh sách diễn đàn
       </Button>
-      
+
       {error && (
         <Alert variant="danger" dismissible onClose={() => setError("")}>
           <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
           {error}
         </Alert>
       )}
-      
-      <Card className="mb-4">
-        <Card.Header className="bg-primary text-white">
+
+      <Card className="mb-4 forum-detail-card">
+        <Card.Header className="forum-detail-header">
           <div className="d-flex justify-content-between align-items-center">
-            <h4 className="mb-0">{forum.title}</h4>
-            <Badge bg="light" text="dark">{formatDate(forum.createdAt)}</Badge>
+            <h4 className="mb-0 forum-detail-title">{forum.title}</h4>
+            <Badge bg="light" text="dark" className="forum-badge">{formatDate(forum.createdAt)}</Badge>
           </div>
         </Card.Header>
-        <Card.Body>
-          <div className="mb-3 text-muted">
-            <strong>Môn học:</strong> {forum.subjectTeacherId?.subjectId?.subjectName || "Không xác định"}
-            <span className="mx-2">|</span>
-            <strong>Giảng viên:</strong> {forum.subjectTeacherId?.teacherId?.teacherName || "Không xác định"}
-            <span className="mx-2">|</span>
-            <strong>Người tạo:</strong> {forum.userId?.name || forum.userId?.username || "Không xác định"}
+        <div className="forum-detail-metadata">
+          <div className="d-flex flex-wrap gap-3">
+            <div><strong>Môn học:</strong> {forum.subjectTeacherId?.subjectId?.subjectName || "Không xác định"}</div>
+            <div><strong>Giảng viên:</strong> {forum.subjectTeacherId?.teacherId?.teacherName || "Không xác định"}</div>
+            <div><strong>Người tạo:</strong> {forum.userId?.name || forum.userId?.username || "Không xác định"}</div>
           </div>
-          <Card.Subtitle className="mb-3 text-muted">{forum.description}</Card.Subtitle>
-          <Card.Text>{forum.content}</Card.Text>
+        </div>
+        <Card.Body className="forum-detail-content">
+          <div className="mb-3 text-muted">{forum.description}</div>
+          <div>{forum.content}</div>
         </Card.Body>
       </Card>
-      
-      <h4 className="mb-3">
+
+      <h4 className="mb-3 comments-section-title">
         <FontAwesomeIcon icon={faComments} className="me-2" />
         Bình luận ({comments.length})
       </h4>
-      
+
       {/* Comment form */}
-      <Card className="mb-4">
-        <Card.Header>
+      <Card className="mb-4 comment-form-card">
+        <Card.Header className="bg-light">
           <h5 className="mb-0">
             {replying ? "Trả lời bình luận" : "Thêm bình luận mới"}
             {replying && (
-              <Button 
-                variant="link" 
-                className="text-danger" 
+              <Button
+                variant="link"
+                className="text-danger"
                 size="sm"
                 onClick={() => setReplying(null)}
               >
@@ -291,9 +292,9 @@ const ForumDetail = () => {
               />
             </Form.Group>
             <div className="text-end">
-              <Button 
-                type="submit" 
-                variant="primary" 
+              <Button
+                type="submit"
+                variant="primary"
                 disabled={submitting}
               >
                 {submitting ? (
@@ -312,7 +313,7 @@ const ForumDetail = () => {
           </Form>
         </Card.Body>
       </Card>
-      
+
       {/* Comments */}
       <div className="comments-section">
         {buildCommentTree().length > 0 ? (

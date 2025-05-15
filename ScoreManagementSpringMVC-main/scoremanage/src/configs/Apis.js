@@ -161,8 +161,16 @@ export const teacherClassApis = {
   },
 
   // Lấy thông tin chi tiết lớp học
-  getClassDetail: (classId, username) => {
-    return API.get(`${endpoints["teacher-class-detail"]}/${classId}?username=${username}`);
+  getClassDetail: (pathOrClassId, username = null) => {
+    // Kiểm tra nếu pathOrClassId là URL đầy đủ hay chỉ là classId
+    let url;
+    if (typeof pathOrClassId === 'string' && pathOrClassId.includes('?')) {
+      url = `${endpoints["teacher-class-detail"]}/${pathOrClassId}`;
+    } else {
+      url = `${endpoints["teacher-class-detail"]}/${pathOrClassId}?username=${username}`;
+    }
+
+    return API.get(url);
   },
 
   // Lấy điểm của lớp
