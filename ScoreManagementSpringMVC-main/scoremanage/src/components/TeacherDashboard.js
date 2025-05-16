@@ -7,8 +7,10 @@ import "../assets/css/base.css";
 import "../assets/css/dashboard.css";
 import defaultAvatar from '../assets/images/logo.png';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faComments, faExclamationCircle, faCheckCircle, faUserEdit, faUsers, faGraduationCap, faFileImport, faSearch, faUser,
-  faChalkboard, faPaperPlane, faUnlock, faEnvelope} from '@fortawesome/free-solid-svg-icons';
+import {
+  faComments, faExclamationCircle, faCheckCircle, faUserEdit, faUsers, faGraduationCap, faFileImport, faSearch, faUser,
+  faChalkboard, faPaperPlane, faUnlock, faEnvelope, faCalendarAlt
+} from '@fortawesome/free-solid-svg-icons';
 
 const TeacherDashboard = () => {
   const [user] = useContext(MyUserContext);
@@ -323,6 +325,24 @@ const TeacherDashboard = () => {
                     <Link to="/forums" className="btn btn-warning feature-btn w-100">
                       <FontAwesomeIcon icon={faComments} className="me-2" />
                       Truy cập diễn đàn
+                    </Link>
+                  </Card.Body>
+                </div>
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <div className="feature-card">
+                  <div className="card-header-custom bg-soft-info">
+                    <FontAwesomeIcon icon={faCalendarAlt} className="card-header-icon" />
+                    Lịch Dạy
+                  </div>
+                  <Card.Body>
+                    <Card.Text>
+                      Xem lịch dạy của bạn theo tuần, tháng. Theo dõi thời gian và phòng học của các môn học được phân công.
+                    </Card.Text>
+                    <Link to="/teacher/schedule" className="btn btn-info feature-btn w-100 text-white">
+                      <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
+                      Xem lịch dạy
                     </Link>
                   </Card.Body>
                 </div>

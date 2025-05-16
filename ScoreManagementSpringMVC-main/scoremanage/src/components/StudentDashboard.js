@@ -10,7 +10,7 @@ import defaultAvatar from '../assets/images/logo.png';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from '@fortawesome/free-solid-svg-icons/faEdit';
 import {
-  faComments, faCheckCircle, faExclamationCircle,
+  faComments, faCheckCircle, faExclamationCircle, faCalendarAlt,
   faChartLine, faUsers, faUserEdit, faBook, faGraduationCap, faPaperPlane
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -210,6 +210,24 @@ const StudentDashboard = () => {
                     <Link to="/forums" className="btn btn-warning feature-btn w-100">
                       <FontAwesomeIcon icon={faComments} className="me-2" />
                       Truy cập diễn đàn
+                    </Link>
+                  </Card.Body>
+                </div>
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <div className="feature-card">
+                  <div className="card-header-custom bg-soft-info">
+                    <FontAwesomeIcon icon={faCalendarAlt} className="card-header-icon" />
+                    Lịch Học
+                  </div>
+                  <Card.Body>
+                    <Card.Text>
+                      Xem lịch học của bạn theo tuần, tháng. Theo dõi thời gian và phòng học của các môn học đã đăng ký.
+                    </Card.Text>
+                    <Link to="/student/schedule" className="btn btn-info feature-btn w-100 text-white">
+                      <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
+                      Xem lịch học
                     </Link>
                   </Card.Body>
                 </div>

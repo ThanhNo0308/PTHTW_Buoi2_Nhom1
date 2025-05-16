@@ -40,6 +40,7 @@ export const endpoints = {
   "scores-student-scores": `${SERVER_CONTEXT}/api/teacher/students`, // + /{studentId}/scores?schoolYearId=...
   "admin-users": `${SERVER_CONTEXT}/api/teacher/admin-users`,
   "send-unlock-request": `${SERVER_CONTEXT}/api/teacher/send-unlock-request`,
+  "teacher-schedule": `${SERVER_CONTEXT}/api/teacher/schedule`,
 
   // API Forum
   "forums": `${SERVER_CONTEXT}/api/forums`,
@@ -47,6 +48,8 @@ export const endpoints = {
   "forum-comments": `${SERVER_CONTEXT}/api/forums`, // + /{forumId}/comments
   "forum-by-subject": `${SERVER_CONTEXT}/api/forums/by-subject-teacher`, // + /{subjectTeacherId}
   "forum-teacher": `${SERVER_CONTEXT}/api/forums/teacher`,
+  "school-years": `${SERVER_CONTEXT}/api/forums/school-years`,
+
   // API ForumStudent
   "forum-student": `${SERVER_CONTEXT}/api/forums/student`,
   "teacher-subject-teachers": `${SERVER_CONTEXT}/api/forums/subject-teachers`,
@@ -59,6 +62,7 @@ export const endpoints = {
   "student-course-registration": `${SERVER_CONTEXT}/api/student/course-registration`,
   "student-register-course": `${SERVER_CONTEXT}/api/student/course-registration/register`,
   "student-drop-course": `${SERVER_CONTEXT}/api/student/course-registration/drop`,
+  "student-schedule": `${SERVER_CONTEXT}/api/student/schedule`,
 }
 
 // Cấu hình axios với token
@@ -447,6 +451,27 @@ export const studentApis = {
   dropCourse: (enrollmentId) => {
     return API.delete(`${endpoints["student-drop-course"]}?enrollmentId=${enrollmentId}`);
   }
+};
+
+// Thêm API mới cho lịch học
+export const scheduleApis = {
+    // Lấy lịch học của sinh viên
+    getStudentSchedule: (schoolYearId = null) => {
+        let url = endpoints["student-schedule"];
+        if (schoolYearId) {
+            url += `?schoolYearId=${schoolYearId}`;
+        }
+        return API.get(url);
+    },
+    
+    // Lấy lịch dạy của giáo viên
+    getTeacherSchedule: (schoolYearId = null) => {
+        let url = endpoints["teacher-schedule"];
+        if (schoolYearId) {
+            url += `?schoolYearId=${schoolYearId}`;
+        }
+        return API.get(url);
+    }
 };
 
 export default axios.create({

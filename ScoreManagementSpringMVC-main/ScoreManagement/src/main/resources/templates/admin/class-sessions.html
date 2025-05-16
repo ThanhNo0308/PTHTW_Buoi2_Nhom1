@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head>
+        <title>Quản lý lịch học</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+    <div class="container my-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-calendar-check me-2"></i>Quản lý lịch học</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSessionModal">
+                <i class="fas fa-plus me-2"></i>Thêm buổi học mới
+            </button>
+        </div>
+
+        <!-- Thông báo thành công/lỗi -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i><span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i><span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Filters -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Bộ lọc</h5>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/admin/class-sessions}" method="get" class="row g-3">
+                    <!-- Học kỳ -->
+                    <div class="col-md-4">
+                        <label for="schoolYearId" class="form-label">Học kỳ</label>
+                        <select id="schoolYearId" name="schoolYearId" class="form-select">
+                            <option value="">-- Tất cả học kỳ --</option>
+                            <option th:each="sy : ${schoolYears}" 
+                                    th:value="${sy.id}" 
+                                    th:selected="${selectedSchoolYearId != null and sy.id == selectedSchoolYearId}"
+                                    th:text="${sy.nameYear + ' ' + sy.semesterName}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Môn học -->
+                    <div class="col-md-4">
+                        <label for="subjectTeacherId" class="form-label">Môn học</label>
+                        <select id="subjectTeacherId" name="subjectTeacherId" class="form-select">
+                            <option value="">-- Tất cả môn học --</option>
+                            <option th:each="st : ${subjectTeachers}" 
+                                    th:value="${st.id}" 
+                                    th:selected="${selectedSubjectTeacherId != null and st.id == selectedSubjectTeacherId}"
+                                    th:text="${st.subjectId.subjectName + ' - ' + st.teacherId.teacherName}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Lớp -->
+                    <div class="col-md-4">
+                        <label for="classId" class="form-label">Lớp</label>
+                        <select id="classId" name="classId" class="form-select">
+                            <option value="">-- Tất cả lớp --</option>
+                            <option th:each="cls : ${classes}" 
+                                    th:value="${cls.id}" 
+                                    th:selected="${selectedClassId != null and cls.id == selectedClassId}"
+                                    th:text="${cls.className}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Giảng viên -->
+                    <div class="col-md-4">
+                        <label for="teacherId" class="form-label">Giảng viên</label>
+                        <select id="teacherId" name="teacherId" class="form-select">
+                            <option value="">-- Tất cả giảng viên --</option>
+                            <option th:each="teacher : ${teachers}" 
+                                    th:value="${teacher.id}" 
+                                    th:selected="${selectedTeacherId != null and teacher.id == selectedTeacherId}"
+                                    th:text="${teacher.teacherName}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Khoa -->
+                    <div class="col-md-4">
+                        <label for="departmentId" class="form-label">Khoa</label>
+                        <select id="departmentId" name="departmentId" class="form-select">
+                            <option value="">-- Tất cả khoa --</option>
+                            <option th:each="dept : ${departments}" 
+                                    th:value="${dept.id}" 
+                                    th:selected="${selectedDepartmentId != null and dept.id == selectedDepartmentId}"
+                                    th:text="${dept.departmentName}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Thứ trong tuần -->
+                    <div class="col-md-4">
+                        <label for="dayOfWeek" class="form-label">Thứ</label>
+                        <select id="dayOfWeek" name="dayOfWeek" class="form-select">
+                            <option value="">-- Tất cả các ngày --</option>
+                            <option th:each="day : ${dayOfWeekNames.entrySet()}" 
+                                    th:value="${day.key}" 
+                                    th:selected="${selectedDayOfWeek != null and day.key == selectedDayOfWeek}"
+                                    th:text="${day.value}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Nút lọc và xóa bộ lọc -->
+                    <div class="col-12 d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search me-2"></i>Lọc
+                        </button>
+                        <a th:href="@{/admin/class-sessions}" class="btn btn-secondary">
+                            <i class="fas fa-redo me-2"></i>Xóa bộ lọc
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Class Sessions Table -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Danh sách buổi học</h5>
+                    <span th:if="${selectedSubjectTeacher}" class="badge bg-primary">
+                        <span th:text="${selectedSubjectTeacher.subjectId.subjectName + ' - ' + selectedSubjectTeacher.teacherId.teacherName}"></span>
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Môn học</th>
+                                <th>Giảng viên</th>
+                                <th>Phòng học</th>
+                                <th>Thứ</th>
+                                <th>Thời gian</th>
+                                <th>Lớp</th>
+                                <th>Ghi chú</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(classSessions)}">
+                                <td colspan="9" class="text-center">Không có buổi học nào</td>
+                            </tr>
+                            <tr th:each="classSession : ${classSessions}">
+                                <!-- Thay đổi tất cả các tham chiếu bên trong từ session thành classSession -->
+                                <td th:text="${classSession.id}"></td>
+                                <td th:text="${classSession.subjectTeacherId?.subjectId?.subjectName}"></td>
+                                <td th:text="${classSession.subjectTeacherId?.teacherId?.teacherName}"></td>
+                                <td th:text="${classSession.roomId}"></td>
+                                <td th:switch="${classSession.dayOfWeek}">
+                                    <span th:case="1">Thứ hai</span>
+                                    <span th:case="2">Thứ ba</span>
+                                    <span th:case="3">Thứ tư</span>
+                                    <span th:case="4">Thứ năm</span>
+                                    <span th:case="5">Thứ sáu</span>
+                                    <span th:case="6">Thứ bảy</span>
+                                    <span th:case="7">Chủ nhật</span>
+                                    <span th:case="*">Không xác định</span>
+                                </td>
+                                <td th:text="${classSession.startTime + ' - ' + classSession.endTime}"></td>
+                                <td th:text="${classSession.subjectTeacherId?.classId?.className}"></td>
+                                <td th:text="${classSession.notes}"></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-primary edit-session" 
+                                                th:data-id="${classSession.id}"
+                                                th:data-subject-teacher-id="${classSession.subjectTeacherId?.id}"
+                                                th:data-room-id="${classSession.roomId}"
+                                                th:data-day-of-week="${classSession.dayOfWeek}"
+                                                th:data-start-time="${classSession.startTime}"
+                                                th:data-end-time="${classSession.endTime}"
+                                                th:data-notes="${classSession.notes}"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#editSessionModal">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <a th:href="@{/admin/class-session/delete/{id}(id=${classSession.id})}" 
+                                           class="btn btn-danger"
+                                           onclick="return confirm('Bạn có chắc chắn muốn xóa buổi học này?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Session Modal -->
+        <div class="modal fade" id="addSessionModal" tabindex="-1" aria-labelledby="addSessionModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="addSessionModalLabel">Thêm buổi học mới</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form th:action="@{/admin/class-session-add}" method="post" th:object="${classSession}">
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label for="subjectTeacher" class="form-label">Môn học - Giảng viên <span class="text-danger">*</span></label>
+                                    <select id="subjectTeacher" name="subjectTeacherId.id" class="form-select" required>
+                                        <option value="">-- Chọn môn học và giảng viên --</option>
+                                        <option th:each="st : ${subjectTeachers}" 
+                                                th:value="${st.id}" 
+                                                th:text="${st.subjectId.subjectName + ' - ' + st.teacherId.teacherName + ' - ' + (st.classId != null ? st.classId.className : 'Chưa phân lớp') + ' - ' + st.schoolYearId.nameYear + ' ' + st.schoolYearId.semesterName}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="roomId" class="form-label">Phòng học <span class="text-danger">*</span></label>
+                                    <input type="text" id="roomId" th:field="*{roomId}" class="form-control" required placeholder="Ví dụ: A1.01">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="dayOfWeek" class="form-label">Thứ <span class="text-danger">*</span></label>
+                                    <select id="dayOfWeek" th:field="*{dayOfWeek}" class="form-select" required>
+                                        <option value="1">Thứ hai</option>
+                                        <option value="2">Thứ ba</option>
+                                        <option value="3">Thứ tư</option>
+                                        <option value="4">Thứ năm</option>
+                                        <option value="5">Thứ sáu</option>
+                                        <option value="6">Thứ bảy</option>
+                                        <option value="7">Chủ nhật</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Thời gian bắt đầu <span class="text-danger">*</span></label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <select name="startHour" class="form-select" required>
+                                                <option value="">Giờ</option>
+                                                <option th:each="h : ${#numbers.sequence(7, 21)}" th:value="${h}" th:text="${h}"></option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <select name="startMinute" class="form-select" required>
+                                                <option value="">Phút</option>
+                                                <option value="0">00</option>
+                                                <option value="15">15</option>
+                                                <option value="30">30</option>
+                                                <option value="45">45</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Thời gian kết thúc <span class="text-danger">*</span></label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <select name="endHour" class="form-select" required>
+                                                <option value="">Giờ</option>
+                                                <option th:each="h : ${#numbers.sequence(7, 21)}" th:value="${h}" th:text="${h}"></option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <select name="endMinute" class="form-select" required>
+                                                <option value="">Phút</option>
+                                                <option value="0">00</option>
+                                                <option value="15">15</option>
+                                                <option value="30">30</option>
+                                                <option value="45">45</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Ghi chú</label>
+                                <textarea id="notes" th:field="*{notes}" class="form-control" placeholder="Ghi chú thêm về buổi học"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                <button type="submit" class="btn btn-primary">Lưu buổi học</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Session Modal -->
+        <div class="modal fade" id="editSessionModal" tabindex="-1" aria-labelledby="editSessionModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="editSessionModalLabel">Chỉnh sửa buổi học</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form th:action="@{/admin/class-session-update}" method="post">
+                            <input type="hidden" id="editSessionId" name="id">
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label for="editSubjectTeacher" class="form-label">Môn học - Giảng viên <span class="text-danger">*</span></label>
+                                    <select id="editSubjectTeacher" name="subjectTeacherId.id" class="form-select" required>
+                                        <option value="">-- Chọn môn học và giảng viên --</option>
+                                        <option th:each="st : ${subjectTeachers}" 
+                                                th:value="${st.id}" 
+                                                th:text="${st.subjectId.subjectName + ' - ' + st.teacherId.teacherName + ' - ' + (st.classId != null ? st.classId.className : 'Chưa phân lớp') + ' - ' + st.schoolYearId.nameYear + ' ' + st.schoolYearId.semesterName}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="editRoomId" class="form-label">Phòng học <span class="text-danger">*</span></label>
+                                    <input type="text" id="editRoomId" name="roomId" class="form-control" required placeholder="Ví dụ: A1.01">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="editDayOfWeek" class="form-label">Thứ <span class="text-danger">*</span></label>
+                                    <select id="editDayOfWeek" name="dayOfWeek" class="form-select" required>
+                                        <option value="1">Thứ hai</option>
+                                        <option value="2">Thứ ba</option>
+                                        <option value="3">Thứ tư</option>
+                                        <option value="4">Thứ năm</option>
+                                        <option value="5">Thứ sáu</option>
+                                        <option value="6">Thứ bảy</option>
+                                        <option value="7">Chủ nhật</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Thời gian bắt đầu <span class="text-danger">*</span></label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <select id="editStartHour" name="startHour" class="form-select" required>
+                                                <option value="">Giờ</option>
+                                                <option th:each="h : ${#numbers.sequence(7, 21)}" th:value="${h}" th:text="${h}"></option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <select id="editStartMinute" name="startMinute" class="form-select" required>
+                                                <option value="">Phút</option>
+                                                <option value="0">00</option>
+                                                <option value="15">15</option>
+                                                <option value="30">30</option>
+                                                <option value="45">45</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Thời gian kết thúc <span class="text-danger">*</span></label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <select id="editEndHour" name="endHour" class="form-select" required>
+                                                <option value="">Giờ</option>
+                                                <option th:each="h : ${#numbers.sequence(7, 21)}" th:value="${h}" th:text="${h}"></option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <select id="editEndMinute" name="endMinute" class="form-select" required>
+                                                <option value="">Phút</option>
+                                                <option value="0">00</option>
+                                                <option value="15">15</option>
+                                                <option value="30">30</option>
+                                                <option value="45">45</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editNotes" class="form-label">Ghi chú</label>
+                                <textarea id="editNotes" name="notes" class="form-control" placeholder="Ghi chú thêm về buổi học"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                <button type="submit" class="btn btn-primary">Cập nhật</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
+
+    <!-- JavaScript để xử lý việc điền dữ liệu khi edit -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Xử lý khi nhấn vào nút Edit
+            const editButtons = document.querySelectorAll('.edit-session');
+            editButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const id = this.getAttribute('data-id');
+                    const subjectTeacherId = this.getAttribute('data-subject-teacher-id');
+                    const roomId = this.getAttribute('data-room-id');
+                    const dayOfWeek = this.getAttribute('data-day-of-week');
+                    const startTime = this.getAttribute('data-start-time');
+                    const endTime = this.getAttribute('data-end-time');
+                    const notes = this.getAttribute('data-notes');
+
+                    // Điền dữ liệu vào form edit
+                    document.getElementById('editSessionId').value = id;
+                    document.getElementById('editSubjectTeacher').value = subjectTeacherId;
+                    document.getElementById('editRoomId').value = roomId;
+                    document.getElementById('editDayOfWeek').value = dayOfWeek;
+                    document.getElementById('editNotes').value = notes || '';
+
+                    // Xử lý thời gian
+                    if (startTime) {
+                        const [startHour, startMinute] = startTime.split(':');
+                        document.getElementById('editStartHour').value = parseInt(startHour);
+                        document.getElementById('editStartMinute').value = parseInt(startMinute);
+                    }
+
+                    if (endTime) {
+                        const [endHour, endMinute] = endTime.split(':');
+                        document.getElementById('editEndHour').value = parseInt(endHour);
+                        document.getElementById('editEndMinute').value = parseInt(endMinute);
+                    }
+                });
+            });
+
+            const filterSelects = {
+                subjectTeacherId: document.getElementById('subjectTeacherId'),
+                classId: document.getElementById('classId'),
+                teacherId: document.getElementById('teacherId'),
+                departmentId: document.getElementById('departmentId'),
+                dayOfWeek: document.getElementById('dayOfWeek')
+            };
+
+            // Khi người dùng chọn một bộ lọc, vô hiệu hóa các bộ lọc khác để tránh xung đột
+            for (const [key, select] of Object.entries(filterSelects)) {
+                select.addEventListener('change', function () {
+                    if (this.value) {
+                        // Nếu người dùng chọn một giá trị, vô hiệu hóa các select khác
+                        for (const [otherKey, otherSelect] of Object.entries(filterSelects)) {
+                            if (otherKey !== key) {
+                                otherSelect.value = '';
+                                //otherSelect.disabled = true;
+                            }
+                        }
+                    } else {
+                        // Nếu người dùng bỏ chọn, kích hoạt lại tất cả select
+                        for (const otherSelect of Object.values(filterSelects)) {
+                            otherSelect.disabled = false;
+                        }
+                    }
+                });
+
+                // Kích hoạt logic khi tải trang để xử lý trường hợp refresh
+                if (select.value) {
+                    const event = new Event('change');
+                    select.dispatchEvent(event);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

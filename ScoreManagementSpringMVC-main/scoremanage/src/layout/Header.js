@@ -124,8 +124,11 @@ const Header = () => {
                 <Nav.Link as={NavLink} to="/teacher/classes">
                   <FontAwesomeIcon icon={faSchool} className="me-1" /> Lớp học
                 </Nav.Link>
+                <Nav.Link as={NavLink} to="/teacher/schedule">
+                  <FontAwesomeIcon icon={faCalendarAlt} className="me-1" /> Lịch dạy
+                </Nav.Link>
                 <Nav.Link as={NavLink} to="/teacher/students/search">
-                  <FontAwesomeIcon icon={faSearch} className="me-1" /> Tìm kiếm sinh viên
+                  <FontAwesomeIcon icon={faSearch} className="me-1" /> Tìm kiếm
                 </Nav.Link>
                 <Nav.Link as={NavLink} to="/teacher/scores/import">
                   <FontAwesomeIcon icon={faFileImport} className="me-1" /> Nhập điểm
@@ -150,6 +153,9 @@ const Header = () => {
 
                 <Nav.Link as={NavLink} to="/student/class-info">
                   <FontAwesomeIcon icon={faBuilding} className="me-1" /> Thông tin lớp học
+                </Nav.Link>
+                <Nav.Link as={NavLink} to="/student/schedule">
+                  <FontAwesomeIcon icon={faCalendarAlt} className="me-1" /> Lịch học
                 </Nav.Link>
                 <NavDropdown title={<><FontAwesomeIcon icon={faBook} className="me-1" /> Môn học</>} id="course-dropdown">
                   <NavDropdown.Item as={NavLink} to="/student/course-registration">

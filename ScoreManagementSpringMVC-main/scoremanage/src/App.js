@@ -10,6 +10,7 @@ import "./App.css";
 import RegisterStudent from "./components/RegisterStudent";
 import Profile from "./components/Profile";
 
+import TeacherSchedule from './components/TeacherSchedule';
 import TeacherClassesList from "./components/TeacherClassesList";
 import TeacherClassDetail from "./components/TeacherClassDetail";
 import ScoreManagement from "./components/ScoreManagement";
@@ -27,6 +28,8 @@ import StudentScoresList from "./components/StudentScoresList";
 import StudentClassInfo from "./components/StudentClassInfo";
 import StudentSubjects from "./components/StudentSubjects";
 import StudentCourseRegistration from './components/StudentCourseRegistration';
+import StudentSchedule from './components/StudentSchedule';
+
 
 import MyUserReducer from "./reducers/MyUserReducer";
 import { SchoolYearProvider } from "./reducers/SchoolYearContext";
@@ -57,6 +60,7 @@ const App = () => {
               <Route path="/student/class-info" element={<div style={{ margin: '50px 150px' }}><StudentClassInfo /></div>} />
               <Route path="/student/subjects" element={<div style={{ margin: '50px 150px' }}><StudentSubjects /></div>} />
               <Route path="/student/course-registration" element={<StudentCourseRegistration />} />
+              <Route path="/student/schedule" element={<StudentSchedule />} />
 
               <Route path="/teacher/dashboard" element={<div style={{ margin: '50px 150px' }}><TeacherDashboard /></div>} />
               <Route path="/teacher/classes" element={<div style={{ margin: '50px 150px' }}><TeacherClassesList /></div>} />
@@ -70,6 +74,7 @@ const App = () => {
               <Route path="/forums/create" element={<div style={{ margin: '50px 150px' }}><ForumCreate /></div>} />
               <Route path="/forums/:forumId" element={<div style={{ margin: '50px 150px' }}><ForumDetail /></div>} />
               <Route path="/forums/edit/:forumId" element={<ForumEdit />} />
+              <Route path="/teacher/schedule" element={<TeacherSchedule />} />
 
               <Route path="/chat" element={<div style={{ margin: '50px 150px' }}><ChatPage /></div>} />
 
