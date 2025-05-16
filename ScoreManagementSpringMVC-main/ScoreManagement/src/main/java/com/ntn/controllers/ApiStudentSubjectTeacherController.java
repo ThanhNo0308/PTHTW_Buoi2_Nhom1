@@ -39,7 +39,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-
 /**
  *
  * @author Admin
@@ -57,19 +56,19 @@ public class ApiStudentSubjectTeacherController {
 
     @Autowired
     private SubjectService subjectService;
-    
+
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private StudentService studentService;
-    
+
     @Autowired
     private SchoolYearService schoolYearService;
-    
+
     @Autowired
     private StudentSubjectTeacherService studentSubjectTeacherService;
-    
+
     @Autowired
     private SubjectTeacherService subjectTeacherService;
 
@@ -508,9 +507,6 @@ public class ApiStudentSubjectTeacherController {
      */
     private Map<String, Object> getRegistrationPeriodInfo(Schoolyear semester) {
         Map<String, Object> result = new HashMap<>();
-
-        // Mặc định thời gian đăng ký bắt đầu 1 tháng trước khi học kỳ bắt đầu
-        // và kết thúc 1 tuần trước khi học kỳ bắt đầu
         Date now = new Date();
 
         if (semester.getYearStart() == null) {
@@ -532,35 +528,48 @@ public class ApiStudentSubjectTeacherController {
         registrationStartCal.add(Calendar.MONTH, -1);
         Date registrationStart = registrationStartCal.getTime();
 
-        // Thời gian kết thúc đăng ký (1 tuần trước khi học kỳ bắt đầu)
+        // Thời gian kết thúc đăng ký (15 ngày trước khi học kỳ bắt đầu)
         Calendar registrationEndCal = Calendar.getInstance();
         registrationEndCal.setTime(semesterStart);
-        registrationEndCal.add(Calendar.DAY_OF_MONTH, -7);
+        registrationEndCal.add(Calendar.DAY_OF_MONTH, -17);
         Date registrationEnd = registrationEndCal.getTime();
 
-        // Thời gian kết thúc hủy đăng ký (thời điểm học kỳ bắt đầu)
-        Date dropEnd = semesterStart;
+        // Thời gian bắt đầu hủy đăng ký (14 ngày trước khi học kỳ bắt đầu)
+        Calendar dropStartCal = Calendar.getInstance();
+        dropStartCal.setTime(semesterStart);
+        dropStartCal.add(Calendar.DAY_OF_MONTH, -16);
+        Date dropStart = dropStartCal.getTime();
 
+        // Thời gian kết thúc hủy đăng ký (7 ngày trước khi học kỳ bắt đầu)
+        Calendar dropEndCal = Calendar.getInstance();
+        dropEndCal.setTime(semesterStart);
+        dropEndCal.add(Calendar.DAY_OF_MONTH, -9);
+        Date dropEnd = dropEndCal.getTime();
+
+        // Kiểm tra thời gian hiện tại có nằm trong khoảng thời gian đăng ký hoặc hủy đăng ký không
         boolean canRegister = now.after(registrationStart) && now.before(registrationEnd);
-        boolean canDrop = now.after(registrationStart) && now.before(dropEnd);
+        boolean canDrop = now.after(dropStart) && now.before(dropEnd);
 
         result.put("semesterStart", semesterStart);
         result.put("semesterEnd", semesterEnd);
         result.put("registrationStart", registrationStart);
         result.put("registrationEnd", registrationEnd);
+        result.put("dropStart", dropStart);
         result.put("dropEnd", dropEnd);
         result.put("canRegister", canRegister);
         result.put("canDrop", canDrop);
 
-        // Thêm thông báo tương ứng
+        // Thêm thông báo tương ứng với các mốc thời gian mới
         if (now.before(registrationStart)) {
             result.put("message", "Thời gian đăng ký chưa bắt đầu");
-        } else if (now.after(registrationEnd) && now.before(semesterStart)) {
-            result.put("message", "Đã kết thúc thời gian đăng ký nhưng vẫn có thể hủy đăng ký");
-        } else if (now.after(semesterStart)) {
+        } else if (now.after(registrationEnd) && now.before(dropStart)) {
+            result.put("message", "Đã kết thúc thời gian đăng ký, chưa đến thời gian hủy đăng ký");
+        } else if (now.after(dropEnd) && now.before(semesterStart)) {
             result.put("message", "Đã kết thúc thời gian đăng ký và hủy đăng ký");
-        } else {
-            result.put("message", "Đang trong thời gian đăng ký và hủy đăng ký");
+        } else if (canRegister) {
+            result.put("message", "Đang trong thời gian đăng ký môn học");
+        } else if (canDrop) {
+            result.put("message", "Đang trong thời gian hủy đăng ký môn học");
         }
 
         return result;

@@ -82,11 +82,11 @@ const StudentCourseRegistration = () => {
   // Filter available courses
   const filteredCourses = availableCourses.filter(course => {
     if (!filterKeyword) return true;
-    
+
     const keyword = filterKeyword.toLowerCase();
     return (
-      course.subjectName.toLowerCase().includes(keyword) || 
-      course.teacherName.toLowerCase().includes(keyword) || 
+      course.subjectName.toLowerCase().includes(keyword) ||
+      course.teacherName.toLowerCase().includes(keyword) ||
       course.className.toLowerCase().includes(keyword)
     );
   });
@@ -114,7 +114,7 @@ const StudentCourseRegistration = () => {
       setError("Không trong thời gian hủy đăng ký môn học");
       return;
     }
-    
+
     setSelectedCourse(course);
     setActionType('drop');
     setShowConfirmModal(true);
@@ -139,14 +139,14 @@ const StudentCourseRegistration = () => {
         setRegisteredCourses(data.registeredCourses || []);
         setRegisteredCredits(data.registeredCredits || 0);
         setRemainingCredits(data.remainingCredits || 0);
-        
+
         // Cập nhật danh sách khóa học có sẵn
-        setAvailableCourses(prevCourses => 
+        setAvailableCourses(prevCourses =>
           prevCourses.filter(course => course.id !== selectedCourse.id)
         );
-        
+
         setSuccessMessage(`Đăng ký môn ${selectedCourse.subjectName} thành công!`);
-      } 
+      }
       else if (actionType === 'drop') {
         const response = await studentApis.dropCourse(selectedCourse.enrollmentId);
         const data = response.data;
@@ -159,11 +159,11 @@ const StudentCourseRegistration = () => {
         setRegisteredCourses(data.registeredCourses || []);
         setRegisteredCredits(data.registeredCredits || 0);
         setRemainingCredits(data.remainingCredits || 17);
-        
+
         // Cập nhật lại danh sách khóa học có sẵn bằng cách load lại dữ liệu
         const refreshResponse = await studentApis.getAvailableCourses();
         setAvailableCourses(refreshResponse.data.availableCourses || []);
-        
+
         setSuccessMessage(`Hủy đăng ký môn ${selectedCourse.subjectName} thành công!`);
       }
     } catch (err) {
@@ -184,15 +184,16 @@ const StudentCourseRegistration = () => {
   // Registration period display message
   const getRegistrationMessage = () => {
     if (!registrationPeriod) return '';
-    
+
     const startDate = formatDate(registrationPeriod.registrationStart);
     const endDate = formatDate(registrationPeriod.registrationEnd);
+    const dropStartDate = formatDate(registrationPeriod.dropStart);
     const dropEndDate = formatDate(registrationPeriod.dropEnd);
-    
+
     return (
       <div>
         <p>Thời gian đăng ký: <strong>{startDate}</strong> đến <strong>{endDate}</strong></p>
-        <p>Thời gian hủy đăng ký: <strong>{startDate}</strong> đến <strong>{dropEndDate}</strong></p>
+        <p>Thời gian hủy đăng ký: <strong>{dropStartDate}</strong> đến <strong>{dropEndDate}</strong></p>
         <p className="text-info">
           <FontAwesomeIcon icon={faClock} className="me-2" />
           {registrationPeriod.message}
@@ -264,26 +265,26 @@ const StudentCourseRegistration = () => {
                   Học kỳ hiện tại: <strong>{currentSemester.nameYear} {currentSemester.semesterName}</strong>
                 </Alert>
               )}
-              
+
               <h5>Đăng ký cho học kỳ: <Badge bg="primary">{nextSemester?.nameYear} {nextSemester?.semesterName}</Badge></h5>
-              
+
               <Alert variant="info" className="mt-3">
                 <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
                 {getRegistrationMessage()}
               </Alert>
-              
+
               <div className="mt-3">
                 <p className="mb-2">Tiến độ đăng ký tín chỉ:</p>
                 <div className="d-flex justify-content-between align-items-center">
                   <div className="flex-grow-1 me-3">
-                    <ProgressBar 
-                      now={(registeredCredits / 17) * 100} 
+                    <ProgressBar
+                      now={(registeredCredits / 17) * 100}
                       label={`${registeredCredits}/17 tín chỉ`}
-                      variant={registeredCredits > 17 ? "danger" : "success"} 
+                      variant={registeredCredits > 17 ? "danger" : "success"}
                     />
                   </div>
                   <div>
-                    <Badge bg={remainingCredits < 0 ? "danger" : "success"} style={{fontSize: "1rem"}}>
+                    <Badge bg={remainingCredits < 0 ? "danger" : "success"} style={{ fontSize: "1rem" }}>
                       Còn lại: {remainingCredits} tín chỉ
                     </Badge>
                   </div>
@@ -312,13 +313,13 @@ const StudentCourseRegistration = () => {
               <Table hover bordered>
                 <thead className="table-light">
                   <tr>
-                    <th style={{width: '50px'}}>STT</th>
+                    <th style={{ width: '50px' }}>STT</th>
                     <th>Mã MH</th>
                     <th>Tên môn học</th>
-                    <th style={{width: '80px'}}>Tín chỉ</th>
+                    <th style={{ width: '80px' }}>Tín chỉ</th>
                     <th>Giảng viên</th>
                     <th>Lớp học</th>
-                    <th style={{width: '120px'}}>Thao tác</th>
+                    <th style={{ width: '120px' }}>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -331,8 +332,8 @@ const StudentCourseRegistration = () => {
                       <td>{course.teacherName}</td>
                       <td>{course.className}</td>
                       <td className="text-center">
-                        <Button 
-                          variant="danger" 
+                        <Button
+                          variant="danger"
                           size="sm"
                           disabled={!registrationPeriod.canDrop}
                           onClick={() => handleDropCourse(course)}
@@ -357,14 +358,14 @@ const StudentCourseRegistration = () => {
               <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
               Danh sách môn học có thể đăng ký ({filteredCourses.length})
             </Card.Title>
-            <div style={{width: '300px'}}>
+            <div style={{ width: '300px' }}>
               <Form.Control
                 type="search"
                 placeholder="Tìm kiếm môn học..."
                 value={filterKeyword}
                 onChange={(e) => setFilterKeyword(e.target.value)}
                 className="form-control-sm"
-                style={{background: 'white', border: '1px solid white'}}
+                style={{ background: 'white', border: '1px solid white' }}
               />
             </div>
           </div>
@@ -385,13 +386,13 @@ const StudentCourseRegistration = () => {
               <Table hover bordered>
                 <thead className="table-light">
                   <tr>
-                    <th style={{width: '50px'}}>STT</th>
+                    <th style={{ width: '50px' }}>STT</th>
                     <th>Mã MH</th>
                     <th>Tên môn học</th>
-                    <th style={{width: '80px'}}>Tín chỉ</th>
+                    <th style={{ width: '80px' }}>Tín chỉ</th>
                     <th>Giảng viên</th>
                     <th>Lớp học</th>
-                    <th style={{width: '120px'}}>Thao tác</th>
+                    <th style={{ width: '120px' }}>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -403,26 +404,26 @@ const StudentCourseRegistration = () => {
                       <td className="text-center">
                         {course.credits}
                         {course.credits > remainingCredits && (
-                          <FontAwesomeIcon 
-                            icon={faExclamationTriangle} 
-                            className="ms-1 text-warning" 
-                            title="Vượt quá số tín chỉ còn lại" 
+                          <FontAwesomeIcon
+                            icon={faExclamationTriangle}
+                            className="ms-1 text-warning"
+                            title="Vượt quá số tín chỉ còn lại"
                           />
                         )}
                       </td>
                       <td>{course.teacherName}</td>
                       <td>{course.className}</td>
                       <td className="text-center">
-                        <Button 
-                          variant="primary" 
+                        <Button
+                          variant="primary"
                           size="sm"
                           disabled={!registrationPeriod.canRegister || course.credits > remainingCredits}
                           onClick={() => handleRegisterCourse(course)}
                           title={
-                            !registrationPeriod.canRegister 
-                              ? "Ngoài thời gian đăng ký" 
-                              : course.credits > remainingCredits 
-                                ? "Vượt quá số tín chỉ cho phép" 
+                            !registrationPeriod.canRegister
+                              ? "Ngoài thời gian đăng ký"
+                              : course.credits > remainingCredits
+                                ? "Vượt quá số tín chỉ cho phép"
                                 : "Đăng ký môn học"
                           }
                         >
@@ -436,15 +437,15 @@ const StudentCourseRegistration = () => {
               </Table>
             </div>
           )}
-          
+
           <Alert variant="secondary" className="mt-4">
             <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
-            <strong>Lưu ý:</strong> 
+            <strong>Lưu ý:</strong>
             <ul className="mb-0 mt-2">
               <li>Chỉ hiển thị các môn học thuộc khoa của bạn cho học kỳ tiếp theo.</li>
               <li>Mỗi học kỳ chỉ được đăng ký tối đa 17 tín chỉ.</li>
-              <li>Thời gian đăng ký: từ 1 tháng đến 1 tuần trước khi học kỳ bắt đầu.</li>
-              <li>Thời gian hủy đăng ký: từ khi bắt đầu đăng ký đến trước ngày học kỳ bắt đầu.</li>
+              <li>Thời gian đăng ký: 2 tuần đầu tiên của tháng trước khi học kỳ bắt đầu.</li>
+              <li>Thời gian hủy đăng ký: 1 tuần tiếp theo sau thời gian đăng ký.</li>
             </ul>
           </Alert>
         </Card.Body>
@@ -474,14 +475,14 @@ const StudentCourseRegistration = () => {
                   <p className="mb-0"><strong>Lớp:</strong> {selectedCourse.className}</p>
                 </Card.Body>
               </Card>
-              
+
               {actionType === 'register' && (
                 <Alert variant="info">
                   <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
                   Sau khi đăng ký, bạn vẫn có thể hủy đăng ký trước ngày {formatDate(registrationPeriod.dropEnd)}.
                 </Alert>
               )}
-              
+
               {actionType === 'drop' && (
                 <Alert variant="warning">
                   <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
@@ -496,8 +497,8 @@ const StudentCourseRegistration = () => {
             <FontAwesomeIcon icon={faTimes} className="me-1" />
             Hủy
           </Button>
-          <Button 
-            variant={actionType === 'register' ? "primary" : "danger"} 
+          <Button
+            variant={actionType === 'register' ? "primary" : "danger"}
             onClick={processAction}
             disabled={processingAction}
           >
