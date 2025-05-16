@@ -2,12 +2,16 @@ package com.ntn.repository.impl;
 
 import com.ntn.pojo.Schoolyear;
 import com.ntn.pojo.Score;
+import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.repository.SchoolYearRepository;
 import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
+import java.util.ArrayList;
 import java.util.Calendar;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,6 +107,61 @@ public class SchoolYearRepositoryImp implements SchoolYearRepository {
         query.orderBy(builder.desc(root.get("id")));
 
         return session.createQuery(query).getResultList();
+    }
+
+    @Override
+    public List<Schoolyear> getSchoolYearsByTeacher(int teacherId) {
+        Session session = this.factory.getObject().getCurrentSession();
+
+        try {
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Schoolyear> query = builder.createQuery(Schoolyear.class);
+            Root<Subjectteacher> root = query.from(Subjectteacher.class);
+
+            // Join với SchoolYear
+            Join<Subjectteacher, Schoolyear> schoolYearJoin = root.join("schoolYearId", JoinType.INNER);
+
+            // Filter by teacherId
+            query.select(schoolYearJoin).distinct(true)
+                    .where(builder.equal(root.get("teacherId").get("id"), teacherId));
+
+            // Order by newest first
+            query.orderBy(builder.desc(schoolYearJoin.get("id")));
+
+            return session.createQuery(query).getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    @Override
+    public List<Schoolyear> getSchoolYearsByStudent(int studentId) {
+        Session session = this.factory.getObject().getCurrentSession();
+
+        try {
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Schoolyear> query = builder.createQuery(Schoolyear.class);
+            Root<Studentsubjectteacher> root = query.from(Studentsubjectteacher.class);
+
+            // Join với SubjectTeacher để lấy SchoolYear
+            Join<Studentsubjectteacher, Subjectteacher> subjectTeacherJoin = root.join("subjectTeacherId", JoinType.INNER);
+
+            // Join với SchoolYear
+            Join<Subjectteacher, Schoolyear> schoolYearJoin = subjectTeacherJoin.join("schoolYearId", JoinType.INNER);
+
+            // Filter by studentId
+            query.select(schoolYearJoin).distinct(true)
+                    .where(builder.equal(root.get("studentId").get("id"), studentId));
+
+            // Order by newest first
+            query.orderBy(builder.desc(schoolYearJoin.get("id")));
+
+            return session.createQuery(query).getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 
     @Override

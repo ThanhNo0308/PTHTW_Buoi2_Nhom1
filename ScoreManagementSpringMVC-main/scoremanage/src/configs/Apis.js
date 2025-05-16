@@ -156,8 +156,12 @@ export const teacherClassApis = {
   },
 
   // Lấy thông tin phân công môn học
-  getTeacherSubjects: (username) => {
-    return API.get(`${endpoints["teacher-subject-teachers"]}?username=${username}`);
+  getTeacherSubjects: (username, schoolYearId = null) => {
+    let url = `${endpoints["teacher-subject-teachers"]}?username=${username}`;
+    if (schoolYearId) {
+      url += `&schoolYearId=${schoolYearId}`;
+    }
+    return API.get(url);
   },
 
   // Lấy thông tin chi tiết lớp học
@@ -358,6 +362,26 @@ export const forumApis = {
   // Lấy chi tiết diễn đàn và các bình luận
   getForumDetail: (forumId) => {
     return API.get(`${endpoints["forum-detail"]}/${forumId}`);
+  },
+
+  // Lấy học kỳ có sẵn cho diễn đàn
+  getAvailableSchoolYears: () => {
+    return API.get(`${endpoints["forums"]}/school-years`);
+  },
+
+  // Lọc diễn đàn theo môn học và học kỳ
+  getFilteredForums: (subjectTeacherId = null, schoolYearId = null) => {
+    let url = endpoints["forums"] + "/filter?";
+    
+    if (subjectTeacherId) {
+      url += `subjectTeacherId=${subjectTeacherId}&`;
+    }
+    
+    if (schoolYearId) {
+      url += `schoolYearId=${schoolYearId}`;
+    }
+    
+    return API.get(url);
   },
 
   // Thêm diễn đàn mới

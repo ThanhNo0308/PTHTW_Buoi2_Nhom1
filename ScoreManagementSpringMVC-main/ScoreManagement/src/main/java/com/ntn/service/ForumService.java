@@ -19,6 +19,12 @@ public interface ForumService {
 
     List<Forum> getForumByStudent(int studentId);
 
+    List<Forum> getForumBySchoolYear(int schoolYearId);
+
+    List<Forum> getForumByTeacherAndSchoolYear(int teacherId, int schoolYearId);
+
+    List<Forum> getForumByStudentAndSchoolYear(int studentId, int schoolYearId);
+
     boolean addForum(Forum forum);
 
     boolean updateForum(Forum forum);

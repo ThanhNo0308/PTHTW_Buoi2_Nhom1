@@ -33,6 +33,16 @@ public class SchoolYearServiceImp implements SchoolYearService {
     }
 
     @Override
+    public List<Schoolyear> getSchoolYearsByTeacher(int teacherId) {
+        return this.schoolYearRepo.getSchoolYearsByTeacher(teacherId);
+    }
+
+    @Override
+    public List<Schoolyear> getSchoolYearsByStudent(int studentId) {
+        return this.schoolYearRepo.getSchoolYearsByStudent(studentId);
+    }
+
+    @Override
     public boolean deleteSchoolYear(int schoolYearId) {
         return this.schoolYearRepo.deleteSchoolYear(schoolYearId);
     }
@@ -61,6 +71,5 @@ public class SchoolYearServiceImp implements SchoolYearService {
     public boolean hasRelatedData(int schoolYearId) {
         return this.schoolYearRepo.hasRelatedData(schoolYearId);
     }
-    
-    
+
 }

@@ -2,14 +2,19 @@ package com.ntn.controllers;
 
 import com.ntn.pojo.Forum;
 import com.ntn.pojo.Forumcomment;
+import com.ntn.pojo.Schoolyear;
+import com.ntn.pojo.Student;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.Teacher;
 import com.ntn.pojo.User;
 import com.ntn.service.ForumCommentService;
 import com.ntn.service.ForumService;
+import com.ntn.service.SchoolYearService;
+import com.ntn.service.StudentService;
 import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.TeacherService;
 import com.ntn.service.UserService;
+import java.util.ArrayList;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -42,6 +47,12 @@ public class ApiForumController {
 
     @Autowired
     private SubjectTeacherService subjectTeacherService;
+
+    @Autowired
+    private SchoolYearService schoolYearService;
+
+    @Autowired
+    private StudentService studentService;
 
     // Lấy danh sách tất cả diễn đàn
     @GetMapping("/forums")
@@ -307,8 +318,16 @@ public class ApiForumController {
                 username = authentication.getPrincipal().toString();
             }
 
-            // Lấy thông tin giáo viên
-            Teacher teacher = teacherService.getTeacherByUsername(username);
+            // Lấy thông tin User trước
+            User user = userService.getUserByUn(username);
+            if (user == null) {
+                response.put("success", false);
+                response.put("error", "Không tìm thấy thông tin người dùng");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            // Sau đó lấy Teacher từ email của User
+            Teacher teacher = teacherService.getTeacherByEmail(user.getEmail());
             if (teacher == null) {
                 response.put("success", false);
                 response.put("error", "Không tìm thấy thông tin giáo viên");
@@ -328,7 +347,7 @@ public class ApiForumController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
- 
+
     // Lấy danh sách các diễn đàn cho sinh viên (theo các môn đã đăng ký)
     @GetMapping("/forums/student")
     public ResponseEntity<Map<String, Object>> getStudentForums(Authentication authentication) {
@@ -364,17 +383,32 @@ public class ApiForumController {
 
     // Lấy danh sách phân công môn học của giảng viên ở DIỄN ĐÀN
     @GetMapping("/forums/subject-teachers")
-    public ResponseEntity<?> getTeacherSubjects(@RequestParam String username) {
+    public ResponseEntity<?> getTeacherSubjects(
+            @RequestParam String username,
+            @RequestParam(required = false) Integer schoolYearId) {
         try {
-            Teacher teacher = teacherService.getTeacherByUsername(username);
+            // Lấy User trước
+            User user = userService.getUserByUn(username);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("success", false, "error", "Không tìm thấy thông tin người dùng"));
+            }
+
+            // Sau đó lấy Teacher từ email của User
+            Teacher teacher = teacherService.getTeacherByEmail(user.getEmail());
 
             if (teacher == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("success", false, "error", "Không tìm thấy thông tin giáo viên"));
             }
 
-            // Lấy danh sách phân công môn học của giảng viên
-            List<Subjectteacher> subjectTeachers = subjectTeacherService.getSubjectTeachersByTeacherId(teacher.getId());
+            // Lấy danh sách phân công môn học của giảng viên - lọc theo học kỳ nếu có
+            List<Subjectteacher> subjectTeachers;
+            if (schoolYearId != null) {
+                subjectTeachers = subjectTeacherService.getSubjectTeachersByTeacherIdAndSchoolYearId(teacher.getId(), schoolYearId);
+            } else {
+                subjectTeachers = subjectTeacherService.getSubjectTeachersByTeacherId(teacher.getId());
+            }
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -552,6 +586,152 @@ public class ApiForumController {
         } catch (Exception e) {
             response.put("success", false);
             response.put("error", "Lỗi khi cập nhật diễn đàn: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // Lấy danh sách học kỳ
+    @GetMapping("/forums/school-years")
+    public ResponseEntity<Map<String, Object>> getAvailableSchoolYears(Authentication authentication) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Lấy thông tin người dùng hiện tại
+            String username;
+            if (authentication.getPrincipal() instanceof UserDetails) {
+                username = ((UserDetails) authentication.getPrincipal()).getUsername();
+            } else {
+                username = authentication.getPrincipal().toString();
+            }
+            User currentUser = userService.getUserByUn(username);
+
+            List<Schoolyear> availableSchoolYears;
+
+            // Phân biệt xử lý giữa giáo viên và sinh viên
+            if ("Teacher".equals(currentUser.getRole().toString())) {
+                // Sửa lỗi: Lấy teacher từ email thay vì username
+                Teacher teacher = teacherService.getTeacherByEmail(currentUser.getEmail());
+                if (teacher == null) {
+                    response.put("success", false);
+                    response.put("error", "Không tìm thấy thông tin giáo viên");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                }
+
+                // Lấy các học kỳ mà giáo viên có dạy môn học
+                availableSchoolYears = schoolYearService.getSchoolYearsByTeacher(teacher.getId());
+            } else if ("Student".equals(currentUser.getRole().toString())) {
+                // Sửa lỗi: Lấy student từ email thay vì username
+                List<Student> students = studentService.getStudentbyEmail(currentUser.getEmail());
+                Student student = students != null && !students.isEmpty() ? students.get(0) : null;
+                if (student == null) {
+                    response.put("success", false);
+                    response.put("error", "Không tìm thấy thông tin sinh viên");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                }
+
+                availableSchoolYears = schoolYearService.getSchoolYearsByStudent(student.getId());
+            } else {
+                // Admin xem tất cả học kỳ
+                availableSchoolYears = schoolYearService.getAllSchoolYears();
+            }
+
+            // Đánh dấu học kỳ hiện tại
+            int currentSchoolYearId = schoolYearService.getCurrentSchoolYearId();
+            List<Map<String, Object>> enhancedSchoolYears = new ArrayList<>();
+
+            for (Schoolyear sy : availableSchoolYears) {
+                Map<String, Object> syInfo = new HashMap<>();
+                syInfo.put("id", sy.getId());
+                syInfo.put("nameYear", sy.getNameYear());
+                syInfo.put("semesterName", sy.getSemesterName());
+                syInfo.put("yearStart", sy.getYearStart());
+                syInfo.put("yearEnd", sy.getYearEnd());
+                syInfo.put("isCurrent", sy.getId() == currentSchoolYearId);
+                enhancedSchoolYears.add(syInfo);
+            }
+
+            response.put("success", true);
+            response.put("schoolYears", enhancedSchoolYears);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("error", "Lỗi khi lấy danh sách học kỳ: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // Lọc diễn đàn theo học kỳ và môn học
+    @GetMapping("/forums/filter")
+    public ResponseEntity<Map<String, Object>> getFilteredForums(
+            @RequestParam(required = false) Integer subjectTeacherId,
+            @RequestParam(required = false) Integer schoolYearId,
+            Authentication authentication) {
+
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Lấy thông tin người dùng hiện tại
+            String username;
+            if (authentication.getPrincipal() instanceof UserDetails) {
+                username = ((UserDetails) authentication.getPrincipal()).getUsername();
+            } else {
+                username = authentication.getPrincipal().toString();
+            }
+            User currentUser = userService.getUserByUn(username);
+
+            List<Forum> forums;
+
+            // Phân biệt xử lý giữa giáo viên và sinh viên
+            if ("Teacher".equals(currentUser.getRole().toString())) {
+                // Sửa lỗi: Lấy teacher từ email thay vì username
+                Teacher teacher = teacherService.getTeacherByEmail(currentUser.getEmail());
+                if (teacher == null) {
+                    response.put("success", false);
+                    response.put("error", "Không tìm thấy thông tin giáo viên");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                }
+
+                // Lọc theo môn học và học kỳ
+                if (subjectTeacherId != null) {
+                    forums = forumService.getForumBySubjectTeacher(subjectTeacherId);
+                } else if (schoolYearId != null) {
+                    forums = forumService.getForumByTeacherAndSchoolYear(teacher.getId(), schoolYearId);
+                } else {
+                    forums = forumService.getForumByTeacher(teacher.getId());
+                }
+            } else if ("Student".equals(currentUser.getRole().toString())) {
+                // Sửa lỗi: Lấy student từ email thay vì username
+                List<Student> students = studentService.getStudentbyEmail(currentUser.getEmail());
+                Student student = students != null && !students.isEmpty() ? students.get(0) : null;
+                if (student == null) {
+                    response.put("success", false);
+                    response.put("error", "Không tìm thấy thông tin sinh viên");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                }
+
+                // Lọc theo môn học và học kỳ
+                if (subjectTeacherId != null) {
+                    forums = forumService.getForumBySubjectTeacher(subjectTeacherId);
+                } else if (schoolYearId != null) {
+                    forums = forumService.getForumByStudentAndSchoolYear(student.getId(), schoolYearId);
+                } else {
+                    forums = forumService.getForumByStudent(student.getId());
+                }
+            } else {
+                // Admin xem tất cả diễn đàn, với bộ lọc nếu có
+                if (subjectTeacherId != null) {
+                    forums = forumService.getForumBySubjectTeacher(subjectTeacherId);
+                } else if (schoolYearId != null) {
+                    forums = forumService.getForumBySchoolYear(schoolYearId);
+                } else {
+                    forums = forumService.getForums();
+                }
+            }
+
+            response.put("success", true);
+            response.put("forums", forums);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("error", "Lỗi khi lấy danh sách diễn đàn: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

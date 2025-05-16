@@ -111,6 +111,85 @@ public class ForumRepositoryImpl implements ForumRepository {
     }
 
     @Override
+    public List<Forum> getForumBySchoolYear(int schoolYearId) {
+        Session s = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder b = s.getCriteriaBuilder();
+        CriteriaQuery<Forum> q = b.createQuery(Forum.class);
+        Root<Forum> root = q.from(Forum.class);
+
+        // Join với Subjectteacher để lấy thông tin schoolYearId
+        Join<Forum, Subjectteacher> stJoin = root.join("subjectTeacherId", JoinType.INNER);
+
+        // Lọc theo schoolYearId
+        q.select(root);
+        q.where(b.equal(stJoin.get("schoolYearId").get("id"), schoolYearId));
+        q.orderBy(b.desc(root.get("createdAt")));
+
+        return s.createQuery(q).getResultList();
+    }
+
+    @Override
+    public List<Forum> getForumByTeacherAndSchoolYear(int teacherId, int schoolYearId) {
+        Session s = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder b = s.getCriteriaBuilder();
+        CriteriaQuery<Forum> q = b.createQuery(Forum.class);
+        Root<Forum> root = q.from(Forum.class);
+
+        // Join với Subjectteacher
+        Join<Forum, Subjectteacher> stJoin = root.join("subjectTeacherId", JoinType.INNER);
+        Join<Subjectteacher, Teacher> teacherJoin = stJoin.join("teacherId", JoinType.INNER);
+
+        // Lọc theo teacherId và schoolYearId
+        q.select(root);
+        q.where(
+                b.and(
+                        b.equal(teacherJoin.get("id"), teacherId),
+                        b.equal(stJoin.get("schoolYearId").get("id"), schoolYearId)
+                )
+        );
+        q.orderBy(b.desc(root.get("createdAt")));
+
+        return s.createQuery(q).getResultList();
+    }
+
+    @Override
+    public List<Forum> getForumByStudentAndSchoolYear(int studentId, int schoolYearId) {
+        Session s = this.factory.getObject().getCurrentSession();
+
+        // Đầu tiên, lấy danh sách các subjectTeacherId mà sinh viên đã đăng ký trong học kỳ này
+        CriteriaBuilder builder = s.getCriteriaBuilder();
+        CriteriaQuery<Integer> query = builder.createQuery(Integer.class);
+        Root<Studentsubjectteacher> root = query.from(Studentsubjectteacher.class);
+
+        Join<Studentsubjectteacher, Subjectteacher> stJoin = root.join("subjectTeacherId", JoinType.INNER);
+
+        query.select(stJoin.get("id")).distinct(true);
+        query.where(
+                builder.and(
+                        builder.equal(root.get("studentId").get("id"), studentId),
+                        builder.equal(stJoin.get("schoolYearId").get("id"), schoolYearId)
+                )
+        );
+
+        List<Integer> subjectTeacherIds = s.createQuery(query).getResultList();
+
+        if (subjectTeacherIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Sau đó, lấy các forum thuộc về các subjectTeacher này
+        CriteriaBuilder b = s.getCriteriaBuilder();
+        CriteriaQuery<Forum> q = b.createQuery(Forum.class);
+        Root<Forum> forumRoot = q.from(Forum.class);
+        q.select(forumRoot);
+
+        q.where(forumRoot.get("subjectTeacherId").get("id").in(subjectTeacherIds));
+        q.orderBy(b.desc(forumRoot.get("createdAt")));
+
+        return s.createQuery(q).getResultList();
+    }
+
+    @Override
     public boolean addForum(Forum forum) {
         Session s = this.factory.getObject().getCurrentSession();
         try {

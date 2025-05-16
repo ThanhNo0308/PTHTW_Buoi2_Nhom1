@@ -15,6 +15,10 @@ public interface SchoolYearRepository {
 
     List<Schoolyear> getSchoolYearsByNameYearAndSemester(String nameYear, String semesterName);
 
+    List<Schoolyear> getSchoolYearsByTeacher(int teacherId);
+
+    List<Schoolyear> getSchoolYearsByStudent(int studentId);
+
     int getCurrentSchoolYearId();
 
     boolean addOrUpdateSchoolYear(Schoolyear schoolYear);
