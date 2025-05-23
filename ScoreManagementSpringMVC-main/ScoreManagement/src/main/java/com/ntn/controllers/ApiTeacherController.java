@@ -290,21 +290,58 @@ public class ApiTeacherController {
                     double totalScore = 0;
                     int totalCredits = 0;
 
+                    // Nhóm điểm theo môn học
+                    Map<Integer, List<Score>> scoresBySubject = new HashMap<>();
                     for (Score score : scores) {
-                        if (score.getAverageScore() != null) {
-                            int credits = score.getSubjectTeacherID().getSubjectId().getCredits();
-                            totalScore += score.getAverageScore() * credits;
-                            totalCredits += credits;
+                        int subjectId = score.getSubjectTeacherID().getSubjectId().getId();
+                        if (!scoresBySubject.containsKey(subjectId)) {
+                            scoresBySubject.put(subjectId, new ArrayList<>());
                         }
+                        scoresBySubject.get(subjectId).add(score);
                     }
 
-                    if (totalCredits > 0) {
-                        response.put("semesterAverage", totalScore / totalCredits);
-                    } else {
-                        response.put("semesterAverage", 0);
+                    // Tính điểm trung bình môn học và điểm trung bình học kỳ
+                    Map<Integer, Double> subjectAverages = new HashMap<>();
+                    for (Map.Entry<Integer, List<Score>> entry : scoresBySubject.entrySet()) {
+                        int subjectId = entry.getKey();
+                        List<Score> subjectScores = entry.getValue();
+
+                        double subjectTotalWeightedScore = 0;
+                        double subjectTotalWeight = 0;
+
+                        for (Score score : subjectScores) {
+                            if (score.getScoreValue() != null && score.getScoreType() != null) {
+                                Float weight = scoreService.getScoreWeight(
+                                        score.getSubjectTeacherID().getClassId().getId(),
+                                        score.getSubjectTeacherID().getId(),
+                                        currentSchoolYear.getId(),
+                                        score.getScoreType().getScoreType()
+                                );
+
+                                if (weight != null) {
+                                    subjectTotalWeightedScore += score.getScoreValue() * weight;
+                                    subjectTotalWeight += weight;
+                                }
+                            }
+                        }
+
+                        double subjectAverage = 0;
+                        if (subjectTotalWeight > 0) {
+                            subjectAverage = subjectTotalWeightedScore / subjectTotalWeight;
+                        }
+
+                        int credits = subjectScores.get(0).getSubjectTeacherID().getSubjectId().getCredits();
+                        subjectAverages.put(subjectId, subjectAverage);
+                        totalScore += subjectAverage * credits;
+                        totalCredits += credits;
                     }
+
+                    double semesterAverage = totalCredits > 0 ? totalScore / totalCredits : 0;
+                    response.put("subjectAverages", subjectAverages);
+                    response.put("semesterAverage", semesterAverage);
                 } else {
                     response.put("semesterAverage", 0);
+                    response.put("subjectAverages", new HashMap<>());
                 }
 
                 response.put("success", true);

@@ -24,6 +24,7 @@ const StudentScores = () => {
   const [currentSchoolYear, setCurrentSchoolYear] = useState(null);
   const [semesterAverage, setSemesterAverage] = useState(null);
   const [allScoreTypes, setAllScoreTypes] = useState([]);
+  const [subjectAverages, setSubjectAverages] = useState({});
 
   const scoreTableStyles = {
     unconfiguredScoreCell: {
@@ -54,6 +55,7 @@ const StudentScores = () => {
           setScores(validScores);
           setSchoolYears(response.data.schoolYears || []);
           setCurrentSchoolYear(response.data.currentSchoolYear || null);
+          setSubjectAverages(response.data.subjectAverages || {});
           setSemesterAverage(response.data.semesterAverage);
 
           // Thu thập tất cả các loại điểm từ dữ liệu
@@ -154,9 +156,14 @@ const StudentScores = () => {
   const groupedScoresBySubject = groupScoresBySubject();
 
   // Calculate subject average based on score weights
-  const calculateSubjectAverage = (subjectScores, subjectWeights) => {
+  const calculateSubjectAverage = (subject) => {
+    // Ưu tiên sử dụng điểm trung bình từ API
+    if (subjectAverages[subject.subjectId] !== undefined) {
+      return subjectAverages[subject.subjectId];
+    }
+
     // Kiểm tra xem có đủ cả điểm giữa kỳ và cuối kỳ không
-    if (!subjectScores['Giữa kỳ'] || !subjectScores['Cuối kỳ']) {
+    if (!subject.scores['Giữa kỳ'] || !subject.scores['Cuối kỳ']) {
       return null;  // Trả về null nếu không đủ các điểm bắt buộc
     }
 
@@ -169,13 +176,13 @@ const StudentScores = () => {
     let totalWeightedScore = 0;
     let totalWeight = 0;
 
-    Object.keys(subjectScores).forEach(type => {
-      const score = subjectScores[type];
+    Object.keys(subject.scores).forEach(type => {
+      const score = subject.scores[type];
       if (score === undefined || score === null) return;
 
       // Sử dụng trọng số từ dữ liệu nếu có, nếu không dùng giá trị mặc định
-      const weight = subjectWeights[type] || defaultWeights[type] ||
-        (1 / Object.keys(subjectScores).length);
+      const weight = subject.weights[type] || defaultWeights[type] ||
+        (1 / Object.keys(subject.scores).length);
 
       totalWeightedScore += score * weight;
       totalWeight += weight;
@@ -202,22 +209,24 @@ const StudentScores = () => {
 
   // Thêm hàm tính điểm trung bình học kỳ
   const calculateSemesterAverage = () => {
+    // Sử dụng giá trị từ API nếu có
+    if (semesterAverage !== null && semesterAverage !== undefined && semesterAverage > 0) {
+      return semesterAverage;
+    }
+
+    // Tính toán dự phòng nếu API không trả về semesterAverage
     let totalWeightedScore = 0;
     let totalCredits = 0;
 
     groupedScoresBySubject.forEach(subject => {
-      const avgScore = calculateSubjectAverage(subject.scores, subject.weights);
+      const avgScore = calculateSubjectAverage(subject);
       if (avgScore !== null) {
         totalWeightedScore += avgScore * subject.credits;
         totalCredits += subject.credits;
       }
     });
 
-    if (totalCredits > 0) {
-      return totalWeightedScore / totalCredits;
-    }
-
-    return null;
+    return totalCredits > 0 ? totalWeightedScore / totalCredits : null;
   };
 
   const calculatedSemesterAverage = calculateSemesterAverage();
@@ -351,7 +360,7 @@ const StudentScores = () => {
                 </thead>
                 <tbody>
                   {groupedScoresBySubject.map((subject, index) => {
-                    const avgScore = calculateSubjectAverage(subject.scores, subject.weights);
+                    const avgScore = calculateSubjectAverage(subject);
                     const isPassed = avgScore !== null ? avgScore >= 5 : false;
 
                     return (
