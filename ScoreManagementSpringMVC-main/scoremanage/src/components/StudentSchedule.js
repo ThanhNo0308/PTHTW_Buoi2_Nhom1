@@ -127,6 +127,20 @@ const StudentSchedule = () => {
         return grouped;
     };
 
+    const formatDate = (dateString) => {
+        if (!dateString) return "Chưa cập nhật";
+
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return "Định dạng không hợp lệ";
+
+            return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+        } catch (error) {
+            console.error("Lỗi định dạng ngày:", error);
+            return "Chưa cập nhật";
+        }
+    };
+
     return (
         <Container className="mt-4 mb-5">
             <h2 className="mb-4">
@@ -191,6 +205,22 @@ const StudentSchedule = () => {
                                                         } {
                                                                 schoolYears.find(sy => sy.id === parseInt(selectedSchoolYear))?.semesterName
                                                             }</p>
+                                                        {(() => {
+                                                            const selectedYear = schoolYears.find(sy => sy.id === parseInt(selectedSchoolYear));
+
+                                                            // Sử dụng cả hai tên trường có thể có để đảm bảo tương thích
+                                                            if (selectedYear) {
+                                                                const startDate = selectedYear.startDate || selectedYear.yearStart;
+                                                                const endDate = selectedYear.endDate || selectedYear.yearEnd;
+
+                                                                if (startDate || endDate) {
+                                                                    return (
+                                                                        <p><strong>Thời gian học kỳ:</strong> {formatDate(startDate)} - {formatDate(endDate)}</p>
+                                                                    );
+                                                                }
+                                                            }
+                                                            return null;
+                                                        })()}
                                                     </>
                                                 ) : (
                                                     <p>Không có thông tin học kỳ</p>
