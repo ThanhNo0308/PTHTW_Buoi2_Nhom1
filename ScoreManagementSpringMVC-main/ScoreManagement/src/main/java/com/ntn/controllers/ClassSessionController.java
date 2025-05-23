@@ -36,15 +36,15 @@ public class ClassSessionController {
 
     @Autowired
     private SchoolYearService schoolYearService;
-    
+
     @Autowired
     private ClassService classService;
-    
-     @Autowired
+
+    @Autowired
     private DepartmentService departmentService;
-     
-     @Autowired
-     private TeacherService teacherService;
+
+    @Autowired
+    private TeacherService teacherService;
 
     // Hiển thị danh sách các buổi học
     @GetMapping("/admin/class-sessions")
@@ -112,21 +112,21 @@ public class ClassSessionController {
     @PostMapping("/admin/class-session-add")
     public String classSessionAdd(
             @ModelAttribute("classSession") ClassSession classSession,
-            @RequestParam(value = "subjectTeacherId.id", required = false) Integer subjectTeacherId,
-            @RequestParam(value = "startHour") Integer startHour,
-            @RequestParam(value = "startMinute") Integer startMinute,
-            @RequestParam(value = "endHour") Integer endHour,
-            @RequestParam(value = "endMinute") Integer endMinute,
             BindingResult bindingResult,
-            Model model,
+            @RequestParam(value = "subjectTeacherId.id", required = false) Integer subjectTeacherId,
+            @RequestParam(value = "startHour", required = false) Integer startHour,
+            @RequestParam(value = "startMinute", required = false) Integer startMinute,
+            @RequestParam(value = "endHour", required = false) Integer endHour,
+            @RequestParam(value = "endMinute", required = false) Integer endMinute,
             RedirectAttributes redirectAttributes) {
 
         try {
             if (bindingResult.hasErrors()) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng kiểm tra lại thông tin buổi học");
-                return "redirect:/admin/class-sessions";
+                return "redirect:/admin/class-sessions/create-for-subject/" + subjectTeacherId;
             }
 
+            // Xử lý SubjectTeacher
             if (subjectTeacherId != null) {
                 Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
                 classSession.setSubjectTeacherId(subjectTeacher);
@@ -139,23 +139,32 @@ public class ClassSessionController {
             // Kiểm tra xung đột lịch học
             if (classSessionService.hasScheduleConflict(classSession)) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Phòng học đã được sử dụng trong khung giờ này!");
-                return "redirect:/admin/class-sessions";
+                return "redirect:/admin/class-sessions/create-for-subject/" + subjectTeacherId;
             }
 
             boolean success = classSessionService.addOrUpdateClassSession(classSession);
 
             if (success) {
                 redirectAttributes.addFlashAttribute("successMessage", "Thêm buổi học thành công");
-                return "redirect:/admin/class-sessions";
+
+                // Kiểm tra xem có cần tiếp tục tạo lịch học hay chuyển về trang phân công
+                List<ClassSession> sessions = classSessionService.getClassSessionsBySubjectTeacher(subjectTeacherId);
+                if (sessions.size() <= 1) {
+                    // Nếu đây là buổi học đầu tiên, hiển thị thông báo khuyến khích tạo thêm
+                    redirectAttributes.addFlashAttribute("infoMessage",
+                            "Bạn đã tạo lịch học đầu tiên. Bây giờ sinh viên có thể đăng ký môn học này. "
+                            + "Bạn có thể tiếp tục tạo thêm lịch học khác hoặc quay về danh sách phân công.");
+                }
+
+                return "redirect:/admin/class-sessions/create-for-subject/" + subjectTeacherId;
             } else {
                 redirectAttributes.addFlashAttribute("errorMessage", "Không thể thêm buổi học");
-                return "redirect:/admin/class-sessions";
+                return "redirect:/admin/class-sessions/create-for-subject/" + subjectTeacherId;
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
-            return "redirect:/admin/class-sessions";
+            return "redirect:/admin/class-sessions/create-for-subject/" + subjectTeacherId;
         }
     }
 
@@ -236,5 +245,54 @@ public class ClassSessionController {
         }
 
         return "redirect:/admin/class-sessions";
+    }
+
+    @GetMapping("/admin/class-sessions/create-for-subject/{subjectTeacherId}")
+    public String createSessionForSubject(
+            @PathVariable("subjectTeacherId") Integer subjectTeacherId,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        // Lấy thông tin phân công giảng dạy
+        Subjectteacher subjectTeacher = subjectTeacherService.getSubjectTeacherById(subjectTeacherId);
+
+        if (subjectTeacher == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy thông tin phân công giảng dạy");
+            return "redirect:/admin/subjTeach";
+        }
+
+        // Kiểm tra xem đã có lịch học nào cho phân công này chưa
+        List<ClassSession> existingSessions = classSessionService.getClassSessionsBySubjectTeacher(subjectTeacherId);
+
+        // Đảm bảo luôn thêm danh sách vào model, dù trống hay không
+        model.addAttribute("existingSessions", existingSessions);
+
+        if (!existingSessions.isEmpty()) {
+            model.addAttribute("warningMessage", "Phân công này đã có " + existingSessions.size() + " lịch học. Bạn có thể thêm lịch học bổ sung.");
+        } else {
+            model.addAttribute("infoMessage", "Đây là phân công mới. Bạn cần tạo lịch học trước khi sinh viên có thể đăng ký.");
+        }
+
+        // Tạo đối tượng ClassSession mới với phân công đã chọn
+        ClassSession newSession = new ClassSession();
+        newSession.setSubjectTeacherId(subjectTeacher);
+
+        // Truyền dữ liệu vào view
+        model.addAttribute("classSession", newSession);
+        model.addAttribute("subjectTeacher", subjectTeacher);
+        model.addAttribute("formAction", "/ScoreManagement/admin/class-session-add");
+
+        // Tạo Map các thứ trong tuần để hiển thị
+        Map<Integer, String> dayOfWeek = new HashMap<>();
+        dayOfWeek.put(1, "Thứ hai");
+        dayOfWeek.put(2, "Thứ ba");
+        dayOfWeek.put(3, "Thứ tư");
+        dayOfWeek.put(4, "Thứ năm");
+        dayOfWeek.put(5, "Thứ sáu");
+        dayOfWeek.put(6, "Thứ bảy");
+        dayOfWeek.put(7, "Chủ nhật");
+        model.addAttribute("dayOfWeekMap", dayOfWeek);
+
+        return "admin/create-class-session";
     }
 }

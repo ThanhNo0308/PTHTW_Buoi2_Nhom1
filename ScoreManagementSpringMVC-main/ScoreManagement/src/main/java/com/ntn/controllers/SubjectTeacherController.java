@@ -37,10 +37,10 @@ public class SubjectTeacherController {
 
     @Autowired
     private DepartmentService departmentService;
-    
+
     @Autowired
     private SchoolYearService schoolYearService;
-    
+
     @Autowired
     private ClassService classService;
 
@@ -54,10 +54,10 @@ public class SubjectTeacherController {
             Model model) {
 
         List<Subjectteacher> subjectTeachers;
-         if (classId != null) {
+        if (classId != null) {
             // Lọc theo lớp học
             subjectTeachers = subjectTeacherService.getSubjectTeachersByClassId(classId);
-        }else if (teacherId != null && schoolYearId != null) {
+        } else if (teacherId != null && schoolYearId != null) {
             // Lọc theo giảng viên và học kỳ
             subjectTeachers = subjectTeacherService.getSubjectTeachersByTeacherIdAndSchoolYearId(teacherId, schoolYearId);
         } else if (teacherId != null) {
@@ -119,7 +119,7 @@ public class SubjectTeacherController {
                 Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
                 subjectTeacher.setSchoolYearId(schoolYear);
             }
-            
+
             if (classId != null) {
                 Class classObj = classService.getClassById(classId);
                 subjectTeacher.setClassId(classObj);
@@ -128,8 +128,9 @@ public class SubjectTeacherController {
             boolean success = subjectTeacherService.addOrUpdateSubjectTeacher(subjectTeacher);
 
             if (success) {
-                redirectAttributes.addFlashAttribute("successMessage", "Phân công giảng dạy thành công");
-                return "redirect:/admin/subjTeach";
+                redirectAttributes.addFlashAttribute("successMessage", "Phân công giảng dạy thành công. Vui lòng tạo lịch học cho phân công này.");
+                // Chuyển hướng đến trang tạo lịch học với ID phân công
+                return "redirect:/admin/class-sessions/create-for-subject/" + subjectTeacher.getId();
             } else {
                 redirectAttributes.addFlashAttribute("errorMessage", "Không thể phân công giảng dạy");
                 return "redirect:/admin/subjTeach?error=add-validation";
@@ -167,12 +168,12 @@ public class SubjectTeacherController {
                 Teacher teacher = teacherService.getTeacherById(teacherId);
                 subjectTeacher.setTeacherId(teacher);
             }
-            
+
             if (schoolYearId != null) {
                 Schoolyear schoolYear = schoolYearService.getSchoolYearById(schoolYearId);
                 subjectTeacher.setSchoolYearId(schoolYear);
             }
-            
+
             if (classId != null) {
                 Class classObj = classService.getClassById(classId);
                 subjectTeacher.setClassId(classObj);

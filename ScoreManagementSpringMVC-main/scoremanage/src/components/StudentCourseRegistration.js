@@ -58,12 +58,17 @@ const StudentCourseRegistration = () => {
           return;
         }
 
+        const registeredIds = (data.registeredCourses || []).map(course => course.subjectTeacherId);
+        const filteredAvailableCourses = (data.availableCourses || []).filter(
+          course => !registeredIds.includes(course.id)
+        );
+
         setStudent(data.student);
         setMajor(data.studentMajor);
         setDepartment(data.studentDepartment);
         setNextSemester(data.nextSemester);
         setCurrentSemester(data.currentSemester);
-        setAvailableCourses(data.availableCourses || []);
+        setAvailableCourses(filteredAvailableCourses);
         setRegisteredCourses(data.registeredCourses || []);
         setRegisteredCredits(data.registeredCredits || 0);
         setRemainingCredits(data.remainingCredits || 17);
@@ -136,13 +141,15 @@ const StudentCourseRegistration = () => {
           return;
         }
 
-        setRegisteredCourses(data.registeredCourses || []);
+        const updatedRegisteredCourses = data.registeredCourses || [];
+        setRegisteredCourses(updatedRegisteredCourses);
         setRegisteredCredits(data.registeredCredits || 0);
         setRemainingCredits(data.remainingCredits || 0);
 
+        const registeredIds = updatedRegisteredCourses.map(c => c.subjectTeacherId);
         // Cập nhật danh sách khóa học có sẵn
         setAvailableCourses(prevCourses =>
-          prevCourses.filter(course => course.id !== selectedCourse.id)
+          prevCourses.filter(course => !registeredIds.includes(course.id))
         );
 
         setSuccessMessage(`Đăng ký môn ${selectedCourse.subjectName} thành công!`);
@@ -156,13 +163,22 @@ const StudentCourseRegistration = () => {
           return;
         }
 
-        setRegisteredCourses(data.registeredCourses || []);
+        const updatedRegisteredCourses = data.registeredCourses || [];
+        setRegisteredCourses(updatedRegisteredCourses);
         setRegisteredCredits(data.registeredCredits || 0);
         setRemainingCredits(data.remainingCredits || 17);
 
-        // Cập nhật lại danh sách khóa học có sẵn bằng cách load lại dữ liệu
+        // Lấy data mới từ API
         const refreshResponse = await studentApis.getAvailableCourses();
-        setAvailableCourses(refreshResponse.data.availableCourses || []);
+        const availableCoursesFromAPI = refreshResponse.data.availableCourses || [];
+
+        // Lọc ra các môn chưa đăng ký (quan trọng)
+        const registeredIds = updatedRegisteredCourses.map(c => c.subjectTeacherId);
+        const filteredAvailableCourses = availableCoursesFromAPI.filter(
+          course => !registeredIds.includes(course.id)
+        );
+
+        setAvailableCourses(filteredAvailableCourses);
 
         setSuccessMessage(`Hủy đăng ký môn ${selectedCourse.subjectName} thành công!`);
       }
@@ -200,6 +216,15 @@ const StudentCourseRegistration = () => {
         </p>
       </div>
     );
+  };
+
+  const getBadgeColor = (sessionType) => {
+    switch (sessionType) {
+      case "Sáng": return "bg-info";
+      case "Chiều": return "bg-warning";
+      case "Tối": return "bg-secondary";
+      default: return "bg-light";
+    }
   };
 
   if (loading) {
@@ -319,6 +344,7 @@ const StudentCourseRegistration = () => {
                     <th style={{ width: '80px' }}>Tín chỉ</th>
                     <th>Giảng viên</th>
                     <th>Lớp học</th>
+                    <th>Lịch học</th>
                     <th style={{ width: '120px' }}>Thao tác</th>
                   </tr>
                 </thead>
@@ -331,6 +357,32 @@ const StudentCourseRegistration = () => {
                       <td className="text-center">{course.credits}</td>
                       <td>{course.teacherName}</td>
                       <td>{course.className}</td>
+                      <td>
+                        {course.schedules && course.schedules.length > 0 ? (
+                          <div>
+                            {course.schedules.map((schedule, idx) => (
+                              <div key={idx} className="schedule-item mb-1 p-1">
+                                <div>
+                                  <span className={`badge ${getBadgeColor(schedule.sessionType)} me-1`}>
+                                    {schedule.sessionType}
+                                  </span>
+                                  <strong>{schedule.dayOfWeekName}</strong>
+                                </div>
+                                <div className="small text-muted">
+                                  <i className="fas fa-clock me-1"></i>
+                                  {schedule.startTime} - {schedule.endTime}
+                                </div>
+                                <div className="small">
+                                  <i className="fas fa-door-open me-1"></i>
+                                  Phòng: {schedule.roomId}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-danger">Chưa có lịch học</span>
+                        )}
+                      </td>
                       <td className="text-center">
                         <Button
                           variant="danger"
@@ -392,6 +444,7 @@ const StudentCourseRegistration = () => {
                     <th style={{ width: '80px' }}>Tín chỉ</th>
                     <th>Giảng viên</th>
                     <th>Lớp học</th>
+                    <th>Lịch học</th>
                     <th style={{ width: '120px' }}>Thao tác</th>
                   </tr>
                 </thead>
@@ -413,6 +466,32 @@ const StudentCourseRegistration = () => {
                       </td>
                       <td>{course.teacherName}</td>
                       <td>{course.className}</td>
+                      <td>
+                        {course.schedules && course.schedules.length > 0 ? (
+                          <div>
+                            {course.schedules.map((schedule, idx) => (
+                              <div key={idx} className="schedule-item mb-1 p-1">
+                                <div>
+                                  <span className={`badge ${getBadgeColor(schedule.sessionType)} me-1`}>
+                                    {schedule.sessionType}
+                                  </span>
+                                  <strong>{schedule.dayOfWeekName}</strong>
+                                </div>
+                                <div className="small text-muted">
+                                  <i className="fas fa-clock me-1"></i>
+                                  {schedule.startTime} - {schedule.endTime}
+                                </div>
+                                <div className="small">
+                                  <i className="fas fa-door-open me-1"></i>
+                                  Phòng: {schedule.roomId}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-danger">Chưa có lịch học</span>
+                        )}
+                      </td>
                       <td className="text-center">
                         <Button
                           variant="primary"
@@ -473,6 +552,19 @@ const StudentCourseRegistration = () => {
                   <p className="mb-1"><strong>Giảng viên:</strong> {selectedCourse.teacherName}</p>
                   <p className="mb-1"><strong>Số tín chỉ:</strong> {selectedCourse.credits}</p>
                   <p className="mb-0"><strong>Lớp:</strong> {selectedCourse.className}</p>
+
+                  {selectedCourse.schedules && selectedCourse.schedules.length > 0 && (
+                    <div className="mt-2 pt-2 border-top">
+                      <p className="mb-1"><strong>Lịch học:</strong></p>
+                      {selectedCourse.schedules.map((schedule, idx) => (
+                        <div key={idx} className="small">
+                          <div>{schedule.dayOfWeekName}, {schedule.sessionType}</div>
+                          <div>{schedule.startTime} - {schedule.endTime}, Phòng {schedule.roomId}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                 </Card.Body>
               </Card>
 

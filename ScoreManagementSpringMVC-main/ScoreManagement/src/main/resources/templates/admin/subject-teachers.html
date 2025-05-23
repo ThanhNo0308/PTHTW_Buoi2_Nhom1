@@ -138,6 +138,12 @@
                                                 th:data-school-year-id="${subjTeach.schoolYearId != null ? subjTeach.schoolYearId.id : ''}">
                                             <i class="fas fa-edit"></i> Sửa
                                         </button>
+
+                                        <!-- Thêm nút tạo lịch học -->
+                                        <a th:href="@{'/admin/class-sessions/create-for-subject/' + ${subjTeach.id}}" class="btn btn-sm btn-success">
+                                            <i class="fas fa-calendar-plus"></i> Tạo lịch học
+                                        </a>
+
                                         <a th:href="@{'/admin/subjTeach/delete/' + ${subjTeach.id}}" class="btn btn-sm btn-danger"
                                            onclick="return confirm('Bạn có chắc chắn muốn xóa phân công này?');">
                                             <i class="fas fa-trash"></i> Xóa

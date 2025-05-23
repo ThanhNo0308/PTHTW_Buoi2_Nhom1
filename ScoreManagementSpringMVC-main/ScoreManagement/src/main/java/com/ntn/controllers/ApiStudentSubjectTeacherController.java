@@ -4,6 +4,7 @@
  */
 package com.ntn.controllers;
 
+import com.ntn.pojo.ClassSession;
 import com.ntn.pojo.Department;
 import com.ntn.pojo.Major;
 import com.ntn.pojo.Schoolyear;
@@ -11,6 +12,7 @@ import com.ntn.pojo.Student;
 import com.ntn.pojo.Studentsubjectteacher;
 import com.ntn.pojo.Subjectteacher;
 import com.ntn.pojo.User;
+import com.ntn.service.ClassSessionService;
 import com.ntn.service.DepartmentService;
 import com.ntn.service.MajorService;
 import com.ntn.service.SchoolYearService;
@@ -20,6 +22,8 @@ import com.ntn.service.SubjectService;
 import com.ntn.service.SubjectTeacherService;
 import com.ntn.service.UserService;
 import java.security.Principal;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
@@ -71,6 +75,9 @@ public class ApiStudentSubjectTeacherController {
 
     @Autowired
     private SubjectTeacherService subjectTeacherService;
+
+    @Autowired
+    private ClassSessionService classSessionService;
 
     @GetMapping("/course-registration")
     public ResponseEntity<?> getAvailableCourses(Principal principal) {
@@ -147,16 +154,113 @@ public class ApiStudentSubjectTeacherController {
             Map<String, Object> registrationPeriod = getRegistrationPeriodInfo(nextSemester);
 
             // Format dữ liệu môn học để hiển thị
-            List<Map<String, Object>> formattedCourses = formatCoursesForResponse(filteredCourses, registeredCourses);
-            List<Map<String, Object>> formattedRegisteredCourses = mapRegisteredCourses(registeredCourses);
+            List<Map<String, Object>> formattedCourses = new ArrayList<>();
+            for (Subjectteacher st : availableCourses) {
+                Map<String, Object> courseInfo = new HashMap<>();
+
+                // Add basic course info
+                courseInfo.put("id", st.getId());
+                courseInfo.put("subjectCode", st.getSubjectId().getId());
+                courseInfo.put("subjectName", st.getSubjectId().getSubjectName());
+                courseInfo.put("credits", st.getSubjectId().getCredits());
+                courseInfo.put("teacherName", st.getTeacherId().getTeacherName());
+
+                // Get class sessions for this subject teacher
+                List<ClassSession> sessions = classSessionService.getClassSessionsBySubjectTeacher(st.getId());
+
+                if (sessions.isEmpty()) {
+                    // If no sessions found, skip this course as it's not available for registration
+                    continue;
+                }
+
+                // Format schedule information
+                List<Map<String, Object>> schedules = new ArrayList<>();
+                for (ClassSession session : sessions) {
+                    Map<String, Object> scheduleInfo = new HashMap<>();
+                    scheduleInfo.put("dayOfWeek", session.getDayOfWeek());
+                    scheduleInfo.put("dayOfWeekName", getDayOfWeekName(session.getDayOfWeek()));
+                    scheduleInfo.put("startTime", session.getStartTime().toString());
+                    scheduleInfo.put("endTime", session.getEndTime().toString());
+                    scheduleInfo.put("roomId", session.getRoomId());
+                    scheduleInfo.put("sessionType", getSessionType(session.getStartTime()));
+                    schedules.add(scheduleInfo);
+                }
+
+                courseInfo.put("schedules", schedules);
+                formattedCourses.add(courseInfo);
+            }
+
+            List<Map<String, Object>> formattedAvailableCourses = new ArrayList<>();
+            for (Subjectteacher st : availableCourses) {
+                Map<String, Object> courseInfo = new HashMap<>();
+
+                // Thêm đầy đủ thông tin
+                courseInfo.put("id", st.getId());
+                courseInfo.put("subjectId", st.getSubjectId().getId());  // Thêm mã môn học
+                courseInfo.put("subjectName", st.getSubjectId().getSubjectName());
+                courseInfo.put("credits", st.getSubjectId().getCredits());
+                courseInfo.put("teacherName", st.getTeacherId().getTeacherName());
+                courseInfo.put("className", st.getClassId() != null ? st.getClassId().getClassName() : "Chưa phân lớp"); // Thêm lớp học
+
+                // Fetch schedules for this course
+                List<ClassSession> sessions = classSessionService.getClassSessionsBySubjectTeacher(st.getId());
+                List<Map<String, Object>> schedules = new ArrayList<>();
+
+                for (ClassSession session : sessions) {
+                    Map<String, Object> scheduleInfo = new HashMap<>();
+                    scheduleInfo.put("dayOfWeek", session.getDayOfWeek());
+                    scheduleInfo.put("dayOfWeekName", getDayOfWeekName(session.getDayOfWeek()));
+                    scheduleInfo.put("startTime", session.getStartTime().toString());
+                    scheduleInfo.put("endTime", session.getEndTime().toString());
+                    scheduleInfo.put("roomId", session.getRoomId());
+                    scheduleInfo.put("sessionType", getSessionType(session.getStartTime()));
+                    schedules.add(scheduleInfo);
+                }
+
+                courseInfo.put("schedules", schedules);
+                formattedAvailableCourses.add(courseInfo);
+            }
+
+            List<Map<String, Object>> formattedRegisteredCourses = new ArrayList<>();
+            for (Studentsubjectteacher enr : registeredCourses) {
+                Subjectteacher st = enr.getSubjectTeacherId();
+                Map<String, Object> regCourse = new HashMap<>();
+
+                regCourse.put("enrollmentId", enr.getId());
+                regCourse.put("subjectTeacherId", st.getId());
+                regCourse.put("subjectId", st.getSubjectId().getId());
+                regCourse.put("subjectName", st.getSubjectId().getSubjectName());
+                regCourse.put("credits", st.getSubjectId().getCredits());
+                regCourse.put("teacherName", st.getTeacherId().getTeacherName());
+                regCourse.put("className", st.getClassId() != null ? st.getClassId().getClassName() : "Chưa phân lớp");
+
+                // Fetch schedules for this course
+                List<ClassSession> sessions = classSessionService.getClassSessionsBySubjectTeacher(st.getId());
+                List<Map<String, Object>> schedules = new ArrayList<>();
+
+                for (ClassSession session : sessions) {
+                    Map<String, Object> scheduleInfo = new HashMap<>();
+                    scheduleInfo.put("dayOfWeek", session.getDayOfWeek());
+                    scheduleInfo.put("dayOfWeekName", getDayOfWeekName(session.getDayOfWeek()));
+                    scheduleInfo.put("startTime", session.getStartTime().toString());
+                    scheduleInfo.put("endTime", session.getEndTime().toString());
+                    scheduleInfo.put("roomId", session.getRoomId());
+                    scheduleInfo.put("sessionType", getSessionType(session.getStartTime()));
+                    schedules.add(scheduleInfo);
+                }
+
+                regCourse.put("schedules", schedules);
+                formattedRegisteredCourses.add(regCourse);
+            }
 
             // Trả về kết quả
+            response.put("success", true);
             response.put("student", student);
             response.put("studentMajor", studentMajor);
             response.put("studentDepartment", studentDepartment);
             response.put("currentSemester", currentSchoolYear);
             response.put("nextSemester", nextSemester);
-            response.put("availableCourses", formattedCourses);
+            response.put("availableCourses", formattedAvailableCourses);
             response.put("registeredCourses", formattedRegisteredCourses);
             response.put("registeredCredits", registeredCredits);
             response.put("maxCredits", 17);
@@ -271,6 +375,47 @@ public class ApiStudentSubjectTeacherController {
                         .body(Map.of("error", "Vượt quá giới hạn 17 tín chỉ cho phép đăng ký"));
             }
 
+            List<ClassSession> classSessions = classSessionService.getClassSessionsBySubjectTeacher(subjectTeacherId);
+            if (classSessions.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of(
+                                "success", false,
+                                "message", "Môn học này chưa có lịch học. Không thể đăng ký."
+                        ));
+            }
+
+            // Kiểm tra xung đột lịch học với các môn đã đăng ký
+            List<Studentsubjectteacher> existingEnrollments = studentSubjectTeacherService.getByStudentId(student.getId());
+            for (Studentsubjectteacher enrollment : existingEnrollments) {
+                List<ClassSession> existingSessions = classSessionService.getClassSessionsBySubjectTeacher(enrollment.getSubjectTeacherId().getId());
+
+                for (ClassSession newSession : classSessions) {
+                    for (ClassSession existingSession : existingSessions) {
+                        // Nếu cùng thứ trong tuần
+                        if (newSession.getDayOfWeek() == existingSession.getDayOfWeek()) {
+                            // Kiểm tra xung đột thời gian
+                            LocalTime newStart = newSession.getStartTime();
+                            LocalTime newEnd = newSession.getEndTime();
+                            LocalTime existingStart = existingSession.getStartTime();
+                            LocalTime existingEnd = existingSession.getEndTime();
+
+                            if ((newStart.isBefore(existingEnd) && existingStart.isBefore(newEnd))) {
+                                return ResponseEntity.status(HttpStatus.CONFLICT)
+                                        .body(Map.of(
+                                                "success", false,
+                                                "message", "Xung đột lịch học với môn " + enrollment.getSubjectTeacherId().getSubjectId().getSubjectName(),
+                                                "conflict", Map.of(
+                                                        "subjectName", enrollment.getSubjectTeacherId().getSubjectId().getSubjectName(),
+                                                        "dayOfWeek", getDayOfWeekName(existingSession.getDayOfWeek()),
+                                                        "time", existingSession.getStartTime() + " - " + existingSession.getEndTime()
+                                                )
+                                        ));
+                            }
+                        }
+                    }
+                }
+            }
+
             // Đăng ký môn học
             Studentsubjectteacher enrollment = new Studentsubjectteacher();
             enrollment.setStudentId(student);
@@ -295,7 +440,7 @@ public class ApiStudentSubjectTeacherController {
                 response.put("registeredCredits", registeredCredits);
                 response.put("remainingCredits", 17 - registeredCredits);
 
-                return ResponseEntity.ok(response);
+                return ResponseEntity.ok(Map.of("success", true, "message", "Đăng ký môn học thành công"));
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Map.of("error", "Không thể đăng ký môn học. Vui lòng thử lại sau."));
@@ -573,5 +718,40 @@ public class ApiStudentSubjectTeacherController {
         }
 
         return result;
+    }
+
+    // Helper method to get day of week name
+    private String getDayOfWeekName(int day) {
+        switch (day) {
+            case 1:
+                return "Thứ hai";
+            case 2:
+                return "Thứ ba";
+            case 3:
+                return "Thứ tư";
+            case 4:
+                return "Thứ năm";
+            case 5:
+                return "Thứ sáu";
+            case 6:
+                return "Thứ bảy";
+            case 7:
+                return "Chủ nhật";
+            default:
+                return "Không xác định";
+        }
+    }
+
+// Helper method to determine session type
+    private String getSessionType(LocalTime time) {
+        int hour = time.getHour();
+
+        if (hour >= 7 && hour < 12) {
+            return "Sáng";
+        } else if (hour >= 12 && hour < 18) {
+            return "Chiều";
+        } else {
+            return "Tối";
+        }
     }
 }

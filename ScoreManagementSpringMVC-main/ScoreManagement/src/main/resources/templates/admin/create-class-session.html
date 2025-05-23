@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>Tạo lịch học</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+    
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a th:href="@{/admin/dashboard}">Trang chủ</a></li>
+                        <li class="breadcrumb-item"><a th:href="@{/admin/subjTeach}">Phân công giảng dạy</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Tạo lịch học</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Thông báo -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+        <div th:if="${warningMessage}" class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i> <span th:text="${warningMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+        <div th:if="${infoMessage}" class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle me-2"></i> <span th:text="${infoMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-calendar-plus me-2"></i>Tạo lịch học
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Hiển thị thông tin phân công -->
+                        <div class="alert alert-light border mb-4">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Môn học:</strong> <span th:text="${subjectTeacher.subjectId.subjectName}"></span></p>
+                                    <p><strong>Giảng viên:</strong> <span th:text="${subjectTeacher.teacherId.teacherName}"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Học kỳ:</strong> <span th:text="${subjectTeacher.schoolYearId.nameYear + ' ' + subjectTeacher.schoolYearId.semesterName}"></span></p>
+                                    <p><strong>Lớp:</strong> <span th:text="${subjectTeacher.classId != null ? subjectTeacher.classId.className : 'Chưa phân lớp'}"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Form tạo lịch học -->
+                        <form th:action="${formAction}" method="post" id="classSessionForm">
+                            <input type="hidden" name="subjectTeacherId.id" th:value="${subjectTeacher.id}" />
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="dayOfWeek" class="form-label">Thứ trong tuần <span class="text-danger">*</span></label>
+                                    <select id="dayOfWeek" name="dayOfWeek" class="form-select" required>
+                                        <option value="">-- Chọn thứ --</option>
+                                        <option th:each="day : ${dayOfWeekMap}" th:value="${day.key}" th:text="${day.value}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="roomId" class="form-label">Phòng học <span class="text-danger">*</span></label>
+                                    <input type="text" id="roomId" name="roomId" class="form-control" required placeholder="Nhập mã phòng (Ví dụ: A101)">
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Giờ bắt đầu <span class="text-danger">*</span></label>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <select id="startHour" name="startHour" class="form-select" required>
+                                                <option value="">Giờ</option>
+                                                <option th:each="hour : ${#numbers.sequence(7, 21)}" th:value="${hour}" th:text="${hour}"></option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <select id="startMinute" name="startMinute" class="form-select" required>
+                                                <option value="">Phút</option>
+                                                <option value="0">00</option>
+                                                <option value="15">15</option>
+                                                <option value="30">30</option>
+                                                <option value="45">45</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Giờ kết thúc <span class="text-danger">*</span></label>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <select id="endHour" name="endHour" class="form-select" required>
+                                                <option value="">Giờ</option>
+                                                <option th:each="hour : ${#numbers.sequence(7, 21)}" th:value="${hour}" th:text="${hour}"></option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <select id="endMinute" name="endMinute" class="form-select" required>
+                                                <option value="">Phút</option>
+                                                <option value="0">00</option>
+                                                <option value="15">15</option>
+                                                <option value="30">30</option>
+                                                <option value="45">45</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Ghi chú</label>
+                                <textarea id="notes" name="notes" class="form-control" rows="2" placeholder="Nhập ghi chú (nếu có)"></textarea>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mt-4">
+                                <div>
+                                    <a th:href="@{/admin/subjTeach}" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left me-2"></i>Quay lại
+                                    </a>
+                                </div>
+                                <div>
+                                    <a th:if="${existingSessions != null && !existingSessions.empty}" th:href="@{/admin/class-sessions}" class="btn btn-info me-2">
+                                        <i class="fas fa-list me-2"></i>Xem tất cả lịch học
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Lưu lịch học
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <!-- Hiển thị lịch học đã tạo (nếu có) -->
+                        <div th:if="${existingSessions != null && !existingSessions.empty}" class="mt-4">
+                            <h5 class="mb-3">Lịch học đã tạo cho phân công này:</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Thứ</th>
+                                            <th>Phòng</th>
+                                            <th>Thời gian bắt đầu</th>
+                                            <th>Thời gian kết thúc</th>
+                                            <th>Ghi chú</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="existingSession : ${existingSessions}">
+                                            <td th:text="${dayOfWeekMap[existingSession.dayOfWeek]}"></td>
+                                            <td th:text="${existingSession.roomId}"></td>
+                                            <td th:text="${existingSession.startTime}"></td>
+                                            <td th:text="${existingSession.endTime}"></td>
+                                            <td th:text="${existingSession.notes != null ? existingSession.notes : '-'}"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="base :: footer"></div>
+    <div th:replace="base :: scripts"></div>
+    
+    <script>
+        // Thêm validation client-side cho form
+        document.getElementById('classSessionForm').addEventListener('submit', function(event) {
+            const startHour = parseInt(document.getElementById('startHour').value);
+            const startMinute = parseInt(document.getElementById('startMinute').value);
+            const endHour = parseInt(document.getElementById('endHour').value);
+            const endMinute = parseInt(document.getElementById('endMinute').value);
+            
+            // Kiểm tra thời gian kết thúc phải sau thời gian bắt đầu
+            if ((endHour < startHour) || (endHour === startHour && endMinute <= startMinute)) {
+                alert('Thời gian kết thúc phải sau thời gian bắt đầu!');
+                event.preventDefault();
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>
