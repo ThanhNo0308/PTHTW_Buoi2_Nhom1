@@ -100,13 +100,8 @@ const StudentDetail = () => {
     let validSubjectsCount = 0;
 
     subjects.forEach(subject => {
-      // Chỉ tính môn học có đủ điểm giữa kỳ và cuối kỳ
-      const hasMidTerm = subject.scores?.some(score =>
-        score.scoreType?.scoreType === 'Giữa kỳ' && score.scoreValue !== null);
-      const hasFinalTerm = subject.scores?.some(score =>
-        score.scoreType?.scoreType === 'Cuối kỳ' && score.scoreValue !== null);
-
-      if (hasMidTerm && hasFinalTerm) {
+      // Bỏ điều kiện kiểm tra nghiêm ngặt, chỉ cần có averageScore là đủ
+      if (subject.averageScore !== undefined && subject.averageScore !== null) {
         const credits = subject.credits || 0;
         const avgScore = subject.averageScore || 0;
 
@@ -266,7 +261,15 @@ const StudentDetail = () => {
                           <td>{schoolYear.semesterName}</td>
                           <td className="text-center">
                             {(() => {
-                              // Ưu tiên tính toán từ dữ liệu chi tiết môn học nếu có
+                              // Kiểm tra trực tiếp averageScores trước
+                              if (averageScores[schoolYear.id]) {
+                                return (
+                                  <Badge bg="primary" pill>
+                                    {parseFloat(averageScores[schoolYear.id]).toFixed(2)}
+                                  </Badge>
+                                );
+                              }
+                              // Sau đó mới tính toán từ dữ liệu chi tiết nếu cần
                               const calculatedAverage = calculateSemesterAverage(schoolYear.id);
                               if (calculatedAverage) {
                                 return (
@@ -275,20 +278,7 @@ const StudentDetail = () => {
                                   </Badge>
                                 );
                               }
-                              // Sử dụng điểm từ API nếu không có chi tiết
-                              else if (averageScores[schoolYear.id]) {
-                                return (
-                                  <Badge bg="primary" pill>
-                                    {averageScores[schoolYear.id].toFixed(2)}
-                                  </Badge>
-                                );
-                              }
-                              // Không có điểm
-                              else {
-                                return (
-                                  <Badge bg="secondary" pill>-</Badge>
-                                );
-                              }
+                              return <Badge bg="secondary" pill>-</Badge>;
                             })()}
                           </td>
                           <td>
